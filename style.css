@@ -1,0 +1,107 @@
+:root {
+  color-scheme: light;
+  font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Roboto", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  background-color: #f7f9fc;
+  color: #1f2a44;
+  line-height: 1.5;
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #ffffff;
+}
+
+.site-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.site-nav a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.page-intro h2 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+}
+
+.placeholder {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.placeholder h3 {
+  margin-top: 0;
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.layout-grid article {
+  border: 1px dashed #2563eb;
+  border-radius: 6px;
+  padding: 1rem;
+  background-color: #f0f5ff;
+}
+
+.layout-grid h4 {
+  margin-top: 0;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1.5rem;
+  margin-top: 3rem;
+  background-color: #1e3a8a;
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .site-nav {
+    width: 100%;
+    justify-content: space-around;
+    margin-top: 0.75rem;
+  }
+
+  .site-title {
+    width: 100%;
+    text-align: center;
+  }
+}
