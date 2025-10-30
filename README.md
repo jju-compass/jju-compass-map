@@ -1,60 +1,39 @@
 # jju-compass-map
-전주대 근처 시설(식당·카페·놀거리 등) 빠른 검색 지도 서비스
+전주대학교 주변 시설을 탐색하기 위한 정적 웹 서비스입니다.  
+현재는 메인 페이지 초안과 각 카테고리 페이지의 빈 껍데기만 남겨 둔 상태로, 본격 구현 전에 구조를 간소화한 단계입니다.
 
-## 프로젝트 개요
+## 1. 현재 상태
+- `index.html`: 간단한 소개 문구만 포함한 메인 페이지
+- 그 외 HTML 파일: `<!-- TODO -->` 주석만 포함된 빈 페이지
+- `style.css`, `map.js`: 추후 구현을 위한 주석만 남김
+- 서버·배포 설정은 그대로 유지(Nginx로 정적 파일 서빙)
 
-### 제품 개요
-- 제품 이름: 전주대 주변 탐색지도(JJU Map)
-- 아이템 개요: 전주대학교 주변 음식점(한식, 중식, 일식 등), 약국, 편의점, 카페 등을 카카오맵 API로 빠르게 검색하고 지도에 표시하는 웹 서비스
+## 2. 앞으로의 작업 범위
+| 담당 | 파일 | 예정 작업 |
+| --- | --- | --- |
+| 조성규 | `index.html` 외 음식점/편의 시설 HTML | 카카오맵 초기화, 카테고리별 마커·인포윈도우 로직 구현 |
+|  | `map.js` | 공통 지도 함수 작성, 데이터 연동 |
+|  | 데이터 파일 | 시설 정보 수집 및 구조화(JSON/JS) |
 
-### 문제 인식
-- 신입생과 타지역 학생들이 전주대 주변 지리를 파악하기 어렵다.
-- 급하게 약국이나 편의점을 찾을 때 시간이 많이 소요된다.
-- 일반 지도 앱은 학교 특화 정보가 부족하다.
+## 3. 개발 환경
+- 언어: HTML5, CSS3, Vanilla JavaScript
+- 지도: Kakao Maps JavaScript SDK (키 발급 및 도메인 등록 필요)
+- 배포: GitHub → Oracle Cloud Ubuntu 서버 → Nginx
 
-### 제품 장점
-- 전주대 중심 특화 서비스로 카테고리 버튼을 통한 빠른 검색이 가능하다.
-- 카카오맵 API 연동으로 실시간 정보를 제공한다.
-- 모바일 반응형 웹으로 언제든 즉시 이용할 수 있다.
+## 4. 서버 메모
+- 프로젝트 경로: `/home/ubuntu/jju-compass-map`
+- Nginx 설정: `/etc/nginx/sites-available/jju-compass` (루트는 위 경로)
+- 방화벽: nftables로 80/443 허용, Oracle VCN 인바운드도 개방
 
-### 실현 가능성
-- 카카오맵 JavaScript API는 무료로 사용 가능하다.
-- HTML/CSS/JavaScript 기반으로 개발하며, 필요 시 서버 및 DB도 구축할 수 있다.
-- 웹프로그래밍 수강 기간 내에 개발이 가능하다.
+## 5. 배포 플로우
+1. 로컬에서 수정 → GitHub `main`에 push
+2. 서버 접속 후 `git pull`
+3. 정적 파일이므로 별도 재시작 없이 즉시 반영 (설정 변경 시 `sudo systemctl reload nginx`)
 
-### 제품 전략
-1. 기본 지도와 카테고리 검색 기능 구현
-2. 사용자 리뷰 및 북마크 기능 추가
-- 홍보: 전주대 에브리타임과 SNS 활용
-- 확장: 장기적으로 광고 수익 확보 및 타 대학 확장
+## 6. 다음 단계 체크리스트
+- Kakao Developers에서 JavaScript 키 발급 후 도메인 추가
+- `index.html`에 지도 스크립트 삽입 및 `map.js`에 초기화 코드 작성
+- 카테고리별 HTML 파일에 지도 컨테이너/리스트 구조 추가
+- 시설 데이터 수집 및 JSON 구조 설계
 
-### 기본 페이지(4)
-- `index.html`: 전체 지도 + 전체 카테고리 마커
-- `about.html`: 서비스 소개
-- `guide.html`: 이용 가이드
-- `search.html`: 키워드 검색 결과 페이지
-
-### 카테고리별 지도 페이지(16)
-- `food.html`
-- `food-korean.html`
-- `food-chinese.html`
-- `food-japanese.html`
-- `food-western.html`
-- `food-snack.html`
-- `cafe.html`
-- `convenience.html`
-- `pharmacy.html`
-- `hospital.html`
-- `bank.html`
-- `stationery.html`
-- `salon.html`
-- `pcroom.html`
-- `gym.html`
-- `karaoke.html`
-
-## 배포 절차
-1. GitHub 저장소에 변경 사항을 커밋하고 `git push`로 업로드합니다.
-2. 오라클 클라우드 서버에 SSH 접속 후, 프로젝트 디렉터리에서 `git pull`로 최신 코드를 가져옵니다.
-3. Nginx `server` 블록의 `root`를 프로젝트 디렉터리로 지정하고 `index index.html;`을 설정합니다.
-4. `sudo nginx -t`로 설정을 검증한 뒤 `sudo systemctl reload nginx` 명령으로 반영합니다.
-5. 브라우저에서 서버 도메인 또는 IP를 열어 서비스가 정상적으로 노출되는지 확인합니다.
+필요한 작업을 수행하면서 README를 계속 업데이트해 주세요. 이렇게 하면 프로젝트의 최신 범위와 진행 상황을 다른 팀원이나 도구가 즉시 이해할 수 있습니다.
