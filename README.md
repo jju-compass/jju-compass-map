@@ -53,9 +53,8 @@
       root /home/ubuntu/jju-compass-map;
       index index.html;
 
-
-## 구현 방식 요약
-- 웹사이트 주소는 "http://134.185.117.30"
-
       location / {
-          try_files $uri $uri/ 
+          try_files $uri $uri/ =404;
+      }
+  }
+  ```
