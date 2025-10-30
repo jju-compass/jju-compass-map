@@ -1,1 +1,45 @@
-<!-- 이 파일은 검색 결과 페이지입니다. -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>JJU Map - 검색 결과</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1 class="site-title">전주대 주변 탐색지도</h1>
+    <nav class="site-nav">
+      <a href="index.html">홈</a>
+      <a href="guide.html">이용 방법</a>
+      <a href="search.html">검색</a>
+      <a href="about.html">소개</a>
+    </nav>
+  </header>
+<main class="content">
+    <section class="page-intro">
+      <h2>검색 결과</h2>
+      <p>키워드를 입력하면 전주대 주변 시설 정보를 찾아서 지도와 리스트에 표시할 예정입니다.</p>
+    </section>
+    <section class="placeholder">
+      <h3>검색 기능 구현 계획</h3>
+      <form class="search-form" role="search" aria-label="시설 검색">
+        <label for="keyword">검색어</label>
+        <div class="form-row">
+          <input id="keyword" name="keyword" type="search" placeholder="예: 카페, 약국, 한식" disabled>
+          <button class="button primary" type="submit" disabled>검색 (준비 중)</button>
+        </div>
+      </form>
+      <p>검색 결과는 카카오맵 장소 검색 API와 연동하여 지도 마커와 리스트로 동시에 보여줄 계획입니다.</p>
+    </section>
+    <section class="placeholder">
+      <h3>검색 결과 영역</h3>
+      <p>지도 우측 또는 하단에 결과 리스트, 평점, 거리 등의 정보를 제공할 예정입니다.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p>&copy; 2025 JJU Map Team. 전주대학교 학생을 위한 로컬 탐색 서비스.</p>
+  </footer>
+  <script src="map.js"></script>
+</body>
+</html>
