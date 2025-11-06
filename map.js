@@ -17,6 +17,12 @@ function initializeMap() {
     };
 
     const map = new kakao.maps.Map(mapContainer, mapOption);
+    
+    // 모바일에서 지도 크기가 올바르게 계산되도록 relayout 호출
+    setTimeout(() => {
+        map.relayout();
+        console.log('[DEBUG] 지도 초기화 완료 및 relayout 실행');
+    }, 100);
 
     return map;
 }
@@ -195,11 +201,22 @@ function displayMarkers(results, map) {
         return;
     }
     
+    // 모바일 디버깅용 로그
+    console.log(`[DEBUG] 마커 생성 시작: ${results.length}개`);
+    console.log('[DEBUG] 지도 객체:', map);
+    console.log('[DEBUG] 지도 중심:', map.getCenter().toString());
+    
     // 왼쪽 사이드바에 목록 표시
     displayPlacesList(results, map);
     
+    // 지도 크기 재조정 (모바일에서 지도 영역이 변경된 후 호출)
+    setTimeout(() => {
+        map.relayout();
+        console.log('[DEBUG] 지도 relayout 완료');
+    }, 100);
+    
     // 새로운 검색 결과로 마커 생성
-    results.forEach(place => {
+    results.forEach((place, index) => {
         const markerPosition = new kakao.maps.LatLng(place.y, place.x);
         const marker = new kakao.maps.Marker({
             position: markerPosition,
@@ -208,6 +225,8 @@ function displayMarkers(results, map) {
 
         // 생성된 마커를 배열에 추가
         markers.push(marker);
+        
+        console.log(`[DEBUG] 마커 ${index + 1} 생성: ${place.place_name} (${place.y}, ${place.x})`);
 
         // 마커 클릭 시 인포윈도우 표시 (인포윈도우 재사용으로 성능 개선)
         kakao.maps.event.addListener(marker, 'click', function() {
