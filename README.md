@@ -95,13 +95,14 @@ searchMultipleKeywords(["한식", "중식", "일식", ...], map, callback);
 * **OS**: Ubuntu 22.04 LTS
 * **웹 서버**: Nginx 1.18
 * **프로젝트 경로**: `/home/ubuntu/jju-compass-map`
-* **공개 접속 URL**: http://134.185.117.30
+* **도메인**: http://jju-map.duckdns.org
+* **공개 IP**: 134.185.117.30
 
 ### Nginx 설정
 ```nginx
 server {
     listen 80;
-    server_name 134.185.117.30;
+    server_name jju-map.duckdns.org 134.185.117.30;
 
     root /home/ubuntu/jju-compass-map;
     index index.html;
