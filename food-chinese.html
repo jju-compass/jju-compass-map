@@ -1,1 +1,81 @@
-<!-- TODO: 이 페이지는 추후 구현 예정입니다. -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중식당 - JJU Map</title>
+    
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+        header { background-color: #FF6B6B; color: white; padding: 20px; text-align: center; }
+        header h1 { margin-bottom: 10px; }
+        .container { display: flex; height: 600px; }
+        #places-list { width: 350px; height: 100%; overflow-y: auto; background: white; border-right: 2px solid #ddd; }
+        #map { flex: 1; height: 100%; }
+        @media (max-width: 768px) { .container { flex-direction: column; height: auto; } #places-list { width: 100%; height: 300px; } #map { height: 400px; } }
+        footer { background-color: #333; color: white; text-align: center; padding: 15px; margin-top: 20px; }
+        .nav-buttons { 
+            padding: 15px; 
+            text-align: center; 
+            background-color: #f4f4f4;
+            border-bottom: 2px solid #ddd;
+        }
+        .nav-btn { 
+            margin: 5px; 
+            padding: 10px 20px; 
+            font-size: 14px; 
+            background-color: #008CBA; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+        }
+        .nav-btn:hover { background-color: #005f7f; }
+        .nav-btn.home { background-color: #4CAF50; }
+        .nav-btn.home:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🥟 전주대 주변 중식당</h1>
+        <p>전주대학교 주변의 중국 음식점을 찾아보세요!</p>
+    </header>
+
+    <div class="nav-buttons">
+        <a href="index.html" class="nav-btn home">🏠 메인</a>
+        <a href="food.html" class="nav-btn">전체 음식점</a>
+        <a href="food-korean.html" class="nav-btn">한식</a>
+        <a href="food-japanese.html" class="nav-btn">일식</a>
+        <a href="food-western.html" class="nav-btn">양식</a>
+        <a href="food-snack.html" class="nav-btn">분식</a>
+        <a href="convenience.html" class="nav-btn">편의점</a>
+        <a href="pharmacy.html" class="nav-btn">약국</a>
+        <a href="hospital.html" class="nav-btn">병원</a>
+    </div>
+
+    <div class="container">
+        <div id="places-list"></div>
+        <div id="map"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 전주대 주변 탐색지도. All rights reserved.</p>
+    </footer>
+
+    <script src="map.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const map = initializeMap();
+            if (map) {
+                searchAndDisplay("중식", map);
+            }
+        });
+    </script>
+</body>
+</html>

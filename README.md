@@ -1,61 +1,113 @@
 # jju-compass-map
-전주대학교 주변 시설 정보를 지도 형태로 제공하기 위한 정적 웹 프로젝트입니다.  
-현재 저장소는 향후 구현을 위한 뼈대만 남겨 두었으며, 프로젝트 구조와 배포 환경을 이해하기 쉽게 문서화했습니다.
+
+전주대학교 주변 시설 정보를 카카오맵 기반으로 제공하는 정적 웹 서비스입니다.
 
 ## 프로젝트 개요
-- **목적**: 음식점, 카페, 편의시설 등 전주대 주변 시설을 카카오맵을 통해 빠르게 탐색할 수 있는 웹 서비스 구축
-- **구성**: HTML/CSS/JavaScript 기반의 정적 페이지. Kakao Maps JavaScript SDK 연동을 전제로 합니다.
-- **상태**: 메인 페이지(`index.html`)는 안내 문구만 포함하고 있으며, 기타 페이지와 자산은 `TODO` 주석으로만 구성된 플레이스홀더입니다.
+
+* **목적**: 전주대학교 주변 음식점(한식, 중식, 일식, 양식, 분식), 편의점, 약국, 병원 등을 카카오맵을 통해 빠르게 탐색
+* **구성**: HTML/CSS/JavaScript 기반의 정적 페이지, Kakao Maps JavaScript SDK 연동
+* **상태**: 카카오맵 API 연동 완료, 장소 검색 및 마커 표시 기능 구현 완료
+
+## 주요 기능
+
+### ✅ 구현 완료
+- 카카오맵 SDK 연동 및 지도 초기화
+- Places API를 통한 키워드/카테고리 검색
+- 검색 결과 마커 생성 및 지도 표시
+- 마커 클릭 시 상세 정보 인포윈도우 표시
+  - 장소명, 주소, 전화번호, 카테고리, 카카오맵 링크
+- 왼쪽 사이드바에 검색 결과 목록 표시
+  - 카테고리별 이모지 아이콘
+  - 목록 클릭 시 지도 이동 및 인포윈도우 자동 표시
+- 전체 음식점 통합 검색 (한식+중식+일식+양식+분식+카페)
+- 반응형 디자인 (PC/모바일)
+- 성능 최적화
+  - 인포윈도우 재사용
+  - 메모리 누수 방지
+  - 중복 장소 자동 제거
 
 ## 저장소 구조
+
 ```
-├── index.html          # 메인 페이지(설명 문구만 존재)
-├── about.html          # 서비스 소개 페이지(추후 구현 예정, TODO 주석만 존재)
-├── guide.html          # 이용 가이드 페이지(추후 구현 예정)
-├── search.html         # 검색 결과 페이지(추후 구현 예정)
-├── food*.html          # 음식점 관련 카테고리 페이지 6종(추후 구현 예정)
-├── cafe.html           # 카페 카테고리 페이지(추후 구현 예정)
-├── convenience.html    # 편의점 카테고리 페이지(추후 구현 예정)
-├── pharmacy.html       # 약국 카테고리 페이지(추후 구현 예정)
-├── hospital.html       # 병원 카테고리 페이지(추후 구현 예정)
-├── bank.html           # 은행/ATM 페이지(추후 구현 예정)
-├── stationery.html     # 문구점 페이지(추후 구현 예정)
-├── salon.html          # 미용실 페이지(추후 구현 예정)
-├── pcroom.html         # PC방 페이지(추후 구현 예정)
-├── gym.html            # 헬스장 페이지(추후 구현 예정)
-├── karaoke.html        # 노래방 페이지(추후 구현 예정)
-├── style.css           # 공통 스타일 파일(현재는 TODO 주석만 존재)
-├── map.js              # Kakao 지도 초기화 스크립트(현재는 TODO 주석만 존재)
-└── README.md           # 프로젝트 설명 문서(본 문서)
+├── index.html          # 메인 페이지 (서비스 소개 및 카테고리 선택)
+├── map.js              # Kakao 지도 초기화 및 검색 로직
+├── style.css           # 공통 스타일 파일(TODO)
+│
+├── food.html           # 전체 음식점 (통합 검색)
+├── food-korean.html    # 한식 카테고리
+├── food-chinese.html   # 중식 카테고리
+├── food-japanese.html  # 일식 카테고리
+├── food-western.html   # 양식 카테고리
+├── food-snack.html     # 분식 카테고리
+├── convenience.html    # 편의점 카테고리
+├── pharmacy.html       # 약국 카테고리
+├── hospital.html       # 병원 카테고리
+│
+└── (팀원 2 담당)
+    ├── about.html          # 서비스 소개 페이지(TODO)
+    ├── guide.html          # 이용 가이드(TODO)
+    ├── search.html         # 검색 결과(TODO)
+    ├── cafe.html           # 카페(TODO)
+    ├── bank.html           # 은행/ATM(TODO)
+    ├── stationery.html     # 문구점(TODO)
+    ├── salon.html          # 미용실(TODO)
+    ├── pcroom.html         # PC방(TODO)
+    ├── gym.html            # 헬스장(TODO)
+    └── karaoke.html        # 노래방(TODO)
 ```
 
-## 구현 방식 요약
-- 모든 페이지는 정적 HTML로 작성하며, 필요 시 `style.css`와 `map.js`에서 공통 스타일과 지도 로직을 참조합니다.
-- Kakao Maps JavaScript SDK를 사용해 메인 페이지에서 지도를 초기화하고, 각 카테고리 페이지는 동일한 방식으로 마커 데이터를 표시할 예정입니다.
-- 추가 도구나 프레임워크 없이 순수 HTML/CSS/JS로 유지하여 서버 측 구성은 단순 정적 서빙으로 마무리합니다.
+## 기술 스택
 
-## 동작 개요
-1. 사용자가 HTML 페이지에 접속하면 정적 자산(`style.css`, `map.js`)이 함께 로드됩니다.
-2. `map.js`는 Kakao Maps SDK를 이용해 기본 지도를 초기화하고, 준비된 시설 데이터(JSON/JS)를 읽어 마커와 인포윈도우를 생성합니다.
-3. 각 카테고리 페이지는 동일한 로직에 서로 다른 데이터 세트를 주입하여, 선택한 카테고리의 시설만 지도에 표시하도록 구성할 예정입니다.
-4. 추가 인터랙션(목록 클릭 시 지도 이동, 필터 버튼 등)도 모두 클라이언트 사이드 JavaScript로 처리합니다.
+- **Frontend**: HTML5, CSS3, JavaScript (ES6)
+- **API**: Kakao Maps JavaScript SDK
+- **서버**: Nginx (정적 파일 서빙)
+- **배포**: Oracle Cloud (Ubuntu 22.04)
 
-## 서버 환경(Oracle Cloud)
-- **OS**: Ubuntu 22.04 LTS
-- **웹 서버**: Nginx 1.18
-- **프로젝트 경로**: `/home/ubuntu/jju-compass-map`
-- **Nginx 가상호스트 설정**: `/etc/nginx/sites-available/jju-compass`
-  ```nginx
-  server {
-      listen 80;
-      server_name 134.185.117.30;
+## 구현 상세
 
-      root /home/ubuntu/jju-compass-map;
-      index index.html;
+### 1. 지도 초기화
+```javascript
+// 전주대학교 중심 좌표로 지도 생성
+const map = initializeMap();
+```
 
-      location / {
-          try_files $uri $uri/ =404;
-      }
-  }
-  ```
-- **공개 접속 URL**: http://134.185.117.30/ (Oracle Cloud 퍼블릭 IP). 정적 파일을 배포하면 이 주소에서 바로 확인할 수 있습니다.
+### 2. 장소 검색
+```javascript
+// Places API 키워드 검색
+searchPlacesByKeyword("한식", map, callback);
+
+// 전체 음식점은 여러 카테고리 통합 검색
+searchMultipleKeywords(["한식", "중식", "일식", ...], map, callback);
+```
+
+### 3. 마커 표시 및 인포윈도우
+- 검색 결과를 지도에 마커로 표시
+- 마커 클릭 시 장소 상세 정보 팝업
+- 인포윈도우 재사용으로 메모리 최적화
+
+### 4. 사이드바 목록
+- 왼쪽에 검색 결과 목록 표시
+- 각 항목 클릭 시 지도 이동 및 인포윈도우 표시
+- 카테고리별 이모지 아이콘 자동 표시
+
+## 서버 환경 (Oracle Cloud)
+
+* **OS**: Ubuntu 22.04 LTS
+* **웹 서버**: Nginx 1.18
+* **프로젝트 경로**: `/home/ubuntu/jju-compass-map`
+* **공개 접속 URL**: http://134.185.117.30
+
+### Nginx 설정
+```nginx
+server {
+    listen 80;
+    server_name 134.185.117.30;
+
+    root /home/ubuntu/jju-compass-map;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```

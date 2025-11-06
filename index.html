@@ -1,15 +1,167 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>JJU Map - 메인 페이지</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전주대 주변 탐색지도 - JJU Map</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* 메인 페이지 스타일 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.2em;
+        }
+        .intro-section {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .intro-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .intro-section p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .category-section {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .category-section h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .category-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .category-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        .category-card p {
+            font-size: 0.9em;
+            color: #666;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 <body>
-  <main>
-    <h1>JJU Map</h1>
-    <p>전주대학교 주변 시설을 지도에서 확인하기 위한 메인 페이지입니다.</p>
-    <p>이곳에 카카오맵을 초기화하고 카테고리별 마커를 연결할 예정입니다.</p>
-  </main>
+    <!-- 헤더 영역 -->
+    <header>
+        <h1>🗺️ 전주대 주변 탐색지도</h1>
+        <p>JJU Map - 전주대학교 주변 모든 시설을 한눈에!</p>
+    </header>
+
+    <!-- 서비스 소개 -->
+    <div class="intro-section">
+        <h2>📍 서비스 소개</h2>
+        <p>전주대학교 주변의 음식점, 카페, 편의시설 등을 빠르게 찾아보세요.</p>
+        <p>카카오맵 기반으로 정확한 위치와 정보를 제공합니다.</p>
+        <p>원하는 카테고리를 선택하면 지도에서 바로 확인할 수 있습니다!</p>
+    </div>
+
+    <!-- 카테고리 선택 -->
+    <div class="category-section">
+        <h2>🔍 카테고리 선택</h2>
+        <div class="category-grid">
+            <!-- 음식점 카테고리 -->
+            <a href="food.html" class="category-card">
+                <h3>🍽️ 전체 음식점</h3>
+                <p>모든 음식점 보기</p>
+            </a>
+            <a href="food-korean.html" class="category-card">
+                <h3>🍚 한식</h3>
+                <p>한식당 찾기</p>
+            </a>
+            <a href="food-chinese.html" class="category-card">
+                <h3>🥟 중식</h3>
+                <p>중국 음식점</p>
+            </a>
+            <a href="food-japanese.html" class="category-card">
+                <h3>🍣 일식</h3>
+                <p>일본 음식점</p>
+            </a>
+            <a href="food-western.html" class="category-card">
+                <h3>🍕 양식</h3>
+                <p>양식당 찾기</p>
+            </a>
+            <a href="food-snack.html" class="category-card">
+                <h3>🍢 분식</h3>
+                <p>분식집 찾기</p>
+            </a>
+
+            <!-- 기타 시설 -->
+            <a href="convenience.html" class="category-card">
+                <h3>🏪 편의점</h3>
+                <p>편의점 찾기</p>
+            </a>
+            <a href="pharmacy.html" class="category-card">
+                <h3>💊 약국</h3>
+                <p>약국 찾기</p>
+            </a>
+            <a href="hospital.html" class="category-card">
+                <h3>🏥 병원</h3>
+                <p>병원 찾기</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer>
+        <p>&copy; 2025 전주대 주변 탐색지도 (JJU Map). All rights reserved.</p>
+        <p>전주대학교 웹프로그래밍 팀 프로젝트</p>
+    </footer>
 </body>
 </html>
