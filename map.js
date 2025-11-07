@@ -297,6 +297,18 @@ function searchMultipleKeywords(keywords, map, callback) {
 }
 
 /**
+ * 모든 음식 카테고리를 검색하는 함수 (food.html 전용)
+ * - map: 지도 객체
+ */
+function searchAllFoodCategories(map) {
+    console.log('[DEBUG] 전체 음식점 검색 시작');
+    searchMultipleKeywords(["한식", "중식", "일식", "양식", "분식", "카페"], map, function(results) {
+        console.log(`[DEBUG] 전체 음식점 검색 완료: ${results.length}개`);
+        displayMarkers(results, map);
+    });
+}
+
+/**
  * 카테고리 버튼 클릭 또는 검색어 입력 시 해당 키워드로 장소 검색 및 마커 표시
  * - keyword: 검색할 키워드
  * - map: 지도 객체
