@@ -255,12 +255,19 @@ function displayMarkers(results, map) {
     // 모든 마커가 보이도록 지도 범위 재설정
     map.setBounds(bounds);
     
-    // 추가 여유 공간을 위해 약간 줌아웃
+    // 지도 범위 설정 후 강제 리렌더링 및 줌아웃
     setTimeout(() => {
+        map.relayout(); // 지도 강제 재렌더링
         const currentLevel = map.getLevel();
-        map.setLevel(currentLevel + 1);
-        console.log('[DEBUG] 마커 표시 완료 및 bounds 설정');
-    }, 100);
+        map.setLevel(currentLevel + 1); // 약간 줌아웃
+        console.log(`[DEBUG] 마커 표시 완료: ${markers.length}개, 줌레벨: ${currentLevel + 1}`);
+        
+        // 마커 강제 재표시
+        markers.forEach(marker => {
+            marker.setMap(null);
+            marker.setMap(map);
+        });
+    }, 200);
 }
 
 /**

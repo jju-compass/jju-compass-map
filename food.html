@@ -163,7 +163,11 @@
         window.addEventListener('load', function() {
             const map = initializeMap();
             if (map) {
-                searchAllFoodCategories(map);
+                // 지도가 완전히 로드된 후 검색 실행 (relayout 완료 대기)
+                setTimeout(() => {
+                    console.log('[food.html] 전체 음식점 검색 시작');
+                    searchAllFoodCategories(map);
+                }, 300);
             }
         });
     </script>
