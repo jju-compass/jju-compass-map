@@ -209,11 +209,11 @@ function displayMarkers(results, map) {
     // 왼쪽 사이드바에 목록 표시
     displayPlacesList(results, map);
     
-    // 지도 크기 재조정 (모바일에서 지도 영역이 변경된 후 호출)
-    setTimeout(() => {
-        map.relayout();
-        console.log('[DEBUG] 지도 relayout 완료');
-    }, 100);
+    // 지도 크기 재조정 먼저 수행
+    map.relayout();
+    
+    // 마커들을 표시할 영역을 계산하기 위한 LatLngBounds 객체 생성
+    const bounds = new kakao.maps.LatLngBounds();
     
     // 새로운 검색 결과로 마커 생성
     results.forEach((place, index) => {
@@ -225,6 +225,9 @@ function displayMarkers(results, map) {
 
         // 생성된 마커를 배열에 추가
         markers.push(marker);
+        
+        // bounds에 마커 위치 추가
+        bounds.extend(markerPosition);
         
         console.log(`[DEBUG] 마커 ${index + 1} 생성: ${place.place_name} (${place.y}, ${place.x})`);
 
@@ -248,6 +251,16 @@ function displayMarkers(results, map) {
             infowindow.open(map, marker);
         });
     });
+    
+    // 모든 마커가 보이도록 지도 범위 재설정
+    map.setBounds(bounds);
+    
+    // 추가 여유 공간을 위해 약간 줌아웃
+    setTimeout(() => {
+        const currentLevel = map.getLevel();
+        map.setLevel(currentLevel + 1);
+        console.log('[DEBUG] 마커 표시 완료 및 bounds 설정');
+    }, 100);
 }
 
 /**
