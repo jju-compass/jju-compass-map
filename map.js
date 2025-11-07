@@ -21,7 +21,6 @@ function initializeMap() {
     // 모바일에서 지도 크기가 올바르게 계산되도록 relayout 호출
     setTimeout(() => {
         map.relayout();
-        console.log('[DEBUG] 지도 초기화 완료 및 relayout 실행');
     }, 100);
 
     return map;
@@ -63,19 +62,32 @@ function searchPlacesByKeyword(keyword, map, callback) {
     // 전주대학교 중심 좌표 기준으로 검색
     const center = map.getCenter();
 
-    // 검색 옵션: 중심 좌표와 반경(예: 1km)
+    // 검색 옵션: 중심 좌표와 반경 (2km로 확대)
     const options = {
         location: center,
-        radius: 1000
+        radius: 2000,
+        size: 15 // 한 페이지에 최대 15개
     };
 
-    // 키워드로 장소 검색
+    let allResults = [];
+
+    // 키워드로 장소 검색 (페이지네이션 처리)
     ps.keywordSearch(keyword, function(data, status, pagination) {
         if (status === kakao.maps.services.Status.OK) {
-            // 검색 결과를 콜백 함수로 전달
-            callback(data);
+            allResults = allResults.concat(data);
+            
+            // 다음 페이지가 있고, 현재 페이지가 3 이하면 더 가져오기
+            if (pagination.hasNextPage && pagination.current < 3) {
+                pagination.nextPage();
+            } else {
+                // 모든 결과 수집 완료
+                callback(allResults);
+            }
+        } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+            callback([]);
         } else {
             console.error('장소 검색 실패:', status);
+            callback([]);
         }
     }, options);
 }
@@ -201,9 +213,6 @@ function displayMarkers(results, map) {
         return;
     }
     
-    // 모바일 디버깅용 로그
-    console.log(`[DEBUG] 마커 생성 시작: ${results.length}개`);
-    
     // 왼쪽 사이드바에 목록 표시
     displayPlacesList(results, map);
     
@@ -228,8 +237,6 @@ function displayMarkers(results, map) {
         
         // bounds에 마커 위치 추가
         bounds.extend(markerPosition);
-        
-        console.log(`[DEBUG] 마커 ${index + 1} 생성: ${place.place_name} (${place.y}, ${place.x})`);
 
         // 마커 클릭 시 인포윈도우 표시 (인포윈도우 재사용으로 성능 개선)
         kakao.maps.event.addListener(marker, 'click', function() {
@@ -255,8 +262,6 @@ function displayMarkers(results, map) {
     // 모든 마커가 보이도록 지도 범위 재설정 (padding 추가)
     const padding = 50; // 여유 공간
     map.setBounds(bounds, padding, padding, padding, padding);
-    
-    console.log(`[DEBUG] 마커 표시 완료: ${markers.length}개, 현재 줌레벨: ${map.getLevel()}`);
 }
 
 /**
@@ -268,7 +273,11 @@ function displayMarkers(results, map) {
 function searchMultipleKeywords(keywords, map, callback) {
     const ps = new kakao.maps.services.Places();
     const center = map.getCenter();
-    const options = { location: center, radius: 1000 };
+    const options = { 
+        location: center, 
+        radius: 2000,
+        size: 15
+    };
     
     let allResults = [];
     let completedCount = 0;
@@ -297,9 +306,7 @@ function searchMultipleKeywords(keywords, map, callback) {
  * - map: 지도 객체
  */
 function searchAllFoodCategories(map) {
-    console.log('[DEBUG] 전체 음식점 검색 시작');
     searchMultipleKeywords(["한식", "중식", "일식", "양식", "분식", "카페"], map, function(results) {
-        console.log(`[DEBUG] 전체 음식점 검색 완료: ${results.length}개`);
         displayMarkers(results, map);
     });
 }
