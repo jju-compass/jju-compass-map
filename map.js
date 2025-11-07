@@ -203,8 +203,6 @@ function displayMarkers(results, map) {
     
     // 모바일 디버깅용 로그
     console.log(`[DEBUG] 마커 생성 시작: ${results.length}개`);
-    console.log('[DEBUG] 지도 객체:', map);
-    console.log('[DEBUG] 지도 중심:', map.getCenter().toString());
     
     // 왼쪽 사이드바에 목록 표시
     displayPlacesList(results, map);
@@ -219,10 +217,12 @@ function displayMarkers(results, map) {
     results.forEach((place, index) => {
         const markerPosition = new kakao.maps.LatLng(place.y, place.x);
         const marker = new kakao.maps.Marker({
-            position: markerPosition,
-            map: map
+            position: markerPosition
         });
 
+        // 마커를 지도에 표시
+        marker.setMap(map);
+        
         // 생성된 마커를 배열에 추가
         markers.push(marker);
         
@@ -252,22 +252,11 @@ function displayMarkers(results, map) {
         });
     });
     
-    // 모든 마커가 보이도록 지도 범위 재설정
-    map.setBounds(bounds);
+    // 모든 마커가 보이도록 지도 범위 재설정 (padding 추가)
+    const padding = 50; // 여유 공간
+    map.setBounds(bounds, padding, padding, padding, padding);
     
-    // 지도 범위 설정 후 강제 리렌더링 및 줌아웃
-    setTimeout(() => {
-        map.relayout(); // 지도 강제 재렌더링
-        const currentLevel = map.getLevel();
-        map.setLevel(currentLevel + 1); // 약간 줌아웃
-        console.log(`[DEBUG] 마커 표시 완료: ${markers.length}개, 줌레벨: ${currentLevel + 1}`);
-        
-        // 마커 강제 재표시
-        markers.forEach(marker => {
-            marker.setMap(null);
-            marker.setMap(map);
-        });
-    }, 200);
+    console.log(`[DEBUG] 마커 표시 완료: ${markers.length}개, 현재 줌레벨: ${map.getLevel()}`);
 }
 
 /**
