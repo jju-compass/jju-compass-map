@@ -116,6 +116,128 @@ footer {
     padding: 15px;
 }
 
+/* 경로 컨트롤 UI */
+.route-controls {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+}
+.route-controls .rc-btn {
+    appearance: none;
+    border: 1px solid #cfd8dc;
+    background: #f7f9fa;
+    color: #333;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.route-controls .rc-btn:hover {
+    background: #e8eef2;
+}
+
+/* 클릭 리플 효과 (커스텀 오버레이용) */
+.kmap-ripple {
+    width: 16px;
+    height: 16px;
+    margin-left: -8px; /* 중심 정렬 */
+    margin-top: -8px;  /* 중심 정렬 */
+    border-radius: 50%;
+    border: 2px solid #4CAF50;
+    background: rgba(76, 175, 80, 0.2);
+    animation: kmap-ripple-anim 0.6s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes kmap-ripple-anim {
+    0% { transform: scale(0.2); opacity: 0.9; }
+    100% { transform: scale(3.2); opacity: 0; }
+}
+
+/* 걷는 사람(워커) 커스텀 오버레이 */
+.walker-avatar {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    transform: translate(-50%, -50%);
+    animation: walker-bob 0.8s ease-in-out infinite;
+    pointer-events: none;
+}
+.walker-body {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 32px;
+}
+.walker-head {
+    width: 14px;
+    height: 14px;
+    /* 피부색 중앙 → 붉은 외곽으로 살짝 캐릭터 느낌 강조 */
+    background: radial-gradient(circle at 35% 35%, #ffd7c2 0%, #ffb499 60%, #ff7a6e 85%, #d62839 100%);
+    border-radius: 50%;
+    margin: 0 auto 2px auto;
+    /* 붉은 테두리 + 은은한 광택 */
+    box-shadow: 0 0 0 2px #b80010, 0 2px 4px rgba(214,40,57,0.35);
+}
+.walker-torso {
+    width: 20px;
+    height: 16px;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    border-radius: 6px;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+.walker-arm {
+    position: absolute;
+    /* 기존 top:3px -> 머리 부분에 붙어 보여서 몸통 높이(머리 14px + 마진 2px = 16px)로 내림 */
+    top: 16px;
+    width: 6px;
+    height: 14px;
+    background: linear-gradient(#3b82f6, #1d4ed8);
+    border-radius: 3px;
+    transform-origin: top center;
+    animation: walker-arm-swing 0.8s ease-in-out infinite;
+}
+.walker-arm-left { left: -4px; animation-delay: 0s; }
+.walker-arm-right { right: -4px; animation-delay: 0.4s; }
+.walker-leg {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    width: 7px;
+    height: 18px;
+    background: linear-gradient(#1d4ed8, #1e3a8a);
+    border-radius: 4px;
+    transform-origin: top center;
+    animation: walker-leg-step 0.8s ease-in-out infinite;
+}
+.walker-leg-left { transform: translateX(-9px); animation-delay: 0s; }
+.walker-leg-right { transform: translateX(2px); animation-delay: 0.4s; }
+
+@keyframes walker-bob {
+    0%,100% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-3px); }
+}
+@keyframes walker-arm-swing {
+    0%,100% { transform: rotate(15deg); }
+    50% { transform: rotate(-25deg); }
+}
+@keyframes walker-leg-step {
+    0%,100% { transform: translateX(-9px) rotate(18deg); }
+    50% { transform: translateX(-9px) rotate(-12deg); }
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
     .container {
@@ -135,6 +257,16 @@ footer {
         width: 100%;
         height: 60vh;
         min-height: 400px;
+    }
+    .route-controls {
+        left: 10px;
+        bottom: 10px;
+        padding: 6px;
+        gap: 6px;
+    }
+    .route-controls .rc-btn {
+        padding: 6px 8px;
+        font-size: 11px;
     }
     
     .nav-buttons {

@@ -126,6 +126,96 @@ searchMultipleKeywords(["한식", "중식", "일식", "양식", "분식", "카�
 - ✅ **디버깅 로그 제거**: 프로덕션 환경 최적화
 - ✅ **에러 처리 개선**: ZERO_RESULT 케이스 처리
 
+### v1.3.0 (2025-11-14)
+- ✅ 도보 경로 애니메이션(직선 폴백) 추가
+- ✅ 시작 지점 지정(내 위치 / 지도 클릭) UI 추가
+- ✅ 마커 드롭/바운스/리플/경로 따라가기 애니메이션 추가
+- ✅ Directions 프록시 서버 구조 설계(/api/walk) 및 캐시 로직 초안
+- 🔄 Kakao Mobility 실제 경로 통합 준비(REST 키 .env, 프록시 배포)
+
+---
+
+## 🚶 실제 도보 길찾기 연동 (프록시 방식 권장)
+
+실제 도로/보행로를 따르는 경로를 표시하려면 Kakao Mobility Directions REST API를 **클라이언트에서 직접 호출하지 말고** 서버 프록시를 통해 호출해야 합니다. 프론트는 경로 좌표만 받아 폴리라인과 애니메이션을 그립니다.
+
+### 1) 서버 디렉터리 구조
+```
+server/
+  ├── package.json
+  ├── server.js         # /api/walk 프록시
+  └── .env.example      # 환경변수 템플릿
+```
+
+### 2) .env 설정 (커밋 금지)
+`server/.env` 작성:
+```
+KAKAO_MOBILITY_REST_KEY=발급받은_키
+PORT=3001
+HOST=0.0.0.0
+KAKAO_DIRECTIONS_BASE_URL=https://apis-navi.kakaomobility.com
+```
+
+### 3) 설치 & 실행
+```bash
+cd server
+npm install
+npm run start  # 또는: npm run dev
+```
+
+### 4) 프런트 연결 (HTML 내 map.js 로드 전에)
+```html
+<script>
+  window.JJU_DIRECTIONS_API = 'https://jju-map.duckdns.org/api/walk';
+</script>
+<script src="map.js"></script>
+```
+
+### 5) 프록시 동작 흐름
+1. 프런트: `/api/walk?origin=lng,lat&destination=lng,lat&mode=WALK`
+2. 서버: Kakao REST 호출(Authorization: KakaoAK {REST_KEY})
+3. 응답 파싱: `routes[0].sections[*].roads[*].vertexes` → `{lat,lng}` 배열
+4. 반환 JSON:
+```json
+{
+  "source": "live",
+  "path": [{"lat":35.8144,"lng":127.0923}, ...],
+  "distance": 1234,
+  "duration": 980,
+  "guides": [{"text":"10m 직진 후 좌회전","lat":...,"lng":...}]
+}
+```
+5. 실패/쿼터 초과 시: 직선 경로 폴백(`source: fallback-error`)
+
+### 6) 캐시
+- 동일 `(origin|destination|mode|priority)` 키로 1시간 메모리 캐시.
+- 트래픽/쿼터 절약 & 응답 속도 향상.
+- 필요 시 Redis로 교체 가능.
+
+### 7) 클라이언트 폴백 로직
+`map.js`의 `showWalkingRoute` 에서 프록시 실패/미설정 시 직선 보간 경로로 애니메이션 처리 → 사용자 경험 유지.
+
+### 8) 보안 수칙
+- REST 키는 `.env`에만 저장.
+- `server/.env`는 `.gitignore` 등록됨.
+- 필요 시 CORS 화이트리스트(`origin: [...]`)로 제한.
+- 호출량 모니터링: 서버 로그 + (추후) 경고 임계치 설정.
+
+### 9) 확장 아이디어
+- 턴 안내(guides) 마커/오버레이 표시
+- 거리/예상 도보 시간 UI 배지
+- 인기 목적지 경로 사전 캐시(프리워밍)
+- 실패율/평균 응답 시간 메트릭 대시보드
+
+### 10) 기타 대안 (요약)
+| 분류 | 장점 | 단점 |
+|------|------|------|
+| Kakao REST + 프록시 | 지역 최적, 정확도 우수 | 쿼터 관리 필요 |
+| OSRM/GraphHopper 자체호스팅 | 비용 절감, 커스터마이즈 | 초기 구축/업데이트 부담 |
+| 사전 계산(정적 테이블) | 즉시 응답, API 0회 | 임의 시작점 처리 어려움 |
+
+---
+
 ### v1.1.0 (2025-11-06)
 - ✅ 모바일 반응형 디자인 개선 (40vh/60vh 분할)
 - ✅ 마커 렌더링 이슈 해결 (setBounds + padding)

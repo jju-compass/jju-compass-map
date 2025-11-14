@@ -23,6 +23,9 @@ function initializeMap() {
         map.relayout();
     }, 100);
 
+    // 도보 경로 컨트롤 UI 부착
+    try { attachRouteControls(map); } catch (_) {}
+
     return map;
 }
 
@@ -31,6 +34,151 @@ let markers = [];
 
 // 재사용할 인포윈도우 객체 (성능 최적화)
 let infowindow = null;
+
+    // 활성화된 커스텀 오버레이(리플 등)를 추적하여 정리
+    let transientOverlays = [];
+    let userStartPosition = null; // kakao.maps.LatLng or null
+    let userStartMarker = null;   // kakao.maps.Marker or null
+    let routePolyline = null;     // kakao.maps.Polyline or null
+    let routeAnimMarker = null;   // kakao.maps.Marker or null
+    let pickingStart = false;     // 지도 클릭으로 시작 지점 선택 모드
+    let mapPickClickHandler = null; // 이벤트 해제용 참조
+    // 선택: 서버에 구현한 도보 길찾기 프록시 API 엔드포인트를 window.JJU_DIRECTIONS_API로 주입하면 사용합니다.
+    const DIRECTIONS_API = (typeof window !== 'undefined' && window.JJU_DIRECTIONS_API) ? window.JJU_DIRECTIONS_API : null;
+
+    /**
+     * 위경도 도우미: 미터를 위도 변화량으로 변환 (대략)
+     */
+    function metersToDeltaLat(meters) {
+        return meters / 111320; // 1도 위도 ≈ 111.32km
+    }
+
+    /**
+     * 선형 보간
+     */
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    /**
+     * 부드러운 easeOutCubic
+     */
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    /**
+     * 마커 드롭 애니메이션
+     * - marker: kakao.maps.Marker
+     * - targetPos: kakao.maps.LatLng
+     * - duration: ms (기본 700)
+     * - offsetMeters: 위쪽에서 시작할 오프셋 (기본 40m)
+     */
+    function dropMarker(marker, targetPos, duration = 700, offsetMeters = 40) {
+        try {
+            const startLat = targetPos.getLat() - metersToDeltaLat(offsetMeters);
+            const startLng = targetPos.getLng();
+            const start = performance.now();
+            function step(now) {
+                const t = Math.min(1, (now - start) / duration);
+                const e = easeOutCubic(t);
+                const curLat = lerp(startLat, targetPos.getLat(), e);
+                const curLng = lerp(startLng, targetPos.getLng(), e);
+                marker.setPosition(new kakao.maps.LatLng(curLat, curLng));
+                if (t < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    marker.setPosition(targetPos);
+                }
+            }
+            requestAnimationFrame(step);
+        } catch (e) {
+            // 애니메이션 실패 시 원위치
+            marker.setPosition(targetPos);
+        }
+    }
+
+    /**
+     * 마커 바운스 애니메이션 (짧게 톡톡 튀는 효과)
+     * - heightMeters: 최대 튀어오르는 높이 (기본 20m)
+     * - duration: 전체 시간 (기본 700ms)
+     */
+    function bounceMarker(marker, heightMeters = 20, duration = 700) {
+        const originPos = marker.getPosition();
+        const originLat = originPos.getLat();
+        const originLng = originPos.getLng();
+        const amp = metersToDeltaLat(heightMeters);
+        const start = performance.now();
+        function step(now) {
+            const t = Math.min(1, (now - start) / duration);
+            // 감쇠되는 바운스: 절댓값 사인과 감소 계수
+            const bounces = 2.5; // 튀는 횟수
+            const envelope = 1 - t; // 서서히 감소
+            const offset = Math.abs(Math.sin(t * Math.PI * bounces)) * amp * envelope;
+            // 위로 튀도록 위도 감소 방향으로 적용
+            const curLat = originLat - offset;
+            marker.setPosition(new kakao.maps.LatLng(curLat, originLng));
+            if (t < 1) {
+                requestAnimationFrame(step);
+            } else {
+                marker.setPosition(originPos);
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    /**
+     * 단순 경로를 따라 마커를 이동시키는 애니메이션 (데모용)
+     * - path: kakao.maps.LatLng[] (최소 2개)
+     * - duration: 전체 시간 ms
+     * - onDone: 완료 콜백
+     */
+    function animateMarkerAlongPath(marker, path, duration = 2000, onDone) {
+        if (!Array.isArray(path) || path.length < 2) return;
+        const start = performance.now();
+        function interp(p0, p1, t) {
+            return new kakao.maps.LatLng(
+                lerp(p0.getLat(), p1.getLat(), t),
+                lerp(p0.getLng(), p1.getLng(), t)
+            );
+        }
+        function step(now) {
+            const t = Math.min(1, (now - start) / duration);
+            // 구간 수에 비례하여 진행
+            const segCount = path.length - 1;
+            const ft = t * segCount;
+            const i = Math.min(segCount - 1, Math.floor(ft));
+            const localT = ft - i;
+            const pos = interp(path[i], path[i + 1], localT);
+            marker.setPosition(pos);
+            if (t < 1) {
+                requestAnimationFrame(step);
+            } else {
+                marker.setPosition(path[path.length - 1]);
+                if (typeof onDone === 'function') onDone();
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    /**
+     * 클릭 위치에 리플 효과 표시 (CustomOverlay + CSS 애니메이션)
+     */
+    function showRippleEffect(map, position, color = '#4CAF50') {
+        const div = document.createElement('div');
+        div.className = 'kmap-ripple';
+        div.style.borderColor = color;
+        div.style.backgroundColor = color + '33';
+        const overlay = new kakao.maps.CustomOverlay({
+            position,
+            content: div,
+            yAnchor: 0.5,
+            zIndex: 3
+        });
+        overlay.setMap(map);
+        transientOverlays.push(overlay);
+        // 애니메이션 종료 후 제거
+        setTimeout(() => {
+            overlay.setMap(null);
+            transientOverlays = transientOverlays.filter(o => o !== overlay);
+        }, 650);
+    }
 
 /**
  * 지도에 표시된 모든 마커를 제거하는 함수입니다.
@@ -47,6 +195,222 @@ function clearMarkers() {
         markers[i].setMap(null);
     }
     markers = [];
+        // 임시 오버레이 제거
+        transientOverlays.forEach(o => o.setMap(null));
+        transientOverlays = [];
+}
+
+/**
+ * 작은 점 마커 생성 (경로 애니메이션 시 시각화용)
+ */
+function createDotMarker(position) {
+    const svg = encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">\n' +
+        '  <circle cx="6" cy="6" r="4" fill="#4CAF50" fill-opacity="0.9" />\n' +
+        '  <circle cx="6" cy="6" r="5" fill="none" stroke="#2e7d32" stroke-width="1" stroke-opacity="0.9"/>\n' +
+        '</svg>'
+    );
+    const src = `data:image/svg+xml;charset=UTF-8,${svg}`;
+    const size = new kakao.maps.Size(12, 12);
+    const offset = new kakao.maps.Point(6, 6);
+    const image = new kakao.maps.MarkerImage(src, size, { offset });
+    return new kakao.maps.Marker({ position, image, zIndex: 4 });
+}
+
+/**
+ * 워커(사람) 마커 이미지 생성
+ */
+function createWalkerMarker(position) {
+    // 기존 MarkerImage 대신 커스텀 오버레이로 귀여운 걷는 캐릭터 구현
+    const el = document.createElement('div');
+    el.className = 'walker-avatar';
+    el.innerHTML = `
+        <div class="walker-body">
+            <div class="walker-head"></div>
+            <div class="walker-torso"></div>
+            <div class="walker-arm walker-arm-left"></div>
+            <div class="walker-arm walker-arm-right"></div>
+            <div class="walker-leg walker-leg-left"></div>
+            <div class="walker-leg walker-leg-right"></div>
+        </div>
+    `;
+    return new kakao.maps.CustomOverlay({
+        position,
+        content: el,
+        yAnchor: 0.5,
+        zIndex: 7
+    });
+}
+
+/**
+ * 시작 지점 설정 및 워커 마커 표시/업데이트
+ */
+function setStartPosition(map, latLng) {
+    userStartPosition = latLng;
+    if (userStartMarker) {
+        userStartMarker.setPosition(latLng);
+    } else {
+        userStartMarker = createWalkerMarker(latLng);
+        userStartMarker.setMap(map);
+    }
+    showRippleEffect(map, latLng, '#2e7d32');
+}
+
+/**
+ * 지도 클릭으로 시작 지점 지정 모드 토글
+ */
+function toggleStartPickMode(map, enable) {
+    pickingStart = enable;
+    if (enable) {
+        if (!mapPickClickHandler) {
+            mapPickClickHandler = function(e) {
+                setStartPosition(map, e.latLng);
+                toggleStartPickMode(map, false);
+                alert('시작 지점이 설정되었습니다. 목적지를 클릭하면 경로가 재생됩니다.');
+            };
+        }
+        kakao.maps.event.addListener(map, 'click', mapPickClickHandler);
+    } else if (mapPickClickHandler) {
+        kakao.maps.event.removeListener(map, 'click', mapPickClickHandler);
+    }
+}
+
+/**
+ * 내 위치(브라우저 Geolocation)로 시작 지점 설정
+ */
+function setStartFromGeolocation(map) {
+    if (!navigator.geolocation) {
+        alert('브라우저에서 위치 정보를 지원하지 않습니다.');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const ll = new kakao.maps.LatLng(lat, lng);
+            setStartPosition(map, ll);
+            if (typeof map.panTo === 'function') map.panTo(ll);
+        },
+        (err) => {
+            console.warn('Geolocation 실패:', err);
+            alert('내 위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+    );
+}
+
+/**
+ * 컨트롤 UI 생성/부착
+ */
+function attachRouteControls(map) {
+    // 이미 있으면 중복 생성 방지
+    if (document.getElementById('route-controls')) return;
+    const controls = document.createElement('div');
+    controls.id = 'route-controls';
+    controls.className = 'route-controls';
+    controls.innerHTML = `
+        <button class="rc-btn" id="rc-geoloc">내 위치 시작</button>
+        <button class="rc-btn" id="rc-pick">시작 지점 지정</button>
+        <button class="rc-btn" id="rc-clear">경로 지우기</button>
+    `;
+    document.body.appendChild(controls);
+    document.getElementById('rc-geoloc').onclick = () => setStartFromGeolocation(map);
+    document.getElementById('rc-pick').onclick = () => {
+        toggleStartPickMode(map, !pickingStart);
+        alert(pickingStart ? '지도를 클릭하여 시작 지점을 선택하세요.' : '시작 지점 지정 모드를 종료합니다.');
+    };
+    document.getElementById('rc-clear').onclick = () => clearRoute(map);
+}
+
+/** 경로/애니메이션 정리 */
+function clearRoute(map) {
+    if (routePolyline) { routePolyline.setMap(null); routePolyline = null; }
+    if (routeAnimMarker) { routeAnimMarker.setMap(null); routeAnimMarker = null; }
+    // 시작 마커는 유지
+}
+
+/** 두 지점 거리(m) (haversine 근사) */
+function distanceMeters(a, b) {
+    const R = 6371000; // m
+    const toRad = (x) => x * Math.PI / 180;
+    const dLat = toRad(b.getLat() - a.getLat());
+    const dLng = toRad(b.getLng() - a.getLng());
+    const lat1 = toRad(a.getLat());
+    const lat2 = toRad(b.getLat());
+    const sinDLat = Math.sin(dLat/2);
+    const sinDLng = Math.sin(dLng/2);
+    const h = sinDLat*sinDLat + Math.cos(lat1)*Math.cos(lat2)*sinDLng*sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+    return R * c;
+}
+
+/**
+ * 직선 경로를 일정 간격(m)으로 보간하여 LatLng 배열 생성
+ */
+function densifyLinearPath(start, end, stepMeters = 5) {
+    const total = distanceMeters(start, end);
+    const steps = Math.max(2, Math.floor(total / stepMeters));
+    const out = [];
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        out.push(new kakao.maps.LatLng(
+            lerp(start.getLat(), end.getLat(), t),
+            lerp(start.getLng(), end.getLng(), t)
+        ));
+    }
+    return out;
+}
+
+/**
+ * 도보 경로 그리기 + 애니메이션 (REST Directions 없을 경우 직선 보간 대체)
+ */
+async function showWalkingRoute(map, start, end) {
+    clearRoute(map);
+    let path = null;
+    // 서버 프록시가 제공되면 실제 도보 길찾기 경로 사용 시도
+    if (DIRECTIONS_API) {
+        try {
+            const qs = new URLSearchParams({
+                origin: `${start.getLng()},${start.getLat()}`,
+                destination: `${end.getLng()},${end.getLat()}`,
+                mode: 'walk'
+            }).toString();
+            const res = await fetch(`${DIRECTIONS_API}?${qs}`, { method: 'GET' });
+            if (res.ok) {
+                const json = await res.json();
+                if (json && Array.isArray(json.path) && json.path.length >= 2) {
+                    path = json.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+                }
+            }
+        } catch (e) {
+            console.warn('Directions API 실패, 직선 경로로 대체합니다.', e);
+        }
+    }
+    // 실패/미설정 시 직선 보간 경로 사용
+    if (!path) {
+        path = densifyLinearPath(start, end, 4);
+    }
+    routePolyline = new kakao.maps.Polyline({
+        map,
+        path,
+        strokeWeight: 5,
+        strokeColor: '#2E7D32',
+        strokeOpacity: 0.9,
+        strokeStyle: 'shortdash'
+    });
+    // 워커 마커 생성 및 경로 애니메이션
+    routeAnimMarker = createWalkerMarker(start);
+    routeAnimMarker.setMap(map);
+    const speed = 1.25 * 3; // 기존 대비 3배 속도 (m/s)
+    const duration = Math.max(800, (distanceMeters(start, end) / speed) * 1000);
+    animateMarkerAlongPath(routeAnimMarker, path, duration, () => {
+        // 도착 시 살짝 바운스
+        try { bounceMarker(routeAnimMarker, 8, 400); } catch(_){}
+    });
+    // 경로 전체가 보이도록 범위 조정
+    const bounds = new kakao.maps.LatLngBounds();
+    path.forEach(p => bounds.extend(p));
+    map.setBounds(bounds, 40, 40, 40, 40);
 }
 
 /**
@@ -146,8 +510,15 @@ function displayPlacesList(results, map) {
         // 클릭 시 해당 마커로 이동 및 인포윈도우 표시
         itemDiv.onclick = () => {
             const markerPosition = new kakao.maps.LatLng(place.y, place.x);
-            map.setCenter(markerPosition);
-            map.setLevel(3); // 줌인
+            // 스무스 이동 및 줌
+            if (map && typeof map.panTo === 'function') {
+                map.panTo(markerPosition);
+            } else {
+                map.setCenter(markerPosition);
+            }
+            if (typeof map.setLevel === 'function') {
+                try { map.setLevel(3, { animate: true }); } catch (_) { map.setLevel(3); }
+            }
             
             // 해당 마커의 인포윈도우 표시
             const content = `
@@ -165,6 +536,25 @@ function displayPlacesList(results, map) {
             `;
             infowindow.setContent(content);
             infowindow.open(map, markers[index]);
+
+            // 리플 + 바운스
+            showRippleEffect(map, markerPosition);
+            if (markers[index]) bounceMarker(markers[index]);
+
+            // 도보 경로 애니메이션 (시작 지점이 설정된 경우)
+            if (userStartPosition) {
+                showWalkingRoute(map, userStartPosition, markerPosition);
+            } else {
+                // 시작 지점 미설정 시 간단 데모
+                try {
+                    const start = map.getCenter();
+                    const dot = createDotMarker(start);
+                    dot.setMap(map);
+                    animateMarkerAlongPath(dot, [start, markerPosition], 900, () => {
+                        dot.setMap(null);
+                    });
+                } catch (_) { /* noop */ }
+            }
         };
         
         listContainer.appendChild(itemDiv);
@@ -231,6 +621,8 @@ function displayMarkers(results, map) {
 
         // 마커를 지도에 표시
         marker.setMap(map);
+        // 드롭 애니메이션 (살짝 스태거)
+        setTimeout(() => dropMarker(marker, markerPosition, 600, 35), 20 * index);
         
         // 생성된 마커를 배열에 추가
         markers.push(marker);
@@ -256,6 +648,16 @@ function displayMarkers(results, map) {
             `;
             infowindow.setContent(content);
             infowindow.open(map, marker);
+
+            // 리플 + 바운스 + 부드러운 이동
+            showRippleEffect(map, markerPosition);
+            bounceMarker(marker);
+            if (map && typeof map.panTo === 'function') map.panTo(markerPosition);
+
+            // 도보 경로 애니메이션 (시작 지점이 설정된 경우)
+            if (userStartPosition) {
+                showWalkingRoute(map, userStartPosition, markerPosition);
+            }
         });
     });
     
@@ -334,39 +736,5 @@ function searchAndDisplay(keyword, map) {
  * 페이지가 모두 로드되면 지도 초기화 및 이벤트 리스너 등록
  */
 window.onload = function() {
-    const map = initializeMap();
-
-    // 기본: "음식점" 키워드로 검색 및 마커 표시
-    if (map) {
-        searchAndDisplay("음식점", map);
-    }
-
-    // 카테고리 버튼 클릭 이벤트 등록 예시
-    // HTML에서 각 버튼에 data-keyword 속성을 넣어주세요.
-    document.querySelectorAll('.category-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const keyword = btn.getAttribute('data-keyword');
-            searchAndDisplay(keyword, map);
-        });
-    });
-
-    // 검색 입력창에서 엔터 시 검색
-    const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
-    if (searchInput && searchBtn) {
-        searchBtn.addEventListener('click', function() {
-            const keyword = searchInput.value.trim();
-            if (keyword) {
-                searchAndDisplay(keyword, map);
-            }
-        });
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const keyword = searchInput.value.trim();
-                if (keyword) {
-                    searchAndDisplay(keyword, map);
-                }
-            }
-        });
-    }
+    // 자동 초기화/검색은 각 페이지에서 수행합니다.
 };

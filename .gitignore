@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Server environment (Directions proxy)
+server/.env
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
