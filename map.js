@@ -132,6 +132,9 @@ let infowindow = null;
     function animateMarkerAlongPath(marker, path, duration = 2000, onDone) {
         if (!Array.isArray(path) || path.length < 2) return;
         const start = performance.now();
+        if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
+            console.log('[JJU Walk] animate start: segments=', path.length - 1, 'duration=', duration);
+        }
         function interp(p0, p1, t) {
             return new kakao.maps.LatLng(
                 lerp(p0.getLat(), p1.getLat(), t),
@@ -147,11 +150,17 @@ let infowindow = null;
             const localT = ft - i;
             const pos = interp(path[i], path[i + 1], localT);
             marker.setPosition(pos);
+            if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE && (Math.floor(t * 100) % 15 === 0)) {
+                console.log('[JJU Walk] t=', t.toFixed(2), 'seg=', i, 'localT=', localT.toFixed(2));
+            }
             if (t < 1) {
                 requestAnimationFrame(step);
             } else {
                 marker.setPosition(path[path.length - 1]);
                 if (typeof onDone === 'function') onDone();
+                if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
+                    console.log('[JJU Walk] animate end');
+                }
             }
         }
         requestAnimationFrame(step);
@@ -224,6 +233,12 @@ function createWalkerMarker(position) {
     // 기존 MarkerImage 대신 커스텀 오버레이로 귀여운 걷는 캐릭터 구현
     const el = document.createElement('div');
     el.className = 'walker-avatar';
+    // Fallback 인라인 스타일 (style.css 미적용 상황 대비)
+    el.style.position = 'relative';
+    el.style.width = '42px';
+    el.style.height = '42px';
+    el.style.transform = 'translate(-50%, -50%)';
+    el.style.pointerEvents = 'none';
     el.innerHTML = `
         <div class="walker-body">
             <div class="walker-head"></div>
@@ -234,6 +249,15 @@ function createWalkerMarker(position) {
             <div class="walker-leg walker-leg-right"></div>
         </div>
     `;
+    // head/torso 등의 최소 표시를 위한 간단한 Fallback (CSS 로드 실패 시)
+    const head = document.createElement('style');
+    head.textContent = `
+    .walker-head { width:14px;height:14px;background:#ff7a6e;border-radius:50%;margin:0 auto 2px auto; }
+    .walker-torso { width:20px;height:16px;background:#1d4ed8;border-radius:6px;margin:0 auto; }
+    .walker-arm, .walker-leg { background:#1e40af; }
+    `;
+    // 이미 전체 style.css가 로드되어 있다면(규칙 존재) 중복 삽입 영향 없음
+    el.appendChild(head);
     return new kakao.maps.CustomOverlay({
         position,
         content: el,
@@ -367,6 +391,11 @@ function densifyLinearPath(start, end, stepMeters = 5) {
 async function showWalkingRoute(map, start, end) {
     clearRoute(map);
     let path = null;
+    // 시작과 목적지가 동일하면 애니메이션 불필요 (디버그 메시지 출력 후 종료)
+    if (start.getLat() === end.getLat() && start.getLng() === end.getLng()) {
+        console.warn('[JJU Walk] 시작 지점과 목적지가 동일하여 이동하지 않습니다.');
+        return;
+    }
     // 서버 프록시가 제공되면 실제 도보 길찾기 경로 사용 시도
     if (DIRECTIONS_API) {
         try {
@@ -403,9 +432,15 @@ async function showWalkingRoute(map, start, end) {
     routeAnimMarker.setMap(map);
     const speed = 1.25 * 3; // 기존 대비 3배 속도 (m/s)
     const duration = Math.max(800, (distanceMeters(start, end) / speed) * 1000);
+    if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
+        console.log('[JJU Walk] path length=', path.length, 'duration(ms)=', duration.toFixed(0));
+    }
     animateMarkerAlongPath(routeAnimMarker, path, duration, () => {
         // 도착 시 살짝 바운스
         try { bounceMarker(routeAnimMarker, 8, 400); } catch(_){}
+        if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
+            console.log('[JJU Walk] 경로 애니메이션 완료');
+        }
     });
     // 경로 전체가 보이도록 범위 조정
     const bounds = new kakao.maps.LatLngBounds();
