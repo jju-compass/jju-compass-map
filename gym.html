@@ -1,1 +1,51 @@
-<!-- TODO: 이 페이지는 추후 구현 예정입니다. -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>헬스장 - JJU Map</title>
+    
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>💪 전주대 주변 헬스장</h1>
+        <p>전주대학교 주변의 헬스장을(를) 찾아보세요!</p>
+    </header>
+
+    <div class="nav-buttons">
+        <a href="index.html" class="nav-btn home">🏠 메인</a>
+        <a href="food.html" class="nav-btn">전체 음식점</a>
+        <a href="cafe.html" class="nav-btn">카페</a>
+        <a href="convenience.html" class="nav-btn">편의점</a>
+        <a href="pharmacy.html" class="nav-btn">약국</a>
+        <a href="hospital.html" class="nav-btn">병원</a>
+        <a href="bank.html" class="nav-btn">은행/ATM</a>
+        <a href="stationery.html" class="nav-btn">문구점</a>
+        <a href="salon.html" class="nav-btn">미용실</a>
+        <a href="pcroom.html" class="nav-btn">PC방</a>
+        <a href="gym.html" class="nav-btn">헬스장</a>
+        <a href="karaoke.html" class="nav-btn">노래방</a>
+    </div>
+
+    <div class="container">
+        <div id="places-list"></div>
+        <div id="map"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 전주대 주변 탐색지도. All rights reserved.</p>
+    </footer>
+
+    <script src="map.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const map = initializeMap();
+            if (map) {
+                searchAndDisplay("헬스장", map);
+            }
+        });
+    </script>
+</body>
+</html>

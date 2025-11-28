@@ -128,10 +128,14 @@ let infowindow = null;
      * - path: kakao.maps.LatLng[] (최소 2개)
      * - duration: 전체 시간 ms
      * - onDone: 완료 콜백
+     * - map: 지도 객체 (발자국 트레일용)
      */
-    function animateMarkerAlongPath(marker, path, duration = 2000, onDone) {
+    function animateMarkerAlongPath(marker, path, duration = 2000, onDone, map = null) {
         if (!Array.isArray(path) || path.length < 2) return;
         const start = performance.now();
+        let lastFootstepTime = 0;
+        const footstepInterval = 300; // 발자국 간격 (ms)
+
         if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
             console.log('[JJU Walk] animate start: segments=', path.length - 1, 'duration=', duration);
         }
@@ -143,6 +147,8 @@ let infowindow = null;
         }
         function step(now) {
             const t = Math.min(1, (now - start) / duration);
+            const elapsed = now - start;
+
             // 구간 수에 비례하여 진행
             const segCount = path.length - 1;
             const ft = t * segCount;
@@ -150,6 +156,13 @@ let infowindow = null;
             const localT = ft - i;
             const pos = interp(path[i], path[i + 1], localT);
             marker.setPosition(pos);
+
+            // 발자국 트레일 생성
+            if (map && elapsed - lastFootstepTime > footstepInterval && t < 0.98) {
+                createFootstepTrail(map, pos);
+                lastFootstepTime = elapsed;
+            }
+
             if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE && (Math.floor(t * 100) % 15 === 0)) {
                 console.log('[JJU Walk] t=', t.toFixed(2), 'seg=', i, 'localT=', localT.toFixed(2));
             }
@@ -164,6 +177,30 @@ let infowindow = null;
             }
         }
         requestAnimationFrame(step);
+    }
+
+    /**
+     * 발자국 트레일 효과 생성
+     */
+    function createFootstepTrail(map, position) {
+        const div = document.createElement('div');
+        div.className = 'footstep-trail';
+
+        const overlay = new kakao.maps.CustomOverlay({
+            position,
+            content: div,
+            yAnchor: 0.5,
+            zIndex: 2
+        });
+        overlay.setMap(map);
+        transientOverlays.push(overlay);
+
+        // 애니메이션 후 제거
+        setTimeout(() => {
+            overlay.setMap(null);
+            const idx = transientOverlays.indexOf(overlay);
+            if (idx > -1) transientOverlays.splice(idx, 1);
+        }, 1200);
     }
 
     /**
@@ -227,37 +264,15 @@ function createDotMarker(position) {
 }
 
 /**
- * 워커(사람) 마커 이미지 생성
+ * 워커(사람) 마커 - 실제 사람 이모지 사용
  */
 function createWalkerMarker(position) {
-    // 기존 MarkerImage 대신 커스텀 오버레이로 귀여운 걷는 캐릭터 구현
     const el = document.createElement('div');
     el.className = 'walker-avatar';
-    // Fallback 인라인 스타일 (style.css 미적용 상황 대비)
-    el.style.position = 'relative';
-    el.style.width = '42px';
-    el.style.height = '42px';
-    el.style.transform = 'translate(-50%, -50%)';
-    el.style.pointerEvents = 'none';
-    el.innerHTML = `
-        <div class="walker-body">
-            <div class="walker-head"></div>
-            <div class="walker-torso"></div>
-            <div class="walker-arm walker-arm-left"></div>
-            <div class="walker-arm walker-arm-right"></div>
-            <div class="walker-leg walker-leg-left"></div>
-            <div class="walker-leg walker-leg-right"></div>
-        </div>
-    `;
-    // head/torso 등의 최소 표시를 위한 간단한 Fallback (CSS 로드 실패 시)
-    const head = document.createElement('style');
-    head.textContent = `
-    .walker-head { width:14px;height:14px;background:#ff7a6e;border-radius:50%;margin:0 auto 2px auto; }
-    .walker-torso { width:20px;height:16px;background:#1d4ed8;border-radius:6px;margin:0 auto; }
-    .walker-arm, .walker-leg { background:#1e40af; }
-    `;
-    // 이미 전체 style.css가 로드되어 있다면(규칙 존재) 중복 삽입 영향 없음
-    el.appendChild(head);
+    el.style.fontSize = '40px';
+    el.style.lineHeight = '1';
+    el.textContent = '🚶‍♂️';
+
     return new kakao.maps.CustomOverlay({
         position,
         content: el,
@@ -267,17 +282,36 @@ function createWalkerMarker(position) {
 }
 
 /**
- * 시작 지점 설정 및 워커 마커 표시/업데이트
+ * 시작 지점 깃발 마커 생성
+ */
+function createStartFlagMarker(position) {
+    const el = document.createElement('div');
+    el.className = 'start-flag-marker';
+    el.innerHTML = `
+        <div class="flag-pole"></div>
+        <div class="flag-icon">🚩</div>
+    `;
+
+    return new kakao.maps.CustomOverlay({
+        position,
+        content: el,
+        yAnchor: 1,
+        zIndex: 6
+    });
+}
+
+/**
+ * 시작 지점 설정 및 깃발 마커 표시/업데이트
  */
 function setStartPosition(map, latLng) {
     userStartPosition = latLng;
     if (userStartMarker) {
         userStartMarker.setPosition(latLng);
     } else {
-        userStartMarker = createWalkerMarker(latLng);
+        userStartMarker = createStartFlagMarker(latLng);
         userStartMarker.setMap(map);
     }
-    showRippleEffect(map, latLng, '#2e7d32');
+    showRippleEffect(map, latLng, '#4c6ef5');
 }
 
 /**
@@ -333,24 +367,177 @@ function attachRouteControls(map) {
     controls.id = 'route-controls';
     controls.className = 'route-controls';
     controls.innerHTML = `
-        <button class="rc-btn" id="rc-geoloc">내 위치 시작</button>
-        <button class="rc-btn" id="rc-pick">시작 지점 지정</button>
-        <button class="rc-btn" id="rc-clear">경로 지우기</button>
+        <button class="rc-btn rc-btn-primary" id="rc-route">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="10" r="3"></circle>
+                <path d="M12 2v4M12 14v8"></path>
+                <circle cx="12" cy="21" r="1"></circle>
+            </svg>
+            <span>경로 보기</span>
+        </button>
+        <button class="rc-btn rc-btn-secondary" id="rc-clear" style="display:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>경로 지우기</span>
+        </button>
     `;
     document.body.appendChild(controls);
-    document.getElementById('rc-geoloc').onclick = () => setStartFromGeolocation(map);
-    document.getElementById('rc-pick').onclick = () => {
-        toggleStartPickMode(map, !pickingStart);
-        alert(pickingStart ? '지도를 클릭하여 시작 지점을 선택하세요.' : '시작 지점 지정 모드를 종료합니다.');
+
+    // 경로 보기 버튼 클릭
+    document.getElementById('rc-route').onclick = () => {
+        if (!userStartPosition) {
+            // 시작 지점이 없으면 선택 모달 표시
+            showRouteStartModal(map);
+        } else {
+            // 이미 시작 지점이 있으면 안내 메시지
+            alert('마커를 클릭하면 경로가 표시됩니다.\n시작 지점을 변경하려면 "경로 지우기"를 먼저 눌러주세요.');
+        }
     };
-    document.getElementById('rc-clear').onclick = () => clearRoute(map);
+
+    // 경로 지우기 버튼
+    document.getElementById('rc-clear').onclick = () => {
+        clearRoute(map);
+        if (userStartMarker) {
+            userStartMarker.setMap(null);
+            userStartMarker = null;
+            userStartPosition = null;
+        }
+        // 경로 지우기 버튼 숨김
+        document.getElementById('rc-clear').style.display = 'none';
+    };
+}
+
+/**
+ * 경로 시작 지점 선택 모달 표시
+ */
+function showRouteStartModal(map) {
+    // 기존 모달 제거
+    const existing = document.getElementById('route-start-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'route-start-modal';
+    modal.className = 'route-modal';
+    modal.innerHTML = `
+        <div class="route-modal-overlay"></div>
+        <div class="route-modal-content">
+            <h3 class="route-modal-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                시작 지점을 선택하세요
+            </h3>
+            <p class="route-modal-desc">출발 위치를 설정하면 목적지까지의 경로를 확인할 수 있습니다</p>
+            <div class="route-modal-buttons">
+                <button class="route-modal-btn route-modal-btn-primary" id="modal-gps">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <div>
+                        <div class="btn-title">내 위치 사용</div>
+                        <div class="btn-desc">GPS로 자동 설정</div>
+                    </div>
+                </button>
+                <button class="route-modal-btn" id="modal-manual">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <div>
+                        <div class="btn-title">지도에서 선택</div>
+                        <div class="btn-desc">직접 클릭하여 지정</div>
+                    </div>
+                </button>
+            </div>
+            <button class="route-modal-close" id="modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // GPS 버튼
+    document.getElementById('modal-gps').onclick = () => {
+        modal.remove();
+        setStartFromGeolocation(map);
+        // 경로 지우기 버튼 표시
+        document.getElementById('rc-clear').style.display = 'flex';
+    };
+
+    // 수동 선택 버튼
+    document.getElementById('modal-manual').onclick = () => {
+        modal.remove();
+        toggleStartPickMode(map, true);
+        alert('지도를 클릭하여 시작 지점을 선택하세요.');
+        // 경로 지우기 버튼 표시
+        document.getElementById('rc-clear').style.display = 'flex';
+    };
+
+    // 닫기 버튼
+    document.getElementById('modal-close').onclick = () => modal.remove();
+
+    // 오버레이 클릭으로 닫기
+    modal.querySelector('.route-modal-overlay').onclick = () => modal.remove();
 }
 
 /** 경로/애니메이션 정리 */
 function clearRoute(map) {
     if (routePolyline) { routePolyline.setMap(null); routePolyline = null; }
     if (routeAnimMarker) { routeAnimMarker.setMap(null); routeAnimMarker = null; }
+    hideRouteInfoPanel();
     // 시작 마커는 유지
+}
+
+/**
+ * 경로 정보 패널 표시
+ */
+function showRouteInfoPanel(distanceMeters, timeMinutes) {
+    let panel = document.getElementById('route-info-panel');
+
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'route-info-panel';
+        panel.className = 'route-info-panel';
+        document.body.appendChild(panel);
+    }
+
+    const distanceKm = (distanceMeters / 1000).toFixed(2);
+    const distanceM = Math.round(distanceMeters);
+
+    panel.innerHTML = `
+        <div class="route-info-title">도보 경로</div>
+        <div class="route-info-stats">
+            <div class="route-info-stat">
+                <div class="route-info-stat-icon">📍</div>
+                <div class="route-info-stat-label">거리</div>
+                <div class="route-info-stat-value">${distanceMeters >= 1000 ? distanceKm + 'km' : distanceM + 'm'}</div>
+            </div>
+            <div class="route-info-stat">
+                <div class="route-info-stat-icon">⏱️</div>
+                <div class="route-info-stat-label">시간</div>
+                <div class="route-info-stat-value">${timeMinutes}분</div>
+            </div>
+        </div>
+    `;
+
+    panel.classList.remove('hidden');
+}
+
+/**
+ * 경로 정보 패널 숨김
+ */
+function hideRouteInfoPanel() {
+    const panel = document.getElementById('route-info-panel');
+    if (panel) {
+        panel.classList.add('hidden');
+    }
 }
 
 /** 두 지점 거리(m) (haversine 근사) */
@@ -419,29 +606,52 @@ async function showWalkingRoute(map, start, end) {
     if (!path) {
         path = densifyLinearPath(start, end, 4);
     }
+    // 파란색 실선 Polyline 생성
     routePolyline = new kakao.maps.Polyline({
         map,
         path,
         strokeWeight: 5,
-        strokeColor: '#2E7D32',
+        strokeColor: '#4c6ef5',
         strokeOpacity: 0.9,
-        strokeStyle: 'shortdash'
+        strokeStyle: 'solid'
     });
+
+    // Polyline에 부드러운 그림자 효과 추가 (DOM 직접 조작)
+    setTimeout(() => {
+        const polylineElement = routePolyline.getNode?.();
+        if (polylineElement) {
+            const pathEl = polylineElement.querySelector('path');
+            if (pathEl) {
+                pathEl.style.filter = 'drop-shadow(0 2px 4px rgba(76, 110, 245, 0.3))';
+            }
+        }
+    }, 100);
+
     // 워커 마커 생성 및 경로 애니메이션
     routeAnimMarker = createWalkerMarker(start);
     routeAnimMarker.setMap(map);
     const speed = 1.25 * 3; // 기존 대비 3배 속도 (m/s)
-    const duration = Math.max(800, (distanceMeters(start, end) / speed) * 1000);
+    const totalDistance = distanceMeters(start, end);
+    const duration = Math.max(800, (totalDistance / speed) * 1000);
+    const walkTimeMinutes = Math.ceil(totalDistance / (4 * 1000 / 60)); // 4km/h 기준
+
     if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
         console.log('[JJU Walk] path length=', path.length, 'duration(ms)=', duration.toFixed(0));
     }
+
+    // 경로 정보 패널 표시
+    showRouteInfoPanel(totalDistance, walkTimeMinutes);
+
     animateMarkerAlongPath(routeAnimMarker, path, duration, () => {
         // 도착 시 살짝 바운스
         try { bounceMarker(routeAnimMarker, 8, 400); } catch(_){}
         if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
             console.log('[JJU Walk] 경로 애니메이션 완료');
         }
-    });
+        // 애니메이션 완료 후 정보 패널 숨김
+        hideRouteInfoPanel();
+    }, map); // map 파라미터 전달
+
     // 경로 전체가 보이도록 범위 조정
     const bounds = new kakao.maps.LatLngBounds();
     path.forEach(p => bounds.extend(p));
@@ -499,47 +709,37 @@ function searchPlacesByKeyword(keyword, map, callback) {
 function displayPlacesList(results, map) {
     const listContainer = document.getElementById('places-list');
     if (!listContainer) return;
-    
+
     // 기존 목록 초기화
     listContainer.innerHTML = '';
-    
-    // 검색 결과 개수 표시
-    const countDiv = document.createElement('div');
-    countDiv.style.cssText = 'padding:15px;background:#f8f9fa;border-bottom:2px solid #dee2e6;font-weight:bold;color:#333;';
-    countDiv.innerHTML = `검색 결과: ${results.length}개`;
-    listContainer.appendChild(countDiv);
-    
+
+    // 결과 개수 업데이트 (새로운 UI용)
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        resultsCount.textContent = results.length + '개';
+    }
+
     // 각 장소를 목록으로 표시
     results.forEach((place, index) => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'place-item';
-        itemDiv.style.cssText = `
-            padding:15px;
-            border-bottom:1px solid #e0e0e0;
-            cursor:pointer;
-            transition:background 0.2s;
-        `;
-        
-        // 호버 효과
-        itemDiv.onmouseenter = () => itemDiv.style.background = '#f8f9fa';
-        itemDiv.onmouseleave = () => itemDiv.style.background = 'white';
-        
+        itemDiv.className = 'result-item';
+
+        // 카테고리명 추출 (마지막 카테고리)
+        const categoryText = place.category_name ?
+            place.category_name.split(' > ').pop() : '';
+
         // 장소 정보 HTML
         itemDiv.innerHTML = `
-            <div style="display:flex;align-items:start;gap:10px;">
-                <div style="flex-shrink:0;width:60px;height:60px;background:#e9ecef;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">
-                    ${getCategoryEmoji(place.category_name)}
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:bold;font-size:14px;margin-bottom:3px;color:#333;">
-                        ${index + 1}. ${place.place_name}
-                    </div>
-                    <div style="font-size:12px;color:#666;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        ${place.road_address_name || place.address_name}
-                    </div>
-                    ${place.phone ? `<div style="font-size:11px;color:#888;">📞 ${place.phone}</div>` : ''}
-                </div>
-            </div>
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                ${place.place_name}
+                ${categoryText ? `<span class="category-badge">${categoryText}</span>` : ''}
+            </h3>
+            <p>${place.road_address_name || place.address_name}</p>
+            ${place.phone ? `<p>${place.phone}</p>` : ''}
         `;
         
         // 클릭 시 해당 마커로 이동 및 인포윈도우 표시

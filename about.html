@@ -1,1 +1,84 @@
-<!-- TODO: 이 페이지는 추후 구현 예정입니다. -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 소개 - JJU Map</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>📖 서비스 소개</h1>
+        <p>전주대 주변 탐색지도에 대해 알아보세요</p>
+    </header>
+
+    <div class="nav-buttons">
+        <a href="index.html" class="nav-btn home">🏠 메인</a>
+        <a href="about.html" class="nav-btn">소개</a>
+        <a href="guide.html" class="nav-btn">이용가이드</a>
+    </div>
+
+    <div class="intro-section">
+        <h2>프로젝트 소개</h2>
+        <p>전주대 주변 탐색지도는 전주대학교 학생들을 위한 지도 서비스입니다.</p>
+        <p>카카오맵 API를 활용하여 주변 음식점, 카페, 편의시설 등을 쉽고 빠르게 찾을 수 있습니다.</p>
+    </div>
+
+    <div class="features-section">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+            </div>
+            <h3>카카오맵 기반</h3>
+            <p>정확한 위치 정보와 최신 데이터를 제공합니다</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+            <h3>다양한 카테고리</h3>
+            <p>음식점부터 편의시설까지 15개 이상의 카테고리</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20"></path>
+                </svg>
+            </div>
+            <h3>반응형 디자인</h3>
+            <p>PC와 모바일 모두 최적화된 사용자 경험</p>
+        </div>
+    </div>
+
+    <div class="category-section">
+        <h2>기술 스택</h2>
+        <div style="max-width: 800px; margin: 0 auto; text-align: left; background: white; padding: 32px; border-radius: 16px;">
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong>Frontend:</strong> HTML5, CSS3, JavaScript (Vanilla)
+                </li>
+                <li style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong>API:</strong> Kakao Maps JavaScript SDK v2
+                </li>
+                <li style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong>Deployment:</strong> Oracle Cloud, Nginx, Let's Encrypt SSL
+                </li>
+                <li style="padding: 12px 0;">
+                    <strong>Repository:</strong> <a href="https://github.com/jju-compass/jju-compass-map" style="color: #2563eb;">GitHub</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 전주대 주변 탐색지도 (JJU Map). All rights reserved.</p>
+        <p>전주대학교 웹프로그래밍 팀 프로젝트</p>
+    </footer>
+</body>
+</html>

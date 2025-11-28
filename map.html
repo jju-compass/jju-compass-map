@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전주대 주변지도 - JJU Map</title>
+
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="map-page map-page-sidebar">
+    <!-- 상단 네비게이션 바 -->
+    <nav class="top-navbar">
+        <div class="navbar-left">
+            <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:white;">
+                <svg class="navbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span class="navbar-title">전주대 주변지도</span>
+            </a>
+        </div>
+
+        <div class="navbar-center">
+            <div class="navbar-search">
+                <input type="text" id="topSearch" placeholder="장소, 주소 검색...">
+                <button class="search-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <a href="about.html" class="navbar-link">소개</a>
+            <a href="guide.html" class="navbar-link">사용방법</a>
+        </div>
+    </nav>
+
+    <div class="map-layout">
+        <!-- 왼쪽 사이드바 -->
+        <aside class="map-sidebar">
+            <div class="sidebar-header">
+                <h2>카테고리</h2>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-section-title">음식점</h3>
+                <button class="sidebar-item" data-keyword="전체음식점" data-multi="한식,중식,일식,양식,분식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    전체
+                </button>
+                <button class="sidebar-item" data-keyword="한식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    한식
+                </button>
+                <button class="sidebar-item" data-keyword="중식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    중식
+                </button>
+                <button class="sidebar-item" data-keyword="일식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    일식
+                </button>
+                <button class="sidebar-item" data-keyword="양식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    양식
+                </button>
+                <button class="sidebar-item" data-keyword="분식">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    분식
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-section-title">기타</h3>
+                <button class="sidebar-item" data-keyword="카페">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+                        <path d="M6 2v4M10 2v4M14 2v4"></path>
+                    </svg>
+                    카페
+                </button>
+                <button class="sidebar-item" data-keyword="편의점">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
+                        <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path>
+                    </svg>
+                    편의점
+                </button>
+                <button class="sidebar-item" data-keyword="약국">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20"></path>
+                    </svg>
+                    약국
+                </button>
+                <button class="sidebar-item" data-keyword="병원">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20"></path>
+                        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                    </svg>
+                    병원
+                </button>
+                <button class="sidebar-item" data-keyword="은행">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <path d="M6 12h.01M18 12h.01"></path>
+                    </svg>
+                    은행/ATM
+                </button>
+                <button class="sidebar-item" data-keyword="문구점">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                        <path d="M2 2l7.586 7.586"></path>
+                    </svg>
+                    문구점
+                </button>
+                <button class="sidebar-item" data-keyword="미용실">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 12h20M2 12a10 10 0 0 1 10-10M2 12a10 10 0 0 0 10 10"></path>
+                    </svg>
+                    미용실
+                </button>
+                <button class="sidebar-item" data-keyword="PC방">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <path d="M8 21h8M12 17v4"></path>
+                    </svg>
+                    PC방
+                </button>
+                <button class="sidebar-item" data-keyword="헬스장">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6.5 6.5h11M6.5 17.5h11M3 12h18"></path>
+                        <circle cx="12" cy="12" r="2"></circle>
+                    </svg>
+                    헬스장
+                </button>
+                <button class="sidebar-item" data-keyword="노래방">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    노래방
+                </button>
+            </div>
+        </aside>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="map-main">
+            <!-- 카테고리 헤더 -->
+            <div class="map-content-header">
+                <div class="content-header-icon" id="categoryIcon">💊</div>
+                <div>
+                    <h1 class="content-header-title" id="categoryTitle">약국</h1>
+                    <p class="content-header-desc" id="categoryDesc">주변의 약국을 확인하세요</p>
+                </div>
+            </div>
+
+            <!-- 지도 영역 -->
+            <div class="map-container">
+                <div id="map" class="map-area"></div>
+            </div>
+
+            <!-- 결과 목록 -->
+            <div class="results-section">
+                <div class="results-header">
+                    <h2>주변 장소</h2>
+                    <span class="results-count" id="resultsCount">0개</span>
+                </div>
+                <div class="results-list" id="placesList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="map.js"></script>
+    <script>
+        let currentMap = null;
+        const categoryInfo = {
+            '전체음식점': { icon: '🍽️', title: '전체 음식점', desc: '주변의 모든 음식점을 확인하세요' },
+            '한식': { icon: '🍚', title: '한식', desc: '주변의 한식당을 확인하세요' },
+            '중식': { icon: '🥟', title: '중식', desc: '주변의 중식당을 확인하세요' },
+            '일식': { icon: '🍣', title: '일식', desc: '주변의 일식당을 확인하세요' },
+            '양식': { icon: '🍕', title: '양식', desc: '주변의 양식당을 확인하세요' },
+            '분식': { icon: '🍢', title: '분식', desc: '주변의 분식집을 확인하세요' },
+            '카페': { icon: '☕', title: '카페', desc: '주변의 카페를 확인하세요' },
+            '편의점': { icon: '🏪', title: '편의점', desc: '주변의 편의점을 확인하세요' },
+            '약국': { icon: '💊', title: '약국', desc: '주변의 약국을 확인하세요' },
+            '병원': { icon: '🏥', title: '병원', desc: '주변의 병원을 확인하세요' },
+            '은행': { icon: '🏦', title: '은행/ATM', desc: '주변의 은행과 ATM을 확인하세요' },
+            '문구점': { icon: '✏️', title: '문구점', desc: '주변의 문구점을 확인하세요' },
+            '미용실': { icon: '💇', title: '미용실', desc: '주변의 미용실을 확인하세요' },
+            'PC방': { icon: '💻', title: 'PC방', desc: '주변의 PC방을 확인하세요' },
+            '헬스장': { icon: '💪', title: '헬스장', desc: '주변의 헬스장을 확인하세요' },
+            '노래방': { icon: '🎤', title: '노래방', desc: '주변의 노래방을 확인하세요' }
+        };
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', function() {
+            currentMap = initializeMap();
+
+            // URL 파라미터에서 카테고리 읽기
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category') || '카페';
+
+            if (currentMap) {
+                searchCategory(category);
+                updateCategoryHeader(category);
+            }
+        });
+
+        // 사이드바 아이템 클릭
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const keyword = this.dataset.keyword;
+                const multiKeywords = this.dataset.multi;
+
+                // 활성화 상태 업데이트
+                document.querySelectorAll('.sidebar-item').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // 검색 실행
+                if (multiKeywords) {
+                    searchCategory(null, multiKeywords.split(','));
+                    updateCategoryHeader('전체음식점');
+                } else {
+                    searchCategory(keyword);
+                    updateCategoryHeader(keyword);
+                }
+            });
+        });
+
+        // 카테고리 검색 함수
+        function searchCategory(keyword, multiKeywords = null) {
+            if (!currentMap) return;
+
+            if (multiKeywords) {
+                searchMultipleKeywords(multiKeywords, currentMap, function(results) {
+                    displayMarkersOnMap(results);
+                    displayResultsInPanel(results);
+                });
+            } else {
+                searchPlacesByKeyword(keyword, currentMap, function(results) {
+                    displayMarkersOnMap(results);
+                    displayResultsInPanel(results);
+                });
+            }
+        }
+
+        // 마커 표시
+        function displayMarkersOnMap(results) {
+            displayMarkers(results, currentMap);
+        }
+
+        // 패널에 결과 표시
+        function displayResultsInPanel(results) {
+            const panel = document.getElementById('placesList');
+            panel.innerHTML = '';
+
+            // 결과 개수 업데이트
+            document.getElementById('resultsCount').textContent = results.length + '개';
+
+            results.forEach((place, index) => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+
+                const categoryText = place.category_name ?
+                    place.category_name.split(' > ').pop() : '';
+
+                item.innerHTML = `
+                    <div class="result-item-header">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <h3>${place.place_name}</h3>
+                    </div>
+                    <p class="result-item-address">${place.road_address_name || place.address_name}</p>
+                    ${place.phone ? `<p class="result-item-phone">📞 ${place.phone}</p>` : ''}
+                    ${categoryText ? `<span class="result-item-badge">${categoryText}</span>` : ''}
+                `;
+
+                item.addEventListener('click', function() {
+                    const markerPosition = new kakao.maps.LatLng(place.y, place.x);
+                    currentMap.panTo(markerPosition);
+                    currentMap.setLevel(3);
+
+                    // 인포윈도우 표시
+                    const content = `
+                        <div style="padding:10px;min-width:200px;line-height:1.5;">
+                            <div style="font-weight:bold;font-size:14px;margin-bottom:5px;">
+                                ${place.place_name}
+                            </div>
+                            <div style="font-size:12px;color:#666;">
+                                ${place.road_address_name || place.address_name}
+                            </div>
+                            ${place.phone ? `<div style="font-size:12px;color:#666;margin-top:3px;">📞 ${place.phone}</div>` : ''}
+                            ${place.place_url ? `<div style="margin-top:5px;"><a href="${place.place_url}" target="_blank" style="color:#4CAF50;text-decoration:none;font-size:12px;">상세보기 →</a></div>` : ''}
+                        </div>
+                    `;
+                    if (window.infowindow) {
+                        window.infowindow.setContent(content);
+                        window.infowindow.open(currentMap, markers[index]);
+                    }
+                });
+
+                panel.appendChild(item);
+            });
+        }
+
+        // 카테고리 헤더 업데이트
+        function updateCategoryHeader(keyword) {
+            const info = categoryInfo[keyword] || { icon: '📍', title: keyword, desc: `주변의 ${keyword}을 확인하세요` };
+            document.getElementById('categoryIcon').textContent = info.icon;
+            document.getElementById('categoryTitle').textContent = info.title;
+            document.getElementById('categoryDesc').textContent = info.desc;
+        }
+
+        // 검색 기능
+        document.getElementById('topSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        document.querySelector('.search-icon-btn').addEventListener('click', performSearch);
+
+        function performSearch() {
+            const query = document.getElementById('topSearch').value.trim();
+            if (!query) return;
+
+            searchCategory(query);
+            updateCategoryHeader(query);
+        }
+    </script>
+</body>
+</html>
