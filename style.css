@@ -1531,7 +1531,7 @@ body {
         font-size: 32px;
     }
 
-    /* 지도 페이지 */
+    /* 지도 페이지 모바일 레이아웃 */
     .navbar-center {
         flex-direction: column;
         gap: 8px;
@@ -1541,12 +1541,65 @@ body {
         width: 100%;
     }
 
-    .results-panel {
-        transform: translateY(calc(100% - 100px));
-    }
-
     .navbar-right {
         display: none;
+    }
+
+    /* 사이드바 숨기기 (모바일) */
+    .map-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    }
+
+    .map-sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* 지도와 결과를 수직으로 배치 */
+    .map-layout {
+        flex-direction: column;
+    }
+
+    /* 지도 영역 - 상단 40% */
+    #map {
+        height: 40vh !important;
+        width: 100% !important;
+    }
+
+    /* 결과 패널 - 하단 60% */
+    .results-panel {
+        height: 60vh !important;
+        width: 100% !important;
+        position: relative !important;
+        transform: none !important;
+    }
+
+    /* 경로 컨트롤 버튼 위치 조정 */
+    .route-controls {
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(60vh + 20px);
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .route-controls .rc-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .route-controls .rc-btn span {
+        display: none;
+    }
+
+    .route-controls .rc-btn svg {
+        margin: 0;
     }
 }
 
