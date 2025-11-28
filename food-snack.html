@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분식집 - JJU Map</title>
+    
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <header>
+        <h1>🍢 전주대 주변 분식집</h1>
+        <p>전주대학교 주변의 분식집을 찾아보세요!</p>
+    </header>
+
+    <div class="nav-buttons">
+        <a href="index.html" class="nav-btn home">🏠 메인</a>
+        <a href="food.html" class="nav-btn">전체 음식점</a>
+        <a href="food-korean.html" class="nav-btn">한식</a>
+        <a href="food-chinese.html" class="nav-btn">중식</a>
+        <a href="food-japanese.html" class="nav-btn">일식</a>
+        <a href="food-western.html" class="nav-btn">양식</a>
+        <a href="convenience.html" class="nav-btn">편의점</a>
+        <a href="pharmacy.html" class="nav-btn">약국</a>
+        <a href="hospital.html" class="nav-btn">병원</a>
+    </div>
+
+    <div class="container">
+        <div id="places-list"></div>
+        <div id="map"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 전주대 주변 탐색지도. All rights reserved.</p>
+    </footer>
+
+    <script src="map.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const map = initializeMap();
+            if (map) {
+                searchAndDisplay("분식", map);
+            }
+        });
+    </script>
+</body>
+</html>

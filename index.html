@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전주대 주변지도 - JJU Map</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="landing-page">
+    <!-- 상단 네비게이션 -->
+    <nav class="landing-navbar">
+        <div class="landing-nav-content">
+            <div class="nav-logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>JJU Map</span>
+            </div>
+            <div class="nav-links">
+                <a href="about.html">소개</a>
+                <a href="guide.html">사용방법</a>
+                <a href="map.html" class="nav-btn-primary">지도 시작하기</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 히어로 섹션 -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+                <span>전주대학교 학생을 위한 지도 서비스</span>
+            </div>
+            <h1 class="hero-title">
+                전주대 주변 정보를<br>
+                <span class="gradient-text">한눈에</span>
+            </h1>
+            <p class="hero-description">
+                음식점, 카페, 편의점부터 병원, 약국까지<br>
+                전주대학교 주변 모든 장소를 쉽게 찾아보세요
+            </p>
+            <div class="hero-buttons">
+                <a href="map.html" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    지도 시작하기
+                </a>
+                <a href="#categories" class="btn btn-outline">카테고리 보기</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card card-1">
+                <div class="card-icon">🍚</div>
+                <div class="card-text">
+                    <div class="card-title">한식</div>
+                    <div class="card-desc">45개 장소</div>
+                </div>
+            </div>
+            <div class="floating-card card-2">
+                <div class="card-icon">☕</div>
+                <div class="card-text">
+                    <div class="card-title">카페</div>
+                    <div class="card-desc">32개 장소</div>
+                </div>
+            </div>
+            <div class="floating-card card-3">
+                <div class="card-icon">💊</div>
+                <div class="card-text">
+                    <div class="card-title">약국</div>
+                    <div class="card-desc">8개 장소</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 주요 기능 -->
+    <section class="features">
+        <div class="features-content">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
+                <h3>정확한 위치</h3>
+                <p>카카오맵 기반의 정확한 위치 정보</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <h3>빠른 검색</h3>
+                <p>원하는 장소를 빠르게 검색</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20"></path>
+                    </svg>
+                </div>
+                <h3>다양한 카테고리</h3>
+                <p>음식점부터 편의시설까지 한번에</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 카테고리 섹션 -->
+    <section class="categories" id="categories">
+        <div class="categories-content">
+            <div class="section-header">
+                <h2>카테고리</h2>
+                <p>원하는 카테고리를 선택해서 빠르게 검색하세요</p>
+            </div>
+            <div class="category-grid">
+                <a href="map.html?category=한식" class="category-card">
+                    <div class="category-emoji">🍚</div>
+                    <h3>한식</h3>
+                    <p>전주대 주변 한식당</p>
+                </a>
+                <a href="map.html?category=중식" class="category-card">
+                    <div class="category-emoji">🥟</div>
+                    <h3>중식</h3>
+                    <p>중국 음식점</p>
+                </a>
+                <a href="map.html?category=일식" class="category-card">
+                    <div class="category-emoji">🍣</div>
+                    <h3>일식</h3>
+                    <p>일본 음식점</p>
+                </a>
+                <a href="map.html?category=양식" class="category-card">
+                    <div class="category-emoji">🍕</div>
+                    <h3>양식</h3>
+                    <p>양식당, 패스트푸드</p>
+                </a>
+                <a href="map.html?category=카페" class="category-card">
+                    <div class="category-emoji">☕</div>
+                    <h3>카페</h3>
+                    <p>주변 카페 찾기</p>
+                </a>
+                <a href="map.html?category=편의점" class="category-card">
+                    <div class="category-emoji">🏪</div>
+                    <h3>편의점</h3>
+                    <p>24시간 편의점</p>
+                </a>
+                <a href="map.html?category=약국" class="category-card">
+                    <div class="category-emoji">💊</div>
+                    <h3>약국</h3>
+                    <p>주변 약국 찾기</p>
+                </a>
+                <a href="map.html?category=병원" class="category-card">
+                    <div class="category-emoji">🏥</div>
+                    <h3>병원</h3>
+                    <p>병원, 의원</p>
+                </a>
+                <a href="map.html?category=은행" class="category-card">
+                    <div class="category-emoji">🏦</div>
+                    <h3>은행/ATM</h3>
+                    <p>은행, ATM 찾기</p>
+                </a>
+                <a href="map.html?category=문구점" class="category-card">
+                    <div class="category-emoji">✏️</div>
+                    <h3>문구점</h3>
+                    <p>문구점, 서점</p>
+                </a>
+                <a href="map.html?category=미용실" class="category-card">
+                    <div class="category-emoji">💇</div>
+                    <h3>미용실</h3>
+                    <p>미용실, 이발소</p>
+                </a>
+                <a href="map.html?category=헬스장" class="category-card">
+                    <div class="category-emoji">💪</div>
+                    <h3>헬스장</h3>
+                    <p>헬스장, 체육관</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA 섹션 -->
+    <section class="cta">
+        <div class="cta-content">
+            <h2>지금 바로 시작하세요</h2>
+            <p>전주대학교 주변의 모든 정보를 한눈에</p>
+            <a href="map.html" class="btn btn-large">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                지도 시작하기
+            </a>
+        </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="landing-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>JJU Map</span>
+            </div>
+            <p>&copy; 2025 전주대 주변 탐색지도. All rights reserved.</p>
+            <p>전주대학교 웹프로그래밍 팀 프로젝트</p>
+        </div>
+    </footer>
+</body>
+</html>
