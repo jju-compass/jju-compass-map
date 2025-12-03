@@ -294,6 +294,33 @@ let infowindow = null;
     }
 
     /**
+     * 두 좌표 사이의 방향각 계산 (0도 = 북쪽, 시계방향)
+     */
+    function calculateBearing(from, to) {
+        const lat1 = from.getLat() * Math.PI / 180;
+        const lat2 = to.getLat() * Math.PI / 180;
+        const dLng = (to.getLng() - from.getLng()) * Math.PI / 180;
+
+        const y = Math.sin(dLng) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) -
+                  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+        const bearing = Math.atan2(y, x) * 180 / Math.PI;
+
+        return (bearing + 360) % 360;
+    }
+
+    /**
+     * 부드러운 각도 보간 (최단 경로로 회전)
+     */
+    function lerpAngle(from, to, t) {
+        let delta = to - from;
+        // 360도 경계를 넘는 경우 처리
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
+        return from + delta * t;
+    }
+
+    /**
      * 단순 경로를 따라 마커를 이동시키는 애니메이션 (데모용)
      * - path: kakao.maps.LatLng[] (최소 2개)
      * - duration: 전체 시간 ms
@@ -305,16 +332,20 @@ let infowindow = null;
         const start = performance.now();
         let lastFootstepTime = 0;
         const footstepInterval = 300; // 발자국 간격 (ms)
+        let currentRotation = 0;
+        let targetRotation = 0;
 
         if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
             console.log('[JJU Walk] animate start: segments=', path.length - 1, 'duration=', duration);
         }
+
         function interp(p0, p1, t) {
             return new kakao.maps.LatLng(
                 lerp(p0.getLat(), p1.getLat(), t),
                 lerp(p0.getLng(), p1.getLng(), t)
             );
         }
+
         function step(now) {
             const t = Math.min(1, (now - start) / duration);
             const elapsed = now - start;
@@ -324,17 +355,35 @@ let infowindow = null;
             const ft = t * segCount;
             const i = Math.min(segCount - 1, Math.floor(ft));
             const localT = ft - i;
-            const pos = interp(path[i], path[i + 1], localT);
+
+            // 부드러운 easing 적용
+            const easedLocalT = easeOutCubic(localT);
+            const pos = interp(path[i], path[i + 1], easedLocalT);
             marker.setPosition(pos);
 
-            // 발자국 트레일 생성
+            // 현재 세그먼트의 방향 계산
+            if (i < path.length - 1) {
+                targetRotation = calculateBearing(path[i], path[i + 1]);
+            }
+
+            // 부드러운 회전 보간 (각도 변화를 15%씩 적용하여 더 빠른 반응)
+            currentRotation = lerpAngle(currentRotation, targetRotation, 0.15);
+
+            // CustomOverlay의 wrapper에 회전 적용
+            const content = marker.getContent();
+            if (content && content.classList.contains('walker-wrapper')) {
+                // 회전 중심을 캐릭터 중앙으로, 북쪽 기준이므로 -90도 보정
+                content.style.transform = `rotate(${currentRotation - 90}deg)`;
+            }
+
+            // 발자국 트레일 생성 (방향 정보 포함)
             if (map && elapsed - lastFootstepTime > footstepInterval && t < 0.98) {
-                createFootstepTrail(map, pos);
+                createFootstepTrail(map, pos, currentRotation - 90);
                 lastFootstepTime = elapsed;
             }
 
             if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE && (Math.floor(t * 100) % 15 === 0)) {
-                console.log('[JJU Walk] t=', t.toFixed(2), 'seg=', i, 'localT=', localT.toFixed(2));
+                console.log('[JJU Walk] t=', t.toFixed(2), 'seg=', i, 'localT=', localT.toFixed(2), 'rotation=', currentRotation.toFixed(1));
             }
             if (t < 1) {
                 requestAnimationFrame(step);
@@ -351,10 +400,16 @@ let infowindow = null;
 
     /**
      * 발자국 트레일 효과 생성
+     * - rotation: 회전 각도 (선택적)
      */
-    function createFootstepTrail(map, position) {
+    function createFootstepTrail(map, position, rotation = 0) {
         const div = document.createElement('div');
         div.className = 'footstep-trail';
+
+        // 회전 적용
+        if (rotation !== 0) {
+            div.style.transform = `rotate(${rotation}deg)`;
+        }
 
         const overlay = new kakao.maps.CustomOverlay({
             position,
@@ -437,7 +492,17 @@ function createDotMarker(position) {
  * 워커(사람) 마커 - CustomOverlay만 사용 (일반 마커 제거)
  */
 function createWalkerMarker(position) {
-    // 사람 이모지를 담을 div 생성
+    // 회전용 래퍼 div (외부)
+    const wrapper = document.createElement('div');
+    wrapper.className = 'walker-wrapper';
+    wrapper.style.position = 'relative';
+    wrapper.style.width = '50px';
+    wrapper.style.height = '50px';
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
+
+    // 사람 이모지를 담을 div (내부 - 애니메이션용)
     const el = document.createElement('div');
     el.className = 'walker-avatar';
     el.style.fontSize = '40px';
@@ -445,10 +510,12 @@ function createWalkerMarker(position) {
     el.style.textAlign = 'center';
     el.textContent = '🚶‍♂️';
 
+    wrapper.appendChild(el);
+
     // CustomOverlay 생성
     const customOverlay = new kakao.maps.CustomOverlay({
         position,
-        content: el,
+        content: wrapper,
         yAnchor: 0.5,
         zIndex: 7
     });
@@ -908,7 +975,7 @@ async function showWalkingRoute(map, start, end) {
                 const qs = new URLSearchParams({
                     origin: `${start.getLng()},${start.getLat()}`,
                     destination: `${end.getLng()},${end.getLat()}`,
-                    mode: 'walk'
+                    priority: 'RECOMMEND'  // RECOMMEND, TIME, DISTANCE
                 }).toString();
                 const res = await fetch(`${DIRECTIONS_API}?${qs}`, { method: 'GET' });
                 if (res.ok) {
@@ -918,10 +985,19 @@ async function showWalkingRoute(map, start, end) {
                         // 경로를 캐시에 저장 (LatLng 객체는 직렬화할 수 없으므로 plain object로 변환)
                         const pathData = json.path;
                         CacheManager.setRouteCache(routeCacheKey, pathData);
+
+                        if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
+                            console.log('[JJU Walk] Kakao 자동차 경로 사용:', {
+                                거리: `${json.distance}m`,
+                                소요시간: `${Math.floor(json.duration / 60)}분`,
+                                경로점: json.path.length,
+                                캐시: json.cached || false
+                            });
+                        }
                     }
                 }
             } catch (e) {
-                console.warn('Directions API 실패, 직선 경로로 대체합니다.', e);
+                console.warn('[JJU Walk] Directions API 실패, 직선 경로로 대체합니다.', e);
             }
         }
     }

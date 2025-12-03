@@ -6,6 +6,14 @@
     <title>전주대 주변지도 - JJU Map</title>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+
+    <!-- 경로 찾기 프록시 서버 설정 -->
+    <script>
+        // 로컬 개발: http://localhost:3000/api/directions
+        // 프로덕션: https://your-server.com/api/directions
+        window.JJU_DIRECTIONS_API = 'http://localhost:3000/api/directions';
+    </script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="map-page map-page-sidebar">
@@ -191,6 +199,7 @@
             </div>
         </main>
     </div>
+
 
     <script src="map.js"></script>
     <script>

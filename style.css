@@ -944,20 +944,34 @@ body {
 /* ============================================
    워커 애니메이션 (실제 사람 이모지)
    ============================================ */
+.walker-wrapper {
+    pointer-events: none;
+    transform-origin: center center;
+    will-change: transform;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .walker-avatar {
     position: relative;
     display: inline-block;
-    animation: walker-walk 0.6s ease-in-out infinite;
+    animation: walker-walk 0.5s ease-in-out infinite;
     pointer-events: none;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
+    transform-origin: center center;
 }
 
 @keyframes walker-walk {
     0%,100% {
-        transform: translate(-50%, -50%) translateY(0) rotate(-5deg);
+        transform: translateY(0) scale(1);
+    }
+    25% {
+        transform: translateY(-3px) scale(1.05, 0.95);
     }
     50% {
-        transform: translate(-50%, -50%) translateY(-5px) rotate(5deg);
+        transform: translateY(0) scale(0.95, 1.05);
+    }
+    75% {
+        transform: translateY(-3px) scale(1.05, 0.95);
     }
 }
 
@@ -1067,6 +1081,7 @@ body {
     pointer-events: none;
     z-index: 2;
     animation: footstep-fade 1.2s ease-out forwards;
+    transform-origin: center center;
 }
 
 .footstep-trail::before,
