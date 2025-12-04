@@ -221,5 +221,47 @@
             <p>전주대학교 웹프로그래밍 팀 프로젝트</p>
         </div>
     </footer>
+
+    <!-- 스크롤 애니메이션 스크립트 -->
+    <script>
+        // Intersection Observer를 사용한 스크롤 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            // 애니메이션 대상 요소들
+            const animateElements = document.querySelectorAll('.feature-item, .category-card, .cta-content, .section-header');
+            
+            // 초기 상태 설정
+            animateElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            });
+
+            // Intersection Observer 설정
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        // 스태거 효과 (순차적으로 나타남)
+                        setTimeout(() => {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 100);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            // 관찰 시작
+            animateElements.forEach(el => observer.observe(el));
+
+            // 타이핑 효과 (gradient-text)
+            const gradientText = document.querySelector('.gradient-text');
+            if (gradientText) {
+                gradientText.style.animation = 'gradientShift 3s ease infinite, fadeInUp 0.6s ease-out 0.4s both';
+            }
+        });
+    </script>
 </body>
 </html>

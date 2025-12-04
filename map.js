@@ -18,11 +18,183 @@ const MapState = {
         pickingStart: false,
         pickClickHandler: null
     },
-    currentAnimationId: null
+    currentAnimationId: null,
+    sounds: {
+        enabled: true
+    }
 };
 
 // 선택: 서버에 구현한 도보 길찾기 프록시 API 엔드포인트
 const DIRECTIONS_API = (typeof window !== 'undefined' && window.JJU_DIRECTIONS_API) ? window.JJU_DIRECTIONS_API : null;
+
+// ============================================
+// 사운드 효과 시스템
+// ============================================
+
+/**
+ * 사운드 효과 생성 (Web Audio API)
+ */
+const SoundEffects = {
+    audioContext: null,
+    
+    init() {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return this.audioContext;
+    },
+    
+    // 클릭/선택 효과음
+    playClick() {
+        if (!MapState.sounds.enabled) return;
+        try {
+            const ctx = this.init();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.15);
+        } catch (e) { console.log('Sound error:', e); }
+    },
+    
+    // 검색 완료 효과음
+    playSearchComplete() {
+        if (!MapState.sounds.enabled) return;
+        try {
+            const ctx = this.init();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.setValueAtTime(523, ctx.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(784, ctx.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.35);
+        } catch (e) { console.log('Sound error:', e); }
+    },
+    
+    // 경로 시작 효과음
+    playRouteStart() {
+        if (!MapState.sounds.enabled) return;
+        try {
+            const ctx = this.init();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.3);
+        } catch (e) { console.log('Sound error:', e); }
+    },
+    
+    // 경로 도착 효과음
+    playRouteComplete() {
+        if (!MapState.sounds.enabled) return;
+        try {
+            const ctx = this.init();
+            
+            // 두 음 연속 재생 (도착 느낌)
+            [0, 0.15, 0.3].forEach((delay, i) => {
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                const freqs = [523, 659, 784]; // C5, E5, G5
+                oscillator.frequency.setValueAtTime(freqs[i], ctx.currentTime + delay);
+                
+                gainNode.gain.setValueAtTime(0.2, ctx.currentTime + delay);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.2);
+                
+                oscillator.start(ctx.currentTime + delay);
+                oscillator.stop(ctx.currentTime + delay + 0.2);
+            });
+        } catch (e) { console.log('Sound error:', e); }
+    },
+    
+    // 에러 효과음
+    playError() {
+        if (!MapState.sounds.enabled) return;
+        try {
+            const ctx = this.init();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.25);
+        } catch (e) { console.log('Sound error:', e); }
+    }
+};
+
+/**
+ * 사운드 토글 버튼 생성
+ */
+function createSoundToggleButton() {
+    if (document.querySelector('.sound-toggle')) return;
+    
+    const btn = document.createElement('button');
+    btn.className = 'sound-toggle';
+    btn.title = '사운드 켜기/끄기';
+    btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+    `;
+    
+    btn.onclick = function() {
+        MapState.sounds.enabled = !MapState.sounds.enabled;
+        btn.classList.toggle('muted', !MapState.sounds.enabled);
+        btn.title = MapState.sounds.enabled ? '사운드 끄기' : '사운드 켜기';
+        
+        // 토글 시 피드백 사운드
+        if (MapState.sounds.enabled) {
+            SoundEffects.playClick();
+        }
+    };
+    
+    document.body.appendChild(btn);
+}
+
+// 페이지 로드 시 사운드 버튼 생성
+document.addEventListener('DOMContentLoaded', createSoundToggleButton);
 
 // ============================================
 // 에러 처리 유틸리티
@@ -58,6 +230,9 @@ const ErrorMessages = {
  * 에러 UI 표시
  */
 function showErrorUI(errorType, containerId = 'places-list') {
+    // 🔊 에러 사운드 재생
+    SoundEffects.playError();
+    
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -650,17 +825,19 @@ function showRouteInfoPanel(distanceMeters, timeMinutes) {
     const distanceM = Math.round(distanceMeters);
 
     panel.innerHTML = `
-        <div class="route-info-title">도보 경로</div>
+        <div class="route-info-header">
+            <div class="route-info-icon">🚶</div>
+            <div class="route-info-title">도보 경로</div>
+        </div>
         <div class="route-info-stats">
             <div class="route-info-stat">
-                <div class="route-info-stat-icon">📍</div>
+                <div class="route-info-stat-value">${distanceMeters >= 1000 ? distanceKm + '<span class="unit">km</span>' : distanceM + '<span class="unit">m</span>'}</div>
                 <div class="route-info-stat-label">거리</div>
-                <div class="route-info-stat-value">${distanceMeters >= 1000 ? distanceKm + 'km' : distanceM + 'm'}</div>
             </div>
+            <div class="route-info-divider"></div>
             <div class="route-info-stat">
-                <div class="route-info-stat-icon">⏱️</div>
-                <div class="route-info-stat-label">시간</div>
-                <div class="route-info-stat-value">${timeMinutes}분</div>
+                <div class="route-info-stat-value">${timeMinutes}<span class="unit">분</span></div>
+                <div class="route-info-stat-label">예상 시간</div>
             </div>
         </div>
     `;
@@ -721,6 +898,9 @@ async function showWalkingRoute(map, start, end) {
         console.warn('[JJU Walk] 시작 지점과 목적지가 동일하여 이동하지 않습니다.');
         return;
     }
+    
+    // 🔊 경로 시작 사운드 재생
+    SoundEffects.playRouteStart();
     // 서버 프록시가 제공되면 실제 도보 길찾기 경로 사용 시도
     if (DIRECTIONS_API) {
         try {
@@ -768,9 +948,9 @@ async function showWalkingRoute(map, start, end) {
     // 워커 마커 생성 및 경로 애니메이션
     MapState.route.animMarker = createWalkerMarker(start);
     MapState.route.animMarker.setMap(map);
-    const speed = 1.25 * 3; // 기존 대비 3배 속도 (m/s)
+    const speed = 1.25 * 40; // 초고속 애니메이션 (50m/s)
     const totalDistance = distanceMeters(start, end);
-    const duration = Math.max(800, (totalDistance / speed) * 1000);
+    const duration = Math.max(300, Math.min(2000, (totalDistance / speed) * 1000)); // 0.3초~2초 범위
     const walkTimeMinutes = Math.ceil(totalDistance / (4 * 1000 / 60)); // 4km/h 기준
 
     if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
@@ -781,13 +961,14 @@ async function showWalkingRoute(map, start, end) {
     showRouteInfoPanel(totalDistance, walkTimeMinutes);
 
     animateMarkerAlongPath(MapState.route.animMarker, path, duration, () => {
+        // 🔊 도착 사운드 재생
+        SoundEffects.playRouteComplete();
         // 도착 시 살짝 바운스
         try { bounceMarker(MapState.route.animMarker, 8, 400); } catch(_){}
         if (typeof window !== 'undefined' && window.JJU_DEBUG_ROUTE) {
             console.log('[JJU Walk] 경로 애니메이션 완료');
         }
-        // 애니메이션 완료 후 정보 패널 숨김
-        hideRouteInfoPanel();
+        // 도착 후에도 경로 정보 패널은 유지 (경로가 사라질 때까지)
     }, map); // map 파라미터 전달
 
     // 경로 전체가 보이도록 범위 조정
@@ -892,6 +1073,9 @@ function displayPlacesList(results, map) {
         
         // 클릭 시 해당 마커로 이동 및 인포윈도우 표시
         itemDiv.onclick = () => {
+            // 🔊 클릭 사운드 재생
+            SoundEffects.playClick();
+            
             const markerPosition = new kakao.maps.LatLng(place.y, place.x);
             // 스무스 이동 및 줌
             if (map && typeof map.panTo === 'function') {
@@ -987,6 +1171,9 @@ function displayMarkers(results, map) {
         return;
     }
     
+    // 🔊 검색 성공 사운드 재생
+    SoundEffects.playSearchComplete();
+    
     // 왼쪽 사이드바에 목록 표시
     displayPlacesList(results, map);
     
@@ -1016,6 +1203,9 @@ function displayMarkers(results, map) {
 
         // 마커 클릭 시 인포윈도우 표시 (인포윈도우 재사용으로 성능 개선)
         kakao.maps.event.addListener(marker, 'click', function() {
+            // 🔊 클릭 사운드 재생
+            SoundEffects.playClick();
+            
             // 상세 정보 HTML 생성
             const content = `
                 <div style="padding:10px;min-width:200px;line-height:1.5;">

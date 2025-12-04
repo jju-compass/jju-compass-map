@@ -120,6 +120,11 @@ body {
     align-items: center;
 }
 
+/* 히어로 콘텐츠 애니메이션 */
+.hero-content {
+    animation: slideInLeft 0.8s ease-out;
+}
+
 .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -131,6 +136,7 @@ body {
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 24px;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 
 .hero-title {
@@ -139,13 +145,21 @@ body {
     line-height: 1.2;
     margin-bottom: 24px;
     color: var(--text-dark);
+    animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+    background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
 .hero-description {
@@ -153,11 +167,13 @@ body {
     color: var(--text-gray);
     line-height: 1.8;
     margin-bottom: 32px;
+    animation: fadeInUp 0.6s ease-out 0.6s both;
 }
 
 .hero-buttons {
     display: flex;
     gap: 16px;
+    animation: fadeInUp 0.6s ease-out 0.8s both;
 }
 
 .btn {
@@ -198,12 +214,19 @@ body {
 .btn-large {
     padding: 18px 40px;
     font-size: 18px;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.btn-large:hover {
+    animation: none;
+    transform: translateY(-3px) scale(1.02);
 }
 
 /* 히어로 비주얼 */
 .hero-visual {
     position: relative;
     height: 400px;
+    animation: slideInRight 0.8s ease-out 0.3s both;
 }
 
 .floating-card {
@@ -216,6 +239,19 @@ body {
     align-items: center;
     gap: 16px;
     animation: float 3s ease-in-out infinite;
+    opacity: 0;
+}
+
+.floating-card.card-1 {
+    animation: floatCardIn 0.5s ease-out 0.5s forwards, float 3s ease-in-out 1s infinite;
+}
+
+.floating-card.card-2 {
+    animation: floatCardIn 0.5s ease-out 0.7s forwards, float 3s ease-in-out 1.2s infinite;
+}
+
+.floating-card.card-3 {
+    animation: floatCardIn 0.5s ease-out 0.9s forwards, float 3s ease-in-out 1.4s infinite;
 }
 
 .card-1 {
@@ -254,6 +290,60 @@ body {
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
+}
+
+/* 랜딩 페이지 입장 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes floatCardIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(76, 110, 245, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px 10px rgba(76, 110, 245, 0.2);
+    }
 }
 
 /* 주요 기능 */
@@ -1104,18 +1194,19 @@ body {
     100% { stroke-dashoffset: -20; }
 }
 
-/* 거리/시간 정보 패널 */
+/* 거리/시간 정보 패널 - 확대 디자인 */
 .route-info-panel {
     position: fixed;
-    bottom: 140px;
-    right: 20px;
-    background: white;
-    border-radius: 12px;
-    padding: 16px 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
-    z-index: 800;
-    min-width: 200px;
-    animation: route-info-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border-radius: 20px;
+    padding: 20px 32px;
+    box-shadow: 0 8px 32px rgba(76, 110, 245, 0.2), 0 0 0 1px rgba(76, 110, 245, 0.1);
+    z-index: 1000;
+    min-width: 280px;
+    animation: route-info-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -1134,43 +1225,66 @@ body {
     display: none;
 }
 
+.route-info-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(76, 110, 245, 0.1);
+}
+
+.route-info-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
 .route-info-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-blue);
     letter-spacing: 0.5px;
 }
 
 .route-info-stats {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.route-info-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(76, 110, 245, 0.2);
 }
 
 .route-info-stat {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
-}
-
-.route-info-stat-icon {
-    font-size: 18px;
-    line-height: 1;
+    min-width: 80px;
 }
 
 .route-info-stat-label {
-    font-size: 11px;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
 }
 
 .route-info-stat-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--primary-blue);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-dark);
     line-height: 1;
+}
+
+.route-info-stat-value .unit {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-left: 2px;
 }
 
 /* 경로 애니메이션 진행 중 표시 */
@@ -2229,4 +2343,54 @@ body:not(.landing-page):not(.map-page):not(.map-page-sidebar) footer p {
 .loading-text {
     font-size: 14px;
     color: var(--text-light);
+}
+
+/* ============================================
+   사운드 토글 버튼
+   ============================================ */
+.sound-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-white);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.sound-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-lg);
+}
+
+.sound-toggle:active {
+    transform: scale(0.95);
+}
+
+.sound-toggle svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--text-dark);
+}
+
+.sound-toggle.muted svg {
+    stroke: var(--text-light);
+}
+
+.sound-toggle.muted::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 30px;
+    background: #e74c3c;
+    transform: rotate(-45deg);
+    border-radius: 2px;
 }
