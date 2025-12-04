@@ -4,47 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>중식당 - JJU Map</title>
-    
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <meta name="description" content="전주대학교 주변 중식당 정보">
+    <meta http-equiv="refresh" content="0;url=map.html?category=중식">
     <link rel="stylesheet" href="style.css">
-    
 </head>
-<body>
-    <header>
-        <h1>🥟 전주대 주변 중식당</h1>
-        <p>전주대학교 주변의 중국 음식점을 찾아보세요!</p>
-    </header>
-
-    <div class="nav-buttons">
-        <a href="index.html" class="nav-btn home">🏠 메인</a>
-        <a href="food.html" class="nav-btn">전체 음식점</a>
-        <a href="food-korean.html" class="nav-btn">한식</a>
-        <a href="food-japanese.html" class="nav-btn">일식</a>
-        <a href="food-western.html" class="nav-btn">양식</a>
-        <a href="food-snack.html" class="nav-btn">분식</a>
-        <a href="convenience.html" class="nav-btn">편의점</a>
-        <a href="pharmacy.html" class="nav-btn">약국</a>
-        <a href="hospital.html" class="nav-btn">병원</a>
+<body class="redirect-page">
+    <div class="redirect-container">
+        <div class="redirect-spinner"></div>
+        <p>중식당 페이지로 이동 중...</p>
+        <a href="map.html?category=중식" class="redirect-link">자동으로 이동하지 않으면 클릭하세요</a>
     </div>
-
-    <div class="container">
-        <div id="places-list"></div>
-        <div id="map"></div>
-    </div>
-
-    <footer>
-        <p>&copy; 2025 전주대 주변 탐색지도. All rights reserved.</p>
-    </footer>
-
-
-    <script src="map.js"></script>
     <script>
-        window.addEventListener('load', function() {
-            const map = initializeMap();
-            if (map) {
-                searchAndDisplay("중식", map);
-            }
-        });
+        window.location.replace('map.html?category=중식');
     </script>
 </body>
 </html>

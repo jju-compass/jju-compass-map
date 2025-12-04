@@ -4,14 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전주대 주변지도 - JJU Map</title>
+    <meta name="description" content="전주대학교 주변 음식점, 카페, 편의시설을 쉽게 찾아보세요. 카카오맵 기반 위치 검색 서비스">
+    <meta name="theme-color" content="#4c6ef5">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="landing-page">
+    <!-- 스킵 내비게이션 -->
+    <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
+
     <!-- 상단 네비게이션 -->
-    <nav class="landing-navbar">
+    <nav class="landing-navbar" aria-label="메인 네비게이션">
         <div class="landing-nav-content">
             <div class="nav-logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
@@ -25,17 +30,18 @@
         </div>
     </nav>
 
+    <main id="main-content">
     <!-- 히어로 섹션 -->
-    <section class="hero">
+    <section class="hero" aria-labelledby="hero-title">
         <div class="hero-content">
             <div class="hero-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                     <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                 </svg>
                 <span>전주대학교 학생을 위한 지도 서비스</span>
             </div>
-            <h1 class="hero-title">
+            <h1 id="hero-title" class="hero-title">
                 전주대 주변 정보를<br>
                 <span class="gradient-text">한눈에</span>
             </h1>
@@ -44,8 +50,8 @@
                 전주대학교 주변 모든 장소를 쉽게 찾아보세요
             </p>
             <div class="hero-buttons">
-                <a href="map.html" class="btn btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <a href="map.html" class="btn btn-primary" aria-label="지도 페이지로 이동">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                         <circle cx="12" cy="10" r="3"></circle>
                     </svg>
