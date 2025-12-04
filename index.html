@@ -9,6 +9,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="landing-page">
+    <!-- 인트로 애니메이션 오버레이 -->
+    <div id="intro-overlay" class="intro-overlay">
+        <div class="intro-content">
+            <div class="intro-logo">
+                <svg class="intro-pin" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <div class="intro-pulse"></div>
+            </div>
+            <h1 class="intro-title">JJU Map</h1>
+            <p class="intro-subtitle">전주대학교 주변을 탐색하세요</p>
+            <div class="intro-features">
+                <span class="intro-feature">🍚 맛집</span>
+                <span class="intro-feature">☕ 카페</span>
+                <span class="intro-feature">🏪 편의시설</span>
+            </div>
+            <div class="intro-loading">
+                <div class="intro-loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- 스킵 내비게이션 -->
     <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
 
@@ -224,8 +247,25 @@
 
     <!-- 스크롤 애니메이션 스크립트 -->
     <script>
-        // Intersection Observer를 사용한 스크롤 애니메이션
+        // 인트로 애니메이션
         document.addEventListener('DOMContentLoaded', function() {
+            const intro = document.getElementById('intro-overlay');
+            const body = document.body;
+            
+            // 매번 인트로 표시
+            body.style.overflow = 'hidden'; // 스크롤 방지
+            
+            // 2.5초 후 인트로 페이드아웃
+            setTimeout(() => {
+                intro.classList.add('fade-out');
+                body.style.overflow = '';
+                
+                // 애니메이션 완료 후 제거
+                setTimeout(() => {
+                    intro.style.display = 'none';
+                }, 600);
+            }, 2500);
+            
             // 애니메이션 대상 요소들
             const animateElements = document.querySelectorAll('.feature-item, .category-card, .cta-content, .section-header');
             
