@@ -18,6 +18,13 @@ const MapState = {
         pickingStart: false,
         pickClickHandler: null
     },
+    // 홈 위치 (검색 기준점)
+    home: {
+        position: null,      // kakao.maps.LatLng
+        marker: null,        // CustomOverlay (🏠 마커)
+        pickingHome: false,
+        pickClickHandler: null
+    },
     currentAnimationId: null,
     sounds: {
         enabled: true
@@ -262,6 +269,56 @@ const JJUApi = {
             const { lat, lng } = this._savedStartPosition;
             const position = new kakao.maps.LatLng(lat, lng);
             setStartPosition(map, position);
+        }
+    },
+    
+    // ============================================
+    // 홈 위치 API (검색 기준점)
+    // ============================================
+    
+    /**
+     * 서버에서 홈 위치 가져오기
+     */
+    async getHomeLocation() {
+        const data = await this.request('/api/settings/home');
+        if (data && data.hasHome) {
+            return { lat: data.lat, lng: data.lng };
+        }
+        return null;
+    },
+    
+    /**
+     * 서버에 홈 위치 저장
+     */
+    async setHomeLocation(lat, lng) {
+        return await this.request('/api/settings/home', {
+            method: 'POST',
+            body: JSON.stringify({ lat, lng })
+        });
+    },
+    
+    /**
+     * 서버에서 홈 위치 삭제
+     */
+    async clearHomeLocation() {
+        return await this.request('/api/settings/home', {
+            method: 'DELETE'
+        });
+    },
+    
+    /**
+     * 홈 위치 로드 및 지도에 적용
+     */
+    async applyHomeLocation(map) {
+        try {
+            const home = await this.getHomeLocation();
+            if (home && typeof kakao !== 'undefined') {
+                const position = new kakao.maps.LatLng(home.lat, home.lng);
+                setHomePosition(map, position, false); // 서버 저장 안 함 (이미 서버에 있음)
+                console.log('[Home] 홈 위치 로드됨:', home.lat, home.lng);
+            }
+        } catch (e) {
+            console.warn('[Home] 홈 위치 로드 실패:', e);
         }
     }
 };
@@ -678,7 +735,11 @@ function initializeMap() {
      */
     function animateMarkerAlongPath(marker, path, duration = 2000, onDone, map = null) {
         if (!Array.isArray(path) || path.length < 2) return;
-        const start = performance.now();
+        
+        // 첫 프레임 전에 마커 위치를 시작점으로 명시적 설정 (첫 클릭 시 안 움직이는 문제 해결)
+        marker.setPosition(path[0]);
+        
+        let startTime = null;
         let lastFootstepTime = 0;
         const footstepInterval = 300; // 발자국 간격 (ms)
 
@@ -692,8 +753,13 @@ function initializeMap() {
             );
         }
         function step(now) {
-            const t = Math.min(1, (now - start) / duration);
-            const elapsed = now - start;
+            // 첫 프레임에서 startTime 초기화 (requestAnimationFrame 시점 기준)
+            if (startTime === null) {
+                startTime = now;
+            }
+            
+            const elapsed = now - startTime;
+            const t = Math.min(1, elapsed / duration);
 
             // 구간 수에 비례하여 진행
             const segCount = path.length - 1;
@@ -847,6 +913,301 @@ function createStartFlagMarker(position) {
     });
 }
 
+// ============================================
+// 홈 위치 (검색 기준점) 관련 함수
+// ============================================
+
+/**
+ * 홈 마커(🏠) 생성
+ */
+function createHomeMarker(position) {
+    const el = document.createElement('div');
+    el.className = 'home-marker';
+    el.innerHTML = `
+        <div class="home-icon">🏠</div>
+        <div class="home-pulse"></div>
+    `;
+
+    return new kakao.maps.CustomOverlay({
+        position,
+        content: el,
+        yAnchor: 1,
+        zIndex: 5
+    });
+}
+
+/**
+ * 홈 위치 설정 및 마커 표시
+ * @param {Object} map - 카카오맵 객체
+ * @param {kakao.maps.LatLng} latLng - 위치
+ * @param {boolean} saveToServer - 서버에 저장할지 여부 (기본 true)
+ */
+async function setHomePosition(map, latLng, saveToServer = true) {
+    MapState.home.position = latLng;
+    
+    // 기존 마커 업데이트 또는 새로 생성
+    if (MapState.home.marker) {
+        MapState.home.marker.setPosition(latLng);
+    } else {
+        MapState.home.marker = createHomeMarker(latLng);
+        MapState.home.marker.setMap(map);
+        
+        // 마커 클릭 이벤트 (인포윈도우 표시)
+        const markerEl = MapState.home.marker.getContent();
+        markerEl.style.cursor = 'pointer';
+        markerEl.onclick = () => {
+            showHomeInfoWindow(map, latLng);
+        };
+    }
+    
+    // 리플 효과
+    showRippleEffect(map, latLng, '#10b981');
+    
+    // 서버에 저장
+    if (saveToServer && JJUApi.userId) {
+        try {
+            const result = await JJUApi.setHomeLocation(latLng.getLat(), latLng.getLng());
+            if (result && result.success) {
+                showToast('🏠 홈 위치가 저장되었습니다');
+            }
+        } catch (e) {
+            console.warn('[Home] 서버 저장 실패:', e);
+        }
+    }
+    
+    // 홈 삭제 버튼 표시
+    const clearBtn = document.getElementById('rc-home-clear');
+    if (clearBtn) clearBtn.style.display = 'flex';
+}
+
+/**
+ * 홈 위치 인포윈도우 표시
+ */
+function showHomeInfoWindow(map, position) {
+    // 싱글톤 인포윈도우 사용
+    if (!MapState.infowindow) {
+        MapState.infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+    }
+    
+    const content = `
+        <div class="jju-infowindow home-infowindow">
+            <div class="jju-infowindow-header">
+                <div class="jju-infowindow-title">🏠 검색 기준 위치</div>
+            </div>
+            <div class="jju-infowindow-address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 8v4l2 2"></path>
+                </svg>
+                반경 2km 내 장소를 검색합니다
+            </div>
+            <div class="home-info-coords">
+                위도: ${position.getLat().toFixed(6)}<br>
+                경도: ${position.getLng().toFixed(6)}
+            </div>
+        </div>
+    `;
+    
+    MapState.infowindow.setContent(content);
+    MapState.infowindow.setPosition(position);
+    MapState.infowindow.open(map);
+}
+
+/**
+ * 홈 위치 삭제
+ */
+async function clearHomePosition(map) {
+    // 마커 제거
+    if (MapState.home.marker) {
+        MapState.home.marker.setMap(null);
+        MapState.home.marker = null;
+    }
+    MapState.home.position = null;
+    
+    // 서버에서 삭제
+    if (JJUApi.userId) {
+        try {
+            const result = await JJUApi.clearHomeLocation();
+            if (result && result.success) {
+                showToast('🏠 홈 위치가 삭제되었습니다');
+            }
+        } catch (e) {
+            console.warn('[Home] 서버 삭제 실패:', e);
+        }
+    }
+    
+    // 홈 삭제 버튼 숨김
+    const clearBtn = document.getElementById('rc-home-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    
+    // 인포윈도우 닫기
+    if (MapState.infowindow) {
+        MapState.infowindow.close();
+    }
+}
+
+/**
+ * GPS로 홈 위치 설정
+ */
+function setHomeFromGeolocation(map) {
+    if (!navigator.geolocation) {
+        alert('브라우저에서 위치 정보를 지원하지 않습니다.');
+        return;
+    }
+    
+    showToast('📍 위치를 가져오는 중...');
+    
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const ll = new kakao.maps.LatLng(lat, lng);
+            setHomePosition(map, ll);
+            if (typeof map.panTo === 'function') map.panTo(ll);
+        },
+        (err) => {
+            console.warn('Geolocation 실패:', err);
+            SoundEffects.playError();
+            alert('내 위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+    );
+}
+
+/**
+ * 지도 클릭으로 홈 위치 지정 모드 토글
+ */
+function toggleHomePickMode(map, enable) {
+    MapState.home.pickingHome = enable;
+    
+    if (enable) {
+        if (!MapState.home.pickClickHandler) {
+            MapState.home.pickClickHandler = function(e) {
+                setHomePosition(map, e.latLng);
+                toggleHomePickMode(map, false);
+            };
+        }
+        kakao.maps.event.addListener(map, 'click', MapState.home.pickClickHandler);
+        
+        // 지도 커서 변경
+        const mapContainer = document.getElementById('map');
+        if (mapContainer) mapContainer.style.cursor = 'crosshair';
+    } else {
+        if (MapState.home.pickClickHandler) {
+            kakao.maps.event.removeListener(map, 'click', MapState.home.pickClickHandler);
+        }
+        
+        // 커서 복원
+        const mapContainer = document.getElementById('map');
+        if (mapContainer) mapContainer.style.cursor = '';
+    }
+}
+
+/**
+ * 홈 설정 모달 표시
+ */
+function showHomeSettingModal(map) {
+    // 기존 모달 제거
+    const existing = document.getElementById('home-setting-modal');
+    if (existing) existing.remove();
+    
+    const hasHome = MapState.home.position !== null;
+
+    const modal = document.createElement('div');
+    modal.id = 'home-setting-modal';
+    modal.className = 'route-modal';
+    modal.innerHTML = `
+        <div class="route-modal-overlay"></div>
+        <div class="route-modal-content">
+            <h3 class="route-modal-title">
+                <span style="font-size: 28px;">🏠</span>
+                검색 기준 위치 설정
+            </h3>
+            <p class="route-modal-desc">설정한 위치를 중심으로 반경 2km 내 장소를 검색합니다</p>
+            <div class="route-modal-buttons">
+                <button class="route-modal-btn route-modal-btn-primary" id="home-modal-gps">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <div>
+                        <div class="btn-title">내 위치 사용</div>
+                        <div class="btn-desc">GPS로 자동 설정</div>
+                    </div>
+                </button>
+                <button class="route-modal-btn" id="home-modal-manual">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <div>
+                        <div class="btn-title">지도에서 선택</div>
+                        <div class="btn-desc">직접 클릭하여 지정</div>
+                    </div>
+                </button>
+                ${hasHome ? `
+                <button class="route-modal-btn route-modal-btn-danger" id="home-modal-clear">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <div>
+                        <div class="btn-title">홈 위치 삭제</div>
+                        <div class="btn-desc">기본값(전주대)으로 복원</div>
+                    </div>
+                </button>
+                ` : ''}
+            </div>
+            <button class="route-modal-close" id="home-modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // GPS 버튼
+    document.getElementById('home-modal-gps').onclick = () => {
+        modal.remove();
+        setHomeFromGeolocation(map);
+    };
+
+    // 수동 선택 버튼
+    document.getElementById('home-modal-manual').onclick = () => {
+        modal.remove();
+        toggleHomePickMode(map, true);
+        showToast('📍 지도를 클릭하여 홈 위치를 선택하세요');
+    };
+
+    // 홈 삭제 버튼 (있는 경우)
+    const clearBtn = document.getElementById('home-modal-clear');
+    if (clearBtn) {
+        clearBtn.onclick = () => {
+            modal.remove();
+            clearHomePosition(map);
+        };
+    }
+
+    // 닫기 버튼
+    document.getElementById('home-modal-close').onclick = () => modal.remove();
+
+    // 오버레이 클릭으로 닫기
+    modal.querySelector('.route-modal-overlay').onclick = () => modal.remove();
+}
+
+/**
+ * 검색 시 사용할 중심점 반환 (홈 위치 우선, 없으면 지도 중심)
+ */
+function getSearchCenter(map) {
+    if (MapState.home.position) {
+        return MapState.home.position;
+    }
+    return map.getCenter();
+}
+
 /**
  * 시작 지점 설정 및 깃발 마커 표시/업데이트
  */
@@ -914,13 +1275,24 @@ function attachRouteControls(map) {
     controls.id = 'route-controls';
     controls.className = 'route-controls';
     controls.innerHTML = `
+        <button class="rc-btn rc-btn-home" id="rc-home" title="주변 검색 기준 위치 설정">
+            <span class="rc-home-icon">🏠</span>
+            <span class="rc-text">주변 검색 기준 설정</span>
+        </button>
+        <button class="rc-btn rc-btn-home-clear" id="rc-home-clear" style="display:none;" title="홈 위치 삭제">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="rc-divider"></div>
         <button class="rc-btn rc-btn-primary" id="rc-route">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="10" r="3"></circle>
                 <path d="M12 2v4M12 14v8"></path>
                 <circle cx="12" cy="21" r="1"></circle>
             </svg>
-            <span>경로 보기</span>
+            <span class="rc-text">도보(거리, 시간) 보기</span>
         </button>
         <button class="rc-btn rc-btn-secondary" id="rc-clear" style="display:none;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -931,6 +1303,18 @@ function attachRouteControls(map) {
         </button>
     `;
     document.body.appendChild(controls);
+
+    // 홈 설정 버튼 클릭
+    document.getElementById('rc-home').onclick = () => {
+        SoundEffects.playClick();
+        showHomeSettingModal(map);
+    };
+
+    // 홈 삭제 버튼 클릭
+    document.getElementById('rc-home-clear').onclick = () => {
+        SoundEffects.playClick();
+        clearHomePosition(map);
+    };
 
     // 경로 보기 버튼 클릭
     document.getElementById('rc-route').onclick = () => {
@@ -954,6 +1338,9 @@ function attachRouteControls(map) {
         // 경로 지우기 버튼 숨김
         document.getElementById('rc-clear').style.display = 'none';
     };
+    
+    // 서버에서 홈 위치 로드
+    JJUApi.applyHomeLocation(map);
 }
 
 /**
@@ -1255,8 +1642,8 @@ async function searchPlacesByKeyword(keyword, map, callback, skipCache = false) 
         // Places 서비스 객체 생성
         const ps = new kakao.maps.services.Places();
 
-        // 전주대학교 중심 좌표 기준으로 검색
-        const center = map.getCenter();
+        // 검색 기준점 (홈 위치 우선, 없으면 지도 중심)
+        const center = getSearchCenter(map);
 
         // 검색 옵션: 중심 좌표와 반경 (2km로 확대)
         const options = {
@@ -1664,7 +2051,7 @@ function displayMarkers(results, map) {
  */
 function searchMultipleKeywords(keywords, map, callback) {
     const ps = new kakao.maps.services.Places();
-    const center = map.getCenter();
+    const center = getSearchCenter(map);
     const options = { 
         location: center, 
         radius: 2000,

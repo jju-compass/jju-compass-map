@@ -1790,6 +1790,128 @@ body {
     .navbar-right {
         display: none;
     }
+    
+    /* 사이드바 레이아웃 모바일 대응 */
+    .map-layout {
+        flex-direction: column;
+    }
+    
+    .map-sidebar {
+        display: none;
+    }
+    
+    .map-main {
+        height: calc(100vh - 58px);
+    }
+    
+    .map-content-header {
+        padding: 12px 16px;
+    }
+    
+    .content-header-icon {
+        font-size: 28px;
+    }
+    
+    .content-header-title {
+        font-size: 18px;
+    }
+    
+    .content-header-desc {
+        font-size: 12px;
+    }
+    
+    .three-column-container {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+    }
+    
+    .map-container {
+        flex: none;
+        height: 50vh;
+        min-height: 300px;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+    
+    .map-area {
+        height: 100%;
+    }
+    
+    .results-section {
+        width: 100%;
+        height: auto;
+        max-height: 35vh;
+        border-radius: 16px 16px 0 0;
+        border: none;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.1);
+    }
+    
+    .results-header {
+        padding: 16px 20px;
+    }
+    
+    .results-header h2 {
+        font-size: 16px;
+    }
+    
+    .results-list {
+        padding: 8px;
+    }
+    
+    .result-item {
+        padding: 14px 16px;
+        margin-bottom: 8px;
+    }
+    
+    .result-item-header h3 {
+        font-size: 15px;
+    }
+    
+    /* 경로 컨트롤 모바일 */
+    .map-page-sidebar .route-controls {
+        left: 10px;
+        bottom: 10px;
+    }
+    
+    .route-controls {
+        left: 10px;
+        bottom: 10px;
+        gap: 8px;
+    }
+    
+    .route-controls .rc-btn {
+        padding: 12px 14px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+    
+    .route-controls .rc-btn-primary {
+        padding: 14px 16px;
+    }
+    
+    /* 버튼 텍스트 숨김 (모바일) */
+    .rc-btn .rc-text {
+        display: none;
+    }
+    
+    .rc-btn-home {
+        padding: 12px !important;
+    }
+    
+    .route-info-panel {
+        left: 10px;
+        right: 10px;
+        transform: none;
+        bottom: 80px;
+        min-width: auto;
+        padding: 16px 20px;
+    }
+    
+    .route-info-stat-value {
+        font-size: 24px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -3087,5 +3209,146 @@ body:not(.landing-page):not(.map-page):not(.map-page-sidebar) footer p {
     .jju-infowindow-fav {
         width: 32px;
         height: 32px;
+    }
+}
+
+/* ============================================
+   홈 위치 마커 및 UI
+   ============================================ */
+
+/* 홈 마커 (🏠) */
+.home-marker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+    transition: transform 0.2s ease;
+}
+
+.home-marker:hover {
+    transform: scale(1.1) translateY(-2px);
+}
+
+.home-icon {
+    font-size: 36px;
+    line-height: 1;
+    animation: home-float 3s ease-in-out infinite;
+}
+
+@keyframes home-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+.home-pulse {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 50%;
+    animation: home-pulse-anim 2s ease-out infinite;
+}
+
+@keyframes home-pulse-anim {
+    0% {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* 홈 인포윈도우 */
+.home-infowindow .jju-infowindow-title {
+    color: #10b981;
+}
+
+.home-info-coords {
+    font-size: 11px;
+    color: var(--text-light);
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    line-height: 1.6;
+}
+
+/* 홈 설정 버튼 */
+.rc-btn-home {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.rc-btn-home:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.rc-home-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* 홈 삭제 버튼 */
+.rc-btn-home-clear {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    border: none !important;
+    padding: 8px !important;
+    min-width: auto !important;
+}
+
+.rc-btn-home-clear:hover {
+    background: #fecaca !important;
+    transform: translateY(-2px);
+}
+
+/* 컨트롤 구분선 */
+.rc-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 0 4px;
+}
+
+/* 모달 위험 버튼 (삭제용) */
+.route-modal-btn-danger {
+    background: #fef2f2 !important;
+    border-color: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+.route-modal-btn-danger:hover {
+    background: #fee2e2 !important;
+    border-color: #fecaca !important;
+}
+
+.route-modal-btn-danger .btn-title {
+    color: #dc2626;
+}
+
+.route-modal-btn-danger .btn-desc {
+    color: #f87171;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .home-icon {
+        font-size: 32px;
+    }
+    
+    .rc-divider {
+        height: 24px;
     }
 }
