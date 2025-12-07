@@ -21,11 +21,257 @@ const MapState = {
     currentAnimationId: null,
     sounds: {
         enabled: true
-    }
+    },
+    // 즐겨찾기 상태
+    favorites: new Set(),
+    // 현재 검색 결과
+    currentResults: []
 };
+
+// 서버 API 엔드포인트
+// 프로덕션: 빈 문자열 (같은 도메인의 /api/ 사용)
+// 로컬 개발: localhost:3000
+const API_BASE = (typeof window !== 'undefined' && window.JJU_API_BASE) 
+    ? window.JJU_API_BASE 
+    : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000'
+        : '';
 
 // 선택: 서버에 구현한 도보 길찾기 프록시 API 엔드포인트
 const DIRECTIONS_API = (typeof window !== 'undefined' && window.JJU_DIRECTIONS_API) ? window.JJU_DIRECTIONS_API : null;
+
+// ============================================
+// 사용자 ID 관리
+// ============================================
+
+/**
+ * 사용자 ID 가져오기 (없으면 생성)
+ */
+function getUserId() {
+    let userId = localStorage.getItem('jju_user_id');
+    if (!userId) {
+        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('jju_user_id', userId);
+    }
+    return userId;
+}
+
+// ============================================
+// API 클라이언트
+// ============================================
+
+const JJUApi = {
+    userId: null,
+    
+    init() {
+        this.userId = getUserId();
+        // 서버 설정 저장 (사운드 등)
+        this.loadUserPreferences();
+    },
+    
+    /**
+     * API 요청 헬퍼
+     */
+    async request(endpoint, options = {}) {
+        const url = `${API_BASE}${endpoint}`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-User-Id': this.userId,
+            ...options.headers
+        };
+        
+        try {
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.warn('[JJU API]', endpoint, 'failed:', error.message);
+            return null;
+        }
+    },
+    
+    // ============================================
+    // 검색 캐시 API
+    // ============================================
+    
+    /**
+     * 캐시된 검색 결과 조회
+     */
+    async getCachedSearch(keyword) {
+        const data = await this.request(`/api/cache/search?keyword=${encodeURIComponent(keyword)}`);
+        if (data && data.cached) {
+            console.log(`[Cache Hit] ${keyword} (${data.cacheAge}초 전 캐시)`);
+            return data.results;
+        }
+        return null;
+    },
+    
+    /**
+     * 검색 결과 캐시 저장
+     */
+    async setCachedSearch(keyword, results) {
+        return await this.request('/api/cache/search', {
+            method: 'POST',
+            body: JSON.stringify({ keyword, results })
+        });
+    },
+    
+    // ============================================
+    // 즐겨찾기 API
+    // ============================================
+    
+    /**
+     * 즐겨찾기 목록 가져오기
+     */
+    async getFavorites() {
+        const data = await this.request('/api/favorites');
+        if (data && data.favorites) {
+            // 즐겨찾기 ID Set 업데이트
+            MapState.favorites = new Set(data.favorites.map(f => f.place_id));
+            return data.favorites;
+        }
+        return [];
+    },
+    
+    /**
+     * 즐겨찾기 추가
+     */
+    async addFavorite(place) {
+        const result = await this.request('/api/favorites', {
+            method: 'POST',
+            body: JSON.stringify(place)
+        });
+        if (result && result.success) {
+            MapState.favorites.add(place.id || place.place_id);
+        }
+        return result;
+    },
+    
+    /**
+     * 즐겨찾기 제거
+     */
+    async removeFavorite(placeId) {
+        const result = await this.request(`/api/favorites/${placeId}`, {
+            method: 'DELETE'
+        });
+        if (result && result.success) {
+            MapState.favorites.delete(placeId);
+        }
+        return result;
+    },
+    
+    /**
+     * 즐겨찾기 토글
+     */
+    async toggleFavorite(place) {
+        const placeId = place.id || place.place_id;
+        if (MapState.favorites.has(placeId)) {
+            return await this.removeFavorite(placeId);
+        } else {
+            return await this.addFavorite(place);
+        }
+    },
+    
+    /**
+     * 여러 장소 즐겨찾기 상태 확인
+     */
+    async checkFavorites(placeIds) {
+        const data = await this.request('/api/favorites/check', {
+            method: 'POST',
+            body: JSON.stringify({ placeIds })
+        });
+        if (data && data.favorites) {
+            // MapState 업데이트
+            Object.entries(data.favorites).forEach(([id, isFav]) => {
+                if (isFav) MapState.favorites.add(id);
+                else MapState.favorites.delete(id);
+            });
+            return data.favorites;
+        }
+        return {};
+    },
+    
+    // ============================================
+    // 검색 히스토리 API
+    // ============================================
+    
+    /**
+     * 검색 히스토리 가져오기
+     */
+    async getHistory(limit = 10) {
+        const data = await this.request(`/api/history?limit=${limit}`);
+        return data ? data.history : [];
+    },
+    
+    /**
+     * 인기 검색어 가져오기
+     */
+    async getPopularSearches(limit = 10) {
+        const data = await this.request(`/api/history/popular?limit=${limit}`);
+        return data ? data.popular : [];
+    },
+    
+    /**
+     * 검색 히스토리 삭제
+     */
+    async clearHistory() {
+        return await this.request('/api/history', { method: 'DELETE' });
+    },
+    
+    // ============================================
+    // 사용자 설정
+    // ============================================
+    
+    /**
+     * 사용자 설정 저장 (로컬)
+     */
+    saveUserPreferences() {
+        const prefs = {
+            soundEnabled: MapState.sounds.enabled,
+            startPosition: MapState.route.startPosition ? {
+                lat: MapState.route.startPosition.getLat(),
+                lng: MapState.route.startPosition.getLng()
+            } : null
+        };
+        localStorage.setItem('jju_preferences', JSON.stringify(prefs));
+    },
+    
+    /**
+     * 사용자 설정 로드 (로컬)
+     */
+    loadUserPreferences() {
+        try {
+            const prefs = JSON.parse(localStorage.getItem('jju_preferences') || '{}');
+            if (typeof prefs.soundEnabled === 'boolean') {
+                MapState.sounds.enabled = prefs.soundEnabled;
+            }
+            // 시작 위치는 지도 초기화 후 설정
+            this._savedStartPosition = prefs.startPosition;
+        } catch (e) {
+            console.warn('[Preferences] 로드 실패:', e);
+        }
+    },
+    
+    /**
+     * 저장된 시작 위치 적용
+     */
+    applyStartPosition(map) {
+        if (this._savedStartPosition && typeof kakao !== 'undefined') {
+            const { lat, lng } = this._savedStartPosition;
+            const position = new kakao.maps.LatLng(lat, lng);
+            setStartPosition(map, position);
+        }
+    }
+};
+
+// API 초기화
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        JJUApi.init();
+    });
+}
 
 // ============================================
 // 사운드 효과 시스템
@@ -982,10 +1228,28 @@ async function showWalkingRoute(map, start, end) {
  * - keyword: 검색할 키워드(예: "음식점", "약국" 등)
  * - map: 지도 객체
  * - callback: 검색 결과를 처리할 함수
+ * - skipCache: 캐시 무시 여부
  */
-function searchPlacesByKeyword(keyword, map, callback) {
+async function searchPlacesByKeyword(keyword, map, callback, skipCache = false) {
     // 스켈레톤 로딩 표시
     showSkeletonLoading('places-list', 5);
+    
+    // 캐시 확인 (서버 캐시)
+    if (!skipCache && JJUApi.userId) {
+        try {
+            const cached = await JJUApi.getCachedSearch(keyword);
+            if (cached && cached.length > 0) {
+                console.log(`[Cache] Using cached results for "${keyword}"`);
+                // 즐겨찾기 상태 확인
+                const placeIds = cached.map(p => p.id);
+                await JJUApi.checkFavorites(placeIds);
+                callback(cached);
+                return;
+            }
+        } catch (e) {
+            console.warn('[Cache] 캐시 확인 실패:', e);
+        }
+    }
     
     try {
         // Places 서비스 객체 생성
@@ -1004,7 +1268,7 @@ function searchPlacesByKeyword(keyword, map, callback) {
         let allResults = [];
 
         // 키워드로 장소 검색 (페이지네이션 처리)
-        ps.keywordSearch(keyword, function(data, status, pagination) {
+        ps.keywordSearch(keyword, async function(data, status, pagination) {
             if (status === kakao.maps.services.Status.OK) {
                 allResults = allResults.concat(data);
                 
@@ -1012,7 +1276,15 @@ function searchPlacesByKeyword(keyword, map, callback) {
                 if (pagination.hasNextPage && pagination.current < 3) {
                     pagination.nextPage();
                 } else {
-                    // 모든 결과 수집 완료
+                    // 모든 결과 수집 완료 - 캐시 저장
+                    try {
+                        await JJUApi.setCachedSearch(keyword, allResults);
+                        // 즐겨찾기 상태 확인
+                        const placeIds = allResults.map(p => p.id);
+                        await JJUApi.checkFavorites(placeIds);
+                    } catch (e) {
+                        console.warn('[Cache] 캐시 저장 실패:', e);
+                    }
                     callback(allResults);
                 }
             } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
@@ -1039,6 +1311,9 @@ function displayPlacesList(results, map) {
     const listContainer = document.getElementById('places-list');
     if (!listContainer) return;
 
+    // 현재 결과 저장 (즐겨찾기 토글 시 사용)
+    MapState.currentResults = results;
+
     // 기존 목록 초기화
     listContainer.innerHTML = '';
 
@@ -1056,23 +1331,73 @@ function displayPlacesList(results, map) {
         // 카테고리명 추출 (마지막 카테고리)
         const categoryText = place.category_name ?
             place.category_name.split(' > ').pop() : '';
+        
+        // 즐겨찾기 여부 확인
+        const placeId = place.id || place.place_id;
+        const isFavorite = MapState.favorites.has(placeId);
 
-        // 장소 정보 HTML
+        // 장소 정보 HTML (즐겨찾기 버튼 포함)
         itemDiv.innerHTML = `
-            <h3>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                ${place.place_name}
-                ${categoryText ? `<span class="category-badge">${categoryText}</span>` : ''}
-            </h3>
+            <div class="result-item-header">
+                <h3>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    ${place.place_name}
+                    ${categoryText ? `<span class="category-badge">${categoryText}</span>` : ''}
+                </h3>
+                <button class="favorite-btn ${isFavorite ? 'active' : ''}" 
+                        data-place-id="${placeId}" 
+                        data-index="${index}"
+                        title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFavorite ? '#ff6b6b' : 'none'}" stroke="${isFavorite ? '#ff6b6b' : 'currentColor'}" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
             <p>${place.road_address_name || place.address_name}</p>
             ${place.phone ? `<p>${place.phone}</p>` : ''}
         `;
         
-        // 클릭 시 해당 마커로 이동 및 인포윈도우 표시
-        itemDiv.onclick = () => {
+        // 즐겨찾기 버튼 클릭 이벤트
+        const favBtn = itemDiv.querySelector('.favorite-btn');
+        favBtn.onclick = async (e) => {
+            e.stopPropagation(); // 부모 클릭 이벤트 방지
+            
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            
+            try {
+                const result = await JJUApi.toggleFavorite(place);
+                if (result) {
+                    const isNowFavorite = MapState.favorites.has(placeId);
+                    btn.classList.toggle('active', isNowFavorite);
+                    btn.title = isNowFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
+                    
+                    // 아이콘 업데이트
+                    const svg = btn.querySelector('svg');
+                    svg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
+                    svg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : 'currentColor');
+                    
+                    // 피드백 사운드
+                    SoundEffects.playClick();
+                    
+                    // 토스트 메시지
+                    showToast(result.message);
+                }
+            } catch (e) {
+                console.error('즐겨찾기 토글 실패:', e);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+        
+        // 아이템 클릭 시 해당 마커로 이동 및 인포윈도우 표시
+        itemDiv.onclick = (e) => {
+            // 즐겨찾기 버튼 클릭은 무시
+            if (e.target.closest('.favorite-btn')) return;
+            
             // 🔊 클릭 사운드 재생
             SoundEffects.playClick();
             
@@ -1087,20 +1412,10 @@ function displayPlacesList(results, map) {
                 try { map.setLevel(3, { animate: true }); } catch (_) { map.setLevel(3); }
             }
             
-            // 해당 마커의 인포윈도우 표시
-            const content = `
-                <div style="padding:10px;min-width:200px;line-height:1.5;">
-                    <div style="font-weight:bold;font-size:14px;margin-bottom:5px;">
-                        ${place.place_name}
-                    </div>
-                    <div style="font-size:12px;color:#666;">
-                        ${place.road_address_name || place.address_name}
-                    </div>
-                    ${place.phone ? `<div style="font-size:12px;color:#666;margin-top:3px;">📞 ${place.phone}</div>` : ''}
-                    ${place.category_name ? `<div style="font-size:11px;color:#888;margin-top:3px;">${place.category_name}</div>` : ''}
-                    ${place.place_url ? `<div style="margin-top:5px;"><a href="${place.place_url}" target="_blank" style="color:#4CAF50;text-decoration:none;font-size:12px;">상세보기 →</a></div>` : ''}
-                </div>
-            `;
+            // 해당 마커의 인포윈도우 표시 (즐겨찾기 버튼 포함)
+            const infoIsFavorite = MapState.favorites.has(placeId);
+            const content = createInfoWindowContent(place, index, infoIsFavorite);
+            
             if (MapState.infowindow) {
                 MapState.infowindow.setContent(content);
                 MapState.infowindow.open(map, MapState.markers[index]);
@@ -1128,6 +1443,115 @@ function displayPlacesList(results, map) {
         
         listContainer.appendChild(itemDiv);
     });
+}
+
+/**
+ * 인포윈도우 콘텐츠 생성 (즐겨찾기 버튼 포함)
+ * - 프로젝트 스타일과 일관된 디자인 적용
+ */
+function createInfoWindowContent(place, index, isFavorite) {
+    const placeId = place.id || place.place_id;
+    const categoryText = place.category_name ? place.category_name.split(' > ').pop() : '';
+    
+    return `
+        <div class="jju-infowindow">
+            <div class="jju-infowindow-header">
+                <div class="jju-infowindow-title">${place.place_name}</div>
+                <button class="jju-infowindow-fav ${isFavorite ? 'active' : ''}"
+                        onclick="toggleInfoWindowFavorite('${placeId}', ${index}, this)" 
+                        title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFavorite ? '#ff6b6b' : 'none'}" stroke="${isFavorite ? '#ff6b6b' : '#adb5bd'}" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="jju-infowindow-address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                ${place.road_address_name || place.address_name}
+            </div>
+            ${place.phone ? `
+                <div class="jju-infowindow-phone">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    ${place.phone}
+                </div>
+            ` : ''}
+            ${categoryText ? `<span class="jju-infowindow-badge">${categoryText}</span>` : ''}
+            ${place.place_url ? `
+                <a href="${place.place_url}" target="_blank" class="jju-infowindow-link">
+                    상세보기
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * 인포윈도우 내 즐겨찾기 토글 (전역 함수)
+ */
+window.toggleInfoWindowFavorite = async function(placeId, index, btnElement) {
+    const place = MapState.currentResults[index];
+    if (!place) return;
+    
+    try {
+        const result = await JJUApi.toggleFavorite(place);
+        if (result) {
+            const isNowFavorite = MapState.favorites.has(placeId);
+            
+            // 버튼 아이콘 업데이트
+            const svg = btnElement.querySelector('svg');
+            svg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
+            svg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : '#999');
+            btnElement.title = isNowFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
+            
+            // 사이드바 목록도 업데이트
+            const listBtn = document.querySelector(`.favorite-btn[data-place-id="${placeId}"]`);
+            if (listBtn) {
+                listBtn.classList.toggle('active', isNowFavorite);
+                const listSvg = listBtn.querySelector('svg');
+                listSvg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
+                listSvg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : 'currentColor');
+            }
+            
+            SoundEffects.playClick();
+            showToast(result.message);
+        }
+    } catch (e) {
+        console.error('즐겨찾기 토글 실패:', e);
+    }
+};
+
+/**
+ * 토스트 메시지 표시
+ */
+function showToast(message, duration = 2000) {
+    // 기존 토스트 제거
+    const existing = document.querySelector('.jju-toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'jju-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 애니메이션
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
 }
 
 /**
@@ -1206,20 +1630,12 @@ function displayMarkers(results, map) {
             // 🔊 클릭 사운드 재생
             SoundEffects.playClick();
             
-            // 상세 정보 HTML 생성
-            const content = `
-                <div style="padding:10px;min-width:200px;line-height:1.5;">
-                    <div style="font-weight:bold;font-size:14px;margin-bottom:5px;">
-                        ${place.place_name}
-                    </div>
-                    <div style="font-size:12px;color:#666;">
-                        ${place.road_address_name || place.address_name}
-                    </div>
-                    ${place.phone ? `<div style="font-size:12px;color:#666;margin-top:3px;">📞 ${place.phone}</div>` : ''}
-                    ${place.category_name ? `<div style="font-size:11px;color:#888;margin-top:3px;">${place.category_name}</div>` : ''}
-                    ${place.place_url ? `<div style="margin-top:5px;"><a href="${place.place_url}" target="_blank" style="color:#4CAF50;text-decoration:none;font-size:12px;">상세보기 →</a></div>` : ''}
-                </div>
-            `;
+            // 즐겨찾기 여부 확인
+            const placeId = place.id || place.place_id;
+            const isFavorite = MapState.favorites.has(placeId);
+            
+            // 상세 정보 HTML 생성 (즐겨찾기 버튼 포함)
+            const content = createInfoWindowContent(place, index, isFavorite);
             infowindow.setContent(content);
             infowindow.open(map, marker);
 
@@ -1303,6 +1719,235 @@ function searchAndDisplay(keyword, map) {
         searchPlacesByKeyword(keyword, map, function(results) {
             displayMarkers(results, map);
         });
+    }
+}
+
+// ============================================
+// 즐겨찾기 패널 UI
+// ============================================
+
+/**
+ * 즐겨찾기 패널 생성
+ */
+function createFavoritesPanel() {
+    if (document.getElementById('favorites-panel')) return;
+    
+    const panel = document.createElement('div');
+    panel.id = 'favorites-panel';
+    panel.className = 'favorites-panel';
+    panel.innerHTML = `
+        <div class="favorites-panel-header">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                즐겨찾기
+            </h2>
+            <button class="favorites-panel-close" onclick="closeFavoritesPanel()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="favorites-panel-content" id="favorites-list">
+            <div class="favorites-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <p>아직 즐겨찾기가 없습니다.<br>마음에 드는 장소에 하트를 눌러보세요!</p>
+            </div>
+        </div>
+    `;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'favorites-overlay';
+    overlay.className = 'favorites-overlay';
+    overlay.onclick = closeFavoritesPanel;
+    
+    document.body.appendChild(overlay);
+    document.body.appendChild(panel);
+}
+
+/**
+ * 즐겨찾기 패널 열기
+ */
+async function openFavoritesPanel(map) {
+    createFavoritesPanel();
+    
+    const panel = document.getElementById('favorites-panel');
+    const overlay = document.getElementById('favorites-overlay');
+    const listContainer = document.getElementById('favorites-list');
+    
+    // 패널 열기
+    setTimeout(() => {
+        panel.classList.add('open');
+        overlay.classList.add('show');
+    }, 10);
+    
+    // 즐겨찾기 목록 로드
+    listContainer.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><p class="loading-text">불러오는 중...</p></div>';
+    
+    try {
+        const favorites = await JJUApi.getFavorites();
+        
+        if (favorites.length === 0) {
+            listContainer.innerHTML = `
+                <div class="favorites-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <p>아직 즐겨찾기가 없습니다.<br>마음에 드는 장소에 하트를 눌러보세요!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        listContainer.innerHTML = favorites.map((fav, index) => `
+            <div class="favorite-item" data-place-id="${fav.place_id}" data-lat="${fav.lat}" data-lng="${fav.lng}" data-index="${index}">
+                <div class="favorite-item-info">
+                    <div class="favorite-item-name">${fav.place_name}</div>
+                    <div class="favorite-item-address">${fav.address || ''}</div>
+                    ${fav.category ? `<div class="favorite-item-category">${fav.category.split(' > ').pop()}</div>` : ''}
+                </div>
+                <button class="favorite-item-remove" onclick="event.stopPropagation(); removeFavoriteFromPanel('${fav.place_id}', this)" title="즐겨찾기 해제">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
+        
+        // 아이템 클릭 이벤트 (지도로 이동)
+        listContainer.querySelectorAll('.favorite-item').forEach(item => {
+            item.onclick = () => {
+                const lat = parseFloat(item.dataset.lat);
+                const lng = parseFloat(item.dataset.lng);
+                
+                if (map && lat && lng) {
+                    const position = new kakao.maps.LatLng(lat, lng);
+                    map.panTo(position);
+                    map.setLevel(3);
+                    showRippleEffect(map, position);
+                    closeFavoritesPanel();
+                    SoundEffects.playClick();
+                }
+            };
+        });
+        
+    } catch (error) {
+        console.error('즐겨찾기 로드 실패:', error);
+        listContainer.innerHTML = '<div class="favorites-empty"><p>즐겨찾기를 불러올 수 없습니다.</p></div>';
+    }
+}
+
+/**
+ * 즐겨찾기 패널 닫기
+ */
+function closeFavoritesPanel() {
+    const panel = document.getElementById('favorites-panel');
+    const overlay = document.getElementById('favorites-overlay');
+    
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+}
+
+/**
+ * 패널에서 즐겨찾기 제거
+ */
+window.removeFavoriteFromPanel = async function(placeId, btnElement) {
+    const result = await JJUApi.removeFavorite(placeId);
+    
+    if (result && result.success) {
+        const item = btnElement.closest('.favorite-item');
+        if (item) {
+            item.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => item.remove(), 300);
+        }
+        
+        // 사이드바 목록도 업데이트
+        const listBtn = document.querySelector(`.favorite-btn[data-place-id="${placeId}"]`);
+        if (listBtn) {
+            listBtn.classList.remove('active');
+            const svg = listBtn.querySelector('svg');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+        }
+        
+        SoundEffects.playClick();
+        showToast(result.message);
+        
+        // 빈 목록 체크
+        setTimeout(() => {
+            const listContainer = document.getElementById('favorites-list');
+            if (listContainer && !listContainer.querySelector('.favorite-item')) {
+                listContainer.innerHTML = `
+                    <div class="favorites-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <p>아직 즐겨찾기가 없습니다.<br>마음에 드는 장소에 하트를 눌러보세요!</p>
+                    </div>
+                `;
+            }
+        }, 350);
+    }
+};
+
+/**
+ * 즐겨찾기 버튼 생성 (네비게이션 또는 사이드바에 추가)
+ */
+function createFavoritesButton(map) {
+    // 이미 있으면 스킵
+    if (document.getElementById('favorites-toggle')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'favorites-toggle';
+    btn.className = 'favorites-toggle-btn';
+    btn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        즐겨찾기
+        <span class="count" id="favorites-count" style="display:none;">0</span>
+    `;
+    
+    btn.onclick = () => openFavoritesPanel(map);
+    
+    // 삽입 위치 결정 (사이드바 헤더 또는 네비게이션)
+    const sidebarHeader = document.querySelector('.sidebar-header');
+    const navbarRight = document.querySelector('.navbar-right');
+    
+    if (sidebarHeader) {
+        sidebarHeader.appendChild(btn);
+    } else if (navbarRight) {
+        navbarRight.insertBefore(btn, navbarRight.firstChild);
+    } else {
+        // 폴백: 사운드 버튼 옆에 고정
+        btn.style.cssText = 'position:fixed;bottom:20px;right:80px;z-index:1000;';
+        document.body.appendChild(btn);
+    }
+    
+    // 즐겨찾기 카운트 업데이트
+    updateFavoritesCount();
+}
+
+/**
+ * 즐겨찾기 카운트 업데이트
+ */
+async function updateFavoritesCount() {
+    const countEl = document.getElementById('favorites-count');
+    if (!countEl) return;
+    
+    try {
+        const favorites = await JJUApi.getFavorites();
+        const count = favorites.length;
+        
+        countEl.textContent = count;
+        countEl.style.display = count > 0 ? 'inline' : 'none';
+    } catch (e) {
+        // 무시
     }
 }
 

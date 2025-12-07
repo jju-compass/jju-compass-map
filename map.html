@@ -9,9 +9,21 @@
 
     <!-- 경로 찾기 프록시 서버 설정 -->
     <script>
-        // 로컬 개발: http://localhost:3000/api/directions
-        // 프로덕션: https://jju-map.duckdns.org/api/directions
-        window.JJU_DIRECTIONS_API = 'https://jju-map.duckdns.org/api/directions';
+        // 환경 자동 감지: localhost면 로컬 서버, 아니면 프로덕션
+        (function() {
+            const isLocal = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+            
+            if (isLocal) {
+                window.JJU_API_BASE = 'http://localhost:3000';
+            } else {
+                // 프로덕션: Nginx 프록시 통해 /api로 접근
+                window.JJU_API_BASE = 'https://jju-map.duckdns.org';
+            }
+            window.JJU_DIRECTIONS_API = window.JJU_API_BASE + '/api/directions';
+            
+            console.log('[JJU Config] API Base:', window.JJU_API_BASE);
+        })();
     </script>
 
     <link rel="stylesheet" href="style.css">
@@ -194,7 +206,7 @@
                         <h2>주변 장소</h2>
                         <span class="results-count" id="resultsCount">0개</span>
                     </div>
-                    <div class="results-list" id="placesList"></div>
+                    <div class="results-list" id="places-list"></div>
                 </div>
             </div>
         </main>
@@ -226,6 +238,11 @@
         // 페이지 로드 시 초기화
         window.addEventListener('load', function() {
             currentMap = initializeMap();
+
+            // 즐겨찾기 버튼 생성
+            if (currentMap && typeof createFavoritesButton === 'function') {
+                createFavoritesButton(currentMap);
+            }
 
             // URL 파라미터에서 카테고리 읽기
             const urlParams = new URLSearchParams(window.location.search);
@@ -280,60 +297,17 @@
             displayMarkers(results, currentMap);
         }
 
-        // 패널에 결과 표시
+        // 패널에 결과 표시 (map.js의 displayResultsList 사용)
         function displayResultsInPanel(results) {
-            const panel = document.getElementById('placesList');
-            panel.innerHTML = '';
-
             // 결과 개수 업데이트
             document.getElementById('resultsCount').textContent = results.length + '개';
-
-            results.forEach((place, index) => {
-                const item = document.createElement('div');
-                item.className = 'result-item';
-
-                const categoryText = place.category_name ?
-                    place.category_name.split(' > ').pop() : '';
-
-                item.innerHTML = `
-                    <div class="result-item-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <h3>${place.place_name}</h3>
-                    </div>
-                    <p class="result-item-address">${place.road_address_name || place.address_name}</p>
-                    ${place.phone ? `<p class="result-item-phone">📞 ${place.phone}</p>` : ''}
-                    ${categoryText ? `<span class="result-item-badge">${categoryText}</span>` : ''}
-                `;
-
-                item.addEventListener('click', function() {
-                    const markerPosition = new kakao.maps.LatLng(place.y, place.x);
-                    currentMap.panTo(markerPosition);
-                    currentMap.setLevel(3);
-
-                    // 인포윈도우 표시
-                    const content = `
-                        <div style="padding:10px;min-width:200px;line-height:1.5;">
-                            <div style="font-weight:bold;font-size:14px;margin-bottom:5px;">
-                                ${place.place_name}
-                            </div>
-                            <div style="font-size:12px;color:#666;">
-                                ${place.road_address_name || place.address_name}
-                            </div>
-                            ${place.phone ? `<div style="font-size:12px;color:#666;margin-top:3px;">📞 ${place.phone}</div>` : ''}
-                            ${place.place_url ? `<div style="margin-top:5px;"><a href="${place.place_url}" target="_blank" style="color:#4CAF50;text-decoration:none;font-size:12px;">상세보기 →</a></div>` : ''}
-                        </div>
-                    `;
-                    if (window.infowindow) {
-                        window.infowindow.setContent(content);
-                        window.infowindow.open(currentMap, markers[index]);
-                    }
-                });
-
-                panel.appendChild(item);
-            });
+            
+            // map.js의 즐겨찾기 기능이 포함된 결과 목록 표시 함수 사용
+            if (typeof displayPlacesList === 'function') {
+                displayPlacesList(results, currentMap);
+            } else {
+                console.error('displayPlacesList 함수를 찾을 수 없습니다');
+            }
         }
 
         // 카테고리 헤더 업데이트
