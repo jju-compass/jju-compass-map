@@ -298,6 +298,77 @@ app.delete('/api/history', async (req, res) => {
 });
 
 // ============================================
+// 사용자 설정 API (홈 위치)
+// ============================================
+
+/**
+ * 홈 위치 조회
+ * GET /api/settings/home
+ */
+app.get('/api/settings/home', async (req, res) => {
+    try {
+        const home = await db.getHomeLocation(req.userId);
+        
+        if (home) {
+            res.json({
+                userId: req.userId,
+                hasHome: true,
+                ...home
+            });
+        } else {
+            res.json({
+                userId: req.userId,
+                hasHome: false,
+                lat: null,
+                lng: null
+            });
+        }
+    } catch (error) {
+        console.error('[Settings Error]', error);
+        res.status(500).json({ error: '홈 위치 조회 실패', message: error.message });
+    }
+});
+
+/**
+ * 홈 위치 저장
+ * POST /api/settings/home
+ * Body: { lat: number, lng: number }
+ */
+app.post('/api/settings/home', async (req, res) => {
+    try {
+        const { lat, lng } = req.body;
+        
+        if (typeof lat !== 'number' || typeof lng !== 'number') {
+            return res.status(400).json({ error: 'lat과 lng가 필요합니다 (숫자)' });
+        }
+        
+        const result = await db.setHomeLocation(req.userId, lat, lng);
+        console.log(`[Home Set] user: ${req.userId}, lat: ${lat}, lng: ${lng}`);
+        
+        res.json(result);
+    } catch (error) {
+        console.error('[Settings Error]', error);
+        res.status(500).json({ error: '홈 위치 저장 실패', message: error.message });
+    }
+});
+
+/**
+ * 홈 위치 삭제
+ * DELETE /api/settings/home
+ */
+app.delete('/api/settings/home', async (req, res) => {
+    try {
+        const result = await db.clearHomeLocation(req.userId);
+        console.log(`[Home Clear] user: ${req.userId}`);
+        
+        res.json(result);
+    } catch (error) {
+        console.error('[Settings Error]', error);
+        res.status(500).json({ error: '홈 위치 삭제 실패', message: error.message });
+    }
+});
+
+// ============================================
 // 사용자 ID 생성 API
 // ============================================
 
@@ -481,6 +552,11 @@ app.get('/api', (req, res) => {
                 'GET /api/history': '검색 히스토리',
                 'GET /api/history/popular': '인기 검색어',
                 'DELETE /api/history': '히스토리 삭제'
+            },
+            settings: {
+                'GET /api/settings/home': '홈 위치 조회',
+                'POST /api/settings/home': '홈 위치 저장',
+                'DELETE /api/settings/home': '홈 위치 삭제'
             },
             directions: {
                 'GET /api/directions': '도보 경로 찾기'

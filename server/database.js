@@ -84,6 +84,16 @@ async function initDatabase() {
         );
     `);
     
+    db.run(`
+        -- 사용자 설정 테이블 (홈 위치 등)
+        CREATE TABLE IF NOT EXISTS user_settings (
+            user_id TEXT PRIMARY KEY,
+            home_lat REAL,
+            home_lng REAL,
+            updated_at INTEGER NOT NULL
+        );
+    `);
+    
     db.run(`CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_history_user ON search_history(user_id);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_history_keyword ON search_history(keyword);`);
@@ -396,6 +406,74 @@ async function clearSearchHistory(userId) {
 // 유틸리티
 // ============================================
 
+// ============================================
+// 사용자 설정 관련 함수 (홈 위치)
+// ============================================
+
+/**
+ * 홈 위치 조회
+ */
+async function getHomeLocation(userId) {
+    const db = await getDb();
+    
+    const result = db.exec(
+        `SELECT home_lat, home_lng, updated_at FROM user_settings WHERE user_id = ?`,
+        [userId]
+    );
+    
+    const rows = resultToObjects(result);
+    
+    if (rows.length > 0 && rows[0].home_lat !== null && rows[0].home_lng !== null) {
+        return {
+            lat: rows[0].home_lat,
+            lng: rows[0].home_lng,
+            updatedAt: rows[0].updated_at
+        };
+    }
+    return null;
+}
+
+/**
+ * 홈 위치 저장
+ */
+async function setHomeLocation(userId, lat, lng) {
+    const db = await getDb();
+    const now = Date.now();
+    
+    db.run(
+        `INSERT OR REPLACE INTO user_settings (user_id, home_lat, home_lng, updated_at)
+         VALUES (?, ?, ?, ?)`,
+        [userId, lat, lng, now]
+    );
+    
+    saveDatabase(db);
+    return { success: true, lat, lng, message: '홈 위치가 저장되었습니다' };
+}
+
+/**
+ * 홈 위치 삭제
+ */
+async function clearHomeLocation(userId) {
+    const db = await getDb();
+    
+    db.run(
+        `UPDATE user_settings SET home_lat = NULL, home_lng = NULL, updated_at = ? WHERE user_id = ?`,
+        [Date.now(), userId]
+    );
+    
+    const changes = db.getRowsModified();
+    saveDatabase(db);
+    
+    return { 
+        success: true,
+        message: '홈 위치가 삭제되었습니다'
+    };
+}
+
+// ============================================
+// 유틸리티
+// ============================================
+
 /**
  * 데이터베이스 정리 (만료 캐시 삭제, 오래된 히스토리 정리)
  */
@@ -459,6 +537,10 @@ module.exports = {
     getSearchHistory,
     getPopularSearches,
     clearSearchHistory,
+    // 사용자 설정 (홈 위치)
+    getHomeLocation,
+    setHomeLocation,
+    clearHomeLocation,
     // 유틸리티
     cleanupDatabase,
     getDatabaseStats
