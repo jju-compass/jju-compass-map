@@ -1013,6 +1013,18 @@ body {
     transform: translateY(-1px);
 }
 
+.route-controls .rc-btn-danger {
+    background: white;
+    color: #dc3545;
+    border: 1px solid #ffc9c9;
+}
+
+.route-controls .rc-btn-danger:hover {
+    background: #fff5f5;
+    border-color: #dc3545;
+    transform: translateY(-1px);
+}
+
 /* ============================================
    경로 시작 모달
    ============================================ */
@@ -1491,6 +1503,9 @@ body {
 .sidebar-header {
     padding: 24px 20px;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .sidebar-header h2 {
@@ -1498,6 +1513,53 @@ body {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+/* 사이드바 닫기 버튼 (데스크탑에서 숨김) */
+.sidebar-close-btn {
+    display: none;
+    appearance: none;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-gray);
+    transition: all 0.2s ease;
+}
+
+.sidebar-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-dark);
+}
+
+/* 모바일 햄버거 메뉴 버튼 (데스크탑에서 숨김) */
+.mobile-menu-btn {
+    display: none;
+    appearance: none;
+    border: none;
+    background: transparent;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: background 0.2s ease;
+    margin-right: 8px;
+}
+
+.mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 모바일 사이드바 오버레이 (데스크탑에서 숨김) */
+.mobile-sidebar-overlay {
+    display: none;
 }
 
 .sidebar-section {
@@ -1736,6 +1798,219 @@ body {
     border: 1px solid rgba(76, 110, 245, 0.1);
 }
 
+/* ============================================
+   결과 카드 v2 - 순위/색상 테마 적용
+   ============================================ */
+
+/* 카드 컨테이너 (순위 번호 포함) */
+.result-card {
+    display: flex;
+    gap: 16px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+/* 좌측 색상 액센트 바 */
+.result-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--card-accent, var(--primary-blue));
+    border-radius: 16px 0 0 16px;
+}
+
+.result-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    border-color: var(--card-accent, var(--primary-blue));
+}
+
+.result-card:focus-visible {
+    outline: 3px solid var(--card-accent, var(--primary-blue));
+    outline-offset: 2px;
+}
+
+/* 순위 번호 (원형) */
+.result-card-rank {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--card-bg, #f8f9fa);
+    border: 2px solid var(--card-accent, var(--primary-blue));
+    color: var(--card-accent, var(--primary-blue));
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 순위 1, 2, 3 특별 스타일 */
+.result-card-rank--gold {
+    background: linear-gradient(135deg, #fff9db 0%, #ffe066 100%);
+    border-color: #fab005;
+    color: #e67700;
+}
+
+.result-card-rank--silver {
+    background: linear-gradient(135deg, #f8f9fa 0%, #dee2e6 100%);
+    border-color: #868e96;
+    color: #495057;
+}
+
+.result-card-rank--bronze {
+    background: linear-gradient(135deg, #fff4e6 0%, #ffc078 100%);
+    border-color: #fd7e14;
+    color: #d9480f;
+}
+
+/* 카드 본문 */
+.result-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 카드 헤더 */
+.result-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.result-card-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 카테고리 + 거리 메타 */
+.result-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.result-card-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--card-bg, #f8f9fa);
+    color: var(--card-accent, var(--primary-blue));
+    border: 1px solid var(--card-border, var(--border-color));
+}
+
+.result-card-category-icon {
+    font-size: 14px;
+}
+
+.result-card-distance {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.result-card-distance svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* 구분선 */
+.result-card-divider {
+    height: 1px;
+    background: var(--border-light, #e9ecef);
+    margin: 12px 0;
+}
+
+/* 카드 정보 행 */
+.result-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.result-card-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.result-card-row svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: #adb5bd;
+}
+
+.result-card-row span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 즐겨찾기 버튼 */
+.result-card-favorite {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.result-card-favorite:hover {
+    background: #fff0f0;
+    transform: scale(1.1);
+}
+
+.result-card-favorite.active {
+    background: #fff0f0;
+}
+
+.result-card-favorite svg {
+    width: 18px;
+    height: 18px;
+}
+
 /* 경로 보기 버튼 위치 조정 (사이드바 레이아웃용) */
 .map-page-sidebar .route-controls {
     left: 280px;
@@ -1792,13 +2067,59 @@ body {
         display: none;
     }
     
+    /* 모바일 햄버거 메뉴 버튼 표시 */
+    .mobile-menu-btn {
+        display: flex;
+    }
+    
     /* 사이드바 레이아웃 모바일 대응 */
     .map-layout {
         flex-direction: column;
     }
     
+    /* 모바일 사이드바 - 슬라이드 오버레이 */
     .map-sidebar {
-        display: none;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        background: var(--bg-white);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+    }
+    
+    .map-sidebar.open {
+        left: 0;
+    }
+    
+    /* 모바일 사이드바 오버레이 */
+    .mobile-sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .mobile-sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* 모바일 사이드바 닫기 버튼 표시 */
+    .sidebar-close-btn {
+        display: flex;
     }
     
     .map-main {
@@ -1996,11 +2317,17 @@ body {
 .category-card:focus-visible,
 .sidebar-item:focus-visible,
 .result-item:focus-visible,
+.result-card:focus-visible,
 .nav-links a:focus-visible,
 .route-modal-btn:focus-visible,
 .rc-btn:focus-visible {
     outline: 3px solid var(--primary-blue);
     outline-offset: 2px;
+}
+
+/* result-card 전용 포커스 (카테고리 색상 사용) */
+.result-card:focus-visible {
+    outline-color: var(--card-accent, var(--primary-blue));
 }
 
 /* 스킵 내비게이션 (스크린 리더용) */
@@ -3645,3 +3972,181 @@ body:not(.landing-page):not(.map-page):not(.map-page-sidebar) footer p {
         padding: 12px 14px;
     }
 }
+
+/* ============================================
+   검색 결과 정렬 및 거리 표시
+   ============================================ */
+
+/* 정렬 컨테이너 */
+.results-sort-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f3f4f6 100%);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-light);
+}
+
+.results-sort-container label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-gray);
+}
+
+.sort-select {
+    flex: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    /* 커스텀 화살표 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.sort-select:hover {
+    border-color: var(--primary-blue);
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+/* 결과 아이템 액션 영역 (거리 + 즐겨찾기) */
+.result-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* 거리 배지 */
+.distance-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    background: linear-gradient(135deg, rgba(76, 110, 245, 0.1) 0%, rgba(124, 58, 237, 0.08) 100%);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* 모바일 정렬 UI */
+@media (max-width: 768px) {
+    .results-sort-container {
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+    
+    .sort-select {
+        padding: 6px 28px 6px 10px;
+        font-size: 12px;
+    }
+    
+    .distance-badge {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+}
+
+/* ============================================
+   키보드 접근성 개선
+   ============================================ */
+
+/* 키보드 포커스 스타일 (전역) */
+*:focus-visible {
+    outline: 3px solid var(--primary-blue);
+    outline-offset: 2px;
+}
+
+/* 버튼/링크에 대한 포커스 스타일 */
+button:focus-visible,
+a:focus-visible,
+.sidebar-item:focus-visible,
+.result-item:focus-visible,
+.favorite-item:focus-visible {
+    outline: 3px solid var(--primary-blue);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(76, 110, 245, 0.15);
+}
+
+/* 결과 아이템 포커스 시 배경 변화 */
+.result-item:focus-visible {
+    background: linear-gradient(135deg, rgba(76, 110, 245, 0.08) 0%, rgba(124, 58, 237, 0.04) 100%);
+    border-color: var(--primary-blue);
+}
+
+/* 사이드바 아이템 포커스 */
+.sidebar-item:focus-visible {
+    background: linear-gradient(135deg, rgba(76, 110, 245, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%);
+    color: var(--primary-blue);
+}
+
+/* 즐겨찾기 아이템 포커스 */
+.favorite-item:focus-visible {
+    background: #e8f4ff;
+    border: 2px solid var(--primary-blue);
+}
+
+/* 포커스 가능한 요소 커서 */
+[tabindex="0"]:not(:disabled) {
+    cursor: pointer;
+}
+
+/* 입력 필드 포커스 */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.2);
+}
+
+/* 스킵 링크 개선 */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    background: var(--primary-blue);
+    color: white;
+    padding: 12px 24px;
+    z-index: 10000;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 0 0 8px 0;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* 포커스 순서 시각적 표시 (개발/테스트용) */
+/*
+[tabindex="0"]:focus::after {
+    content: attr(data-focus-index);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary-blue);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+*/

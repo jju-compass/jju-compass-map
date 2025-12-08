@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전주대 주변지도 - JJU Map</title>
 
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services"></script>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=fdfa17b1b09d466f785d5e9124d0e5fe&libraries=services,clusterer"></script>
 
     <!-- 경로 찾기 프록시 서버 설정 -->
     <script>
@@ -27,11 +27,21 @@
     </script>
 
     <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
 </head>
 <body class="map-page map-page-sidebar">
+    <!-- 모바일 사이드바 오버레이 -->
+    <div class="mobile-sidebar-overlay" id="sidebarOverlay"></div>
+    
     <!-- 상단 네비게이션 바 -->
     <nav class="top-navbar">
         <div class="navbar-left">
+            <!-- 모바일 햄버거 버튼 -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="메뉴 열기">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"></path>
+                </svg>
+            </button>
             <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:white;">
                 <svg class="navbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -42,14 +52,36 @@
         </div>
 
         <div class="navbar-center">
-            <div class="navbar-search">
-                <input type="text" id="topSearch" placeholder="장소, 주소 검색...">
-                <button class="search-icon-btn">
+            <div class="navbar-search" id="searchContainer">
+                <input type="text" id="topSearch" placeholder="장소, 주소 검색..." autocomplete="off">
+                <button class="search-icon-btn" aria-label="검색">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
                 </button>
+                <!-- 인기 검색어 드롭다운 -->
+                <div class="search-dropdown" id="searchDropdown">
+                    <div class="dropdown-section" id="popularSection">
+                        <div class="dropdown-section-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                            </svg>
+                            인기 검색어
+                        </div>
+                        <div id="popularList" class="dropdown-list"></div>
+                    </div>
+                    <div class="dropdown-section" id="historySection">
+                        <div class="dropdown-section-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            최근 검색
+                        </div>
+                        <div id="historyList" class="dropdown-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -61,9 +93,15 @@
 
     <div class="map-layout">
         <!-- 왼쪽 사이드바 -->
-        <aside class="map-sidebar">
+        <aside class="map-sidebar" id="mapSidebar">
+            <!-- 모바일 사이드바 헤더 (닫기 버튼 포함) -->
             <div class="sidebar-header">
                 <h2>카테고리</h2>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="메뉴 닫기">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
 
             <div class="sidebar-section">
@@ -221,24 +259,7 @@
     <script src="map.js"></script>
     <script>
         let currentMap = null;
-        const categoryInfo = {
-            '전체음식점': { icon: '🍽️', title: '전체 음식점', desc: '주변의 모든 음식점을 확인하세요' },
-            '한식': { icon: '🍚', title: '한식', desc: '주변의 한식당을 확인하세요' },
-            '중식': { icon: '🥟', title: '중식', desc: '주변의 중식당을 확인하세요' },
-            '일식': { icon: '🍣', title: '일식', desc: '주변의 일식당을 확인하세요' },
-            '양식': { icon: '🍕', title: '양식', desc: '주변의 양식당을 확인하세요' },
-            '분식': { icon: '🍢', title: '분식', desc: '주변의 분식집을 확인하세요' },
-            '카페': { icon: '☕', title: '카페', desc: '주변의 카페를 확인하세요' },
-            '편의점': { icon: '🏪', title: '편의점', desc: '주변의 편의점을 확인하세요' },
-            '약국': { icon: '💊', title: '약국', desc: '주변의 약국을 확인하세요' },
-            '병원': { icon: '🏥', title: '병원', desc: '주변의 병원을 확인하세요' },
-            '은행': { icon: '🏦', title: '은행/ATM', desc: '주변의 은행과 ATM을 확인하세요' },
-            '문구점': { icon: '✏️', title: '문구점', desc: '주변의 문구점을 확인하세요' },
-            '미용실': { icon: '💇', title: '미용실', desc: '주변의 미용실을 확인하세요' },
-            'PC방': { icon: '💻', title: 'PC방', desc: '주변의 PC방을 확인하세요' },
-            '헬스장': { icon: '💪', title: '헬스장', desc: '주변의 헬스장을 확인하세요' },
-            '노래방': { icon: '🎤', title: '노래방', desc: '주변의 노래방을 확인하세요' }
-        };
+        // categoryInfo는 config.js에서 로드됨
 
         // 페이지 로드 시 초기화
         window.addEventListener('load', function() {
@@ -257,7 +278,43 @@
                 searchCategory(category);
                 updateCategoryHeader(category);
             }
+            
+            // 모바일 메뉴 초기화
+            initMobileMenu();
         });
+        
+        // 모바일 메뉴 초기화
+        function initMobileMenu() {
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('mapSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            
+            function openSidebar() {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            menuBtn.addEventListener('click', openSidebar);
+            closeBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+            
+            // 사이드바 아이템 클릭 시 모바일에서 자동 닫기
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        }
 
         // 사이드바 아이템 클릭
         document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -315,30 +372,150 @@
             }
         }
 
-        // 카테고리 헤더 업데이트
-        function updateCategoryHeader(keyword) {
-            const info = categoryInfo[keyword] || { icon: '📍', title: keyword, desc: `주변의 ${keyword}을 확인하세요` };
-            document.getElementById('categoryIcon').textContent = info.icon;
-            document.getElementById('categoryTitle').textContent = info.title;
-            document.getElementById('categoryDesc').textContent = info.desc;
-        }
+        // 카테고리 헤더 업데이트 (config.js의 함수 사용)
+        // updateCategoryHeader는 config.js에 정의됨
 
-        // 검색 기능
-        document.getElementById('topSearch').addEventListener('keypress', function(e) {
+        // 검색 기능 (debounce 적용)
+        let searchDebounceTimer = null;
+        const searchInput = document.getElementById('topSearch');
+        
+        // Enter 키로 즉시 검색
+        searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
+                clearTimeout(searchDebounceTimer);
                 performSearch();
             }
         });
+        
+        // 실시간 검색 (300ms debounce)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchDebounceTimer);
+            // 입력값이 있으면 드롭다운 숨기기
+            if (this.value.trim().length > 0) {
+                hideSearchDropdown();
+            }
+            searchDebounceTimer = setTimeout(() => {
+                if (this.value.trim().length >= 2) {
+                    performSearch();
+                }
+            }, 300);
+        });
 
-        document.querySelector('.search-icon-btn').addEventListener('click', performSearch);
+        document.querySelector('.search-icon-btn').addEventListener('click', function() {
+            clearTimeout(searchDebounceTimer);
+            performSearch();
+        });
 
         function performSearch() {
             const query = document.getElementById('topSearch').value.trim();
             if (!query) return;
 
+            hideSearchDropdown();
             searchCategory(query);
             updateCategoryHeader(query);
         }
+        
+        // ============================================
+        // 인기 검색어 / 검색 히스토리 드롭다운
+        // ============================================
+        
+        const searchDropdown = document.getElementById('searchDropdown');
+        const popularList = document.getElementById('popularList');
+        const historyList = document.getElementById('historyList');
+        const searchContainer = document.getElementById('searchContainer');
+        
+        // 드롭다운 표시
+        function showSearchDropdown() {
+            searchDropdown.classList.add('show');
+            loadDropdownData();
+        }
+        
+        // 드롭다운 숨기기
+        function hideSearchDropdown() {
+            searchDropdown.classList.remove('show');
+        }
+        
+        // 드롭다운 데이터 로드
+        async function loadDropdownData() {
+            // 인기 검색어 로드
+            try {
+                const popular = await JJUApi.getPopularSearches(5);
+                if (popular && popular.length > 0) {
+                    popularList.innerHTML = popular.map((item, idx) => `
+                        <div class="dropdown-item" data-keyword="${escapeHtml(item.keyword)}">
+                            <span class="dropdown-rank">${idx + 1}</span>
+                            <span class="dropdown-text">${escapeHtml(item.keyword)}</span>
+                            <span class="dropdown-count">${item.count}회</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('popularSection').style.display = 'block';
+                } else {
+                    document.getElementById('popularSection').style.display = 'none';
+                }
+            } catch (e) {
+                console.warn('[Popular] 인기 검색어 로드 실패:', e);
+                document.getElementById('popularSection').style.display = 'none';
+            }
+            
+            // 검색 히스토리 로드
+            try {
+                const history = await JJUApi.getHistory(5);
+                if (history && history.length > 0) {
+                    historyList.innerHTML = history.map(item => `
+                        <div class="dropdown-item" data-keyword="${escapeHtml(item.keyword)}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            <span class="dropdown-text">${escapeHtml(item.keyword)}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('historySection').style.display = 'block';
+                } else {
+                    document.getElementById('historySection').style.display = 'none';
+                }
+            } catch (e) {
+                console.warn('[History] 검색 히스토리 로드 실패:', e);
+                document.getElementById('historySection').style.display = 'none';
+            }
+        }
+        
+        // HTML 이스케이프 (로컬 함수)
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+        
+        // 이벤트 바인딩
+        searchInput.addEventListener('focus', showSearchDropdown);
+        
+        // 드롭다운 외부 클릭 시 닫기
+        document.addEventListener('click', function(e) {
+            if (!searchContainer.contains(e.target)) {
+                hideSearchDropdown();
+            }
+        });
+        
+        // 드롭다운 아이템 클릭 이벤트 (이벤트 위임)
+        searchDropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.dropdown-item');
+            if (item && item.dataset.keyword) {
+                searchInput.value = item.dataset.keyword;
+                performSearch();
+            }
+        });
+        
+        // ESC 키로 드롭다운 닫기
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideSearchDropdown();
+                this.blur();
+            }
+        });
     </script>
 </body>
 </html>

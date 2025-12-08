@@ -10,6 +10,8 @@ const MapState = {
     markers: [],
     infowindow: null,
     transientOverlays: [],
+    // 마커 클러스터러
+    clusterer: null,
     route: {
         startPosition: null,
         startMarker: null,
@@ -33,6 +35,10 @@ const MapState = {
     favorites: new Set(),
     // 현재 검색 결과
     currentResults: [],
+    // 현재 검색 결과 (원본, 정렬용)
+    currentResultsOriginal: [],
+    // 현재 정렬 방식
+    currentSort: 'distance', // 'distance' | 'name'
     // 선택된 마커 상태
     selectedMarker: {
         index: null,           // 선택된 마커 인덱스
@@ -51,6 +57,103 @@ const API_BASE = (typeof window !== 'undefined' && window.JJU_API_BASE)
 
 // 선택: 서버에 구현한 도보 길찾기 프록시 API 엔드포인트
 const DIRECTIONS_API = (typeof window !== 'undefined' && window.JJU_DIRECTIONS_API) ? window.JJU_DIRECTIONS_API : null;
+
+// ============================================
+// 유틸리티 함수
+// ============================================
+
+/**
+ * HTML 이스케이프 함수 (XSS 방지)
+ * - 사용자 입력이나 외부 데이터를 HTML에 삽입할 때 사용
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * 거리 계산 함수 (Haversine 공식)
+ * - 두 좌표 간의 거리를 미터 단위로 반환
+ */
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000; // 지구 반지름 (미터)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+/**
+ * 거리 포맷팅 (m/km)
+ */
+function formatDistance(meters) {
+    if (meters < 1000) {
+        return Math.round(meters) + 'm';
+    }
+    return (meters / 1000).toFixed(1) + 'km';
+}
+
+/**
+ * 검색 결과 정렬 함수
+ * @param {Array} results - 검색 결과 배열
+ * @param {string} sortBy - 정렬 기준 ('distance' | 'name')
+ * @param {kakao.maps.LatLng} center - 거리 계산 기준점
+ * @returns {Array} - 정렬된 결과 배열
+ */
+function sortResults(results, sortBy, center) {
+    if (!results || results.length === 0) return results;
+    
+    const resultsCopy = [...results];
+    
+    if (sortBy === 'name') {
+        // 이름순 정렬 (가나다순)
+        resultsCopy.sort((a, b) => {
+            const nameA = a.place_name || '';
+            const nameB = b.place_name || '';
+            return nameA.localeCompare(nameB, 'ko');
+        });
+    } else {
+        // 거리순 정렬 (기본값)
+        if (center) {
+            const centerLat = center.getLat();
+            const centerLng = center.getLng();
+            
+            resultsCopy.sort((a, b) => {
+                const distA = calculateDistance(centerLat, centerLng, parseFloat(a.y), parseFloat(a.x));
+                const distB = calculateDistance(centerLat, centerLng, parseFloat(b.y), parseFloat(b.x));
+                return distA - distB;
+            });
+        }
+    }
+    
+    return resultsCopy;
+}
+
+/**
+ * 검색 결과에 거리 정보 추가
+ * @param {Array} results - 검색 결과 배열
+ * @param {kakao.maps.LatLng} center - 거리 계산 기준점
+ * @returns {Array} - 거리 정보가 추가된 결과 배열
+ */
+function addDistanceToResults(results, center) {
+    if (!results || !center) return results;
+    
+    const centerLat = center.getLat();
+    const centerLng = center.getLng();
+    
+    return results.map(place => ({
+        ...place,
+        _distance: calculateDistance(centerLat, centerLng, parseFloat(place.y), parseFloat(place.x))
+    }));
+}
 
 // ============================================
 // 사용자 ID 관리
@@ -479,13 +582,13 @@ function createSoundToggleButton() {
     const btn = document.createElement('button');
     btn.className = 'sound-toggle';
     btn.title = '사운드 켜기/끄기';
-    btn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    btn.innerHTML = typeof getIcon === 'function' 
+        ? getIcon('volumeOn', 18)
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-    `;
+        </svg>`;
     
     btn.onclick = function() {
         MapState.sounds.enabled = !MapState.sounds.enabled;
@@ -549,15 +652,17 @@ function showErrorUI(errorType, containerId = 'places-list') {
         message: '알 수 없는 오류가 발생했습니다.'
     };
 
+    const alertIcon = typeof getIcon === 'function' 
+        ? getIcon('alertCircle', 40) 
+        : `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>`;
+
     container.innerHTML = `
         <div class="error-container">
-            <div class="error-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </div>
+            <div class="error-icon">${alertIcon}</div>
             <h3 class="error-title">${error.title}</h3>
             <p class="error-message">${error.message}</p>
             <button class="error-retry-btn" onclick="location.reload()">
@@ -607,6 +712,77 @@ function showLoadingSpinner(containerId = 'places-list', message = '검색 중..
 // ============================================
 
 /**
+ * 마커 클러스터러 초기화
+ * - 마커가 많을 때 자동으로 클러스터링
+ * - 줌 레벨에 따라 동적으로 그룹화
+ */
+function initClusterer(map) {
+    if (typeof kakao === 'undefined' || !kakao.maps.MarkerClusterer) {
+        console.warn('[Clusterer] MarkerClusterer 라이브러리가 로드되지 않았습니다.');
+        return;
+    }
+    
+    // 기존 클러스터러 제거
+    if (MapState.clusterer) {
+        MapState.clusterer.clear();
+    }
+    
+    // 클러스터러 스타일 정의
+    const clusterStyles = [
+        // 작은 클러스터 (10개 미만)
+        {
+            width: '40px',
+            height: '40px',
+            background: 'linear-gradient(135deg, #4c6ef5 0%, #3b5bdb 100%)',
+            borderRadius: '50%',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            lineHeight: '40px',
+            fontSize: '14px',
+            boxShadow: '0 2px 8px rgba(76, 110, 245, 0.4)'
+        },
+        // 중간 클러스터 (10~30개)
+        {
+            width: '50px',
+            height: '50px',
+            background: 'linear-gradient(135deg, #f59f00 0%, #e67700 100%)',
+            borderRadius: '50%',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            lineHeight: '50px',
+            fontSize: '15px',
+            boxShadow: '0 2px 10px rgba(245, 159, 0, 0.4)'
+        },
+        // 큰 클러스터 (30개 이상)
+        {
+            width: '60px',
+            height: '60px',
+            background: 'linear-gradient(135deg, #fa5252 0%, #e03131 100%)',
+            borderRadius: '50%',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            lineHeight: '60px',
+            fontSize: '16px',
+            boxShadow: '0 3px 12px rgba(250, 82, 82, 0.4)'
+        }
+    ];
+    
+    MapState.clusterer = new kakao.maps.MarkerClusterer({
+        map: map,
+        averageCenter: true,      // 클러스터 중심을 마커들의 평균 위치로
+        minLevel: 5,              // 클러스터링 시작 줌 레벨 (숫자가 클수록 더 넓은 영역)
+        disableClickZoom: false,  // 클러스터 클릭 시 확대 허용
+        styles: clusterStyles,
+        gridSize: 60              // 클러스터링 그리드 크기
+    });
+    
+    console.log('[Clusterer] 마커 클러스터러 초기화 완료');
+}
+
+/**
  * Kakao Maps API를 이용해 지도 영역을 초기화하는 함수입니다.
  */
 function initializeMap() {
@@ -645,6 +821,9 @@ function initializeMap() {
         } catch (e) {
             console.warn('경로 컨트롤 부착 실패:', e);
         }
+        
+        // 마커 클러스터러 초기화
+        initClusterer(map);
 
         return map;
     } catch (e) {
@@ -851,6 +1030,11 @@ function clearMarkers() {
     // 인포윈도우 닫기
     if (MapState.infowindow) {
         MapState.infowindow.close();
+    }
+    
+    // 클러스터러가 있으면 먼저 비우기
+    if (MapState.clusterer) {
+        MapState.clusterer.clear();
     }
     
     // 모든 마커 제거
@@ -1299,12 +1483,19 @@ function attachRouteControls(map) {
             </svg>
             <span class="rc-text">도보(거리, 시간) 보기</span>
         </button>
-        <button class="rc-btn rc-btn-secondary" id="rc-clear" style="display:none;">
+        <button class="rc-btn rc-btn-secondary" id="rc-clear" style="display:none;" title="현재 경로만 삭제">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
             <span>경로 지우기</span>
+        </button>
+        <button class="rc-btn rc-btn-danger" id="rc-reset" style="display:none;" title="시작 지점 초기화">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 4v6h6"></path>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>초기화</span>
         </button>
     `;
     document.body.appendChild(controls);
@@ -1332,17 +1523,32 @@ function attachRouteControls(map) {
         }
     };
 
-    // 경로 지우기 버튼
+    // 경로 지우기 버튼 - 경로만 지우기 (시작 지점 유지)
     document.getElementById('rc-clear').onclick = () => {
+        SoundEffects.playClick();
         clearRoute(map);
-        if (MapState.route.startMarker) {
-            MapState.route.startMarker.setMap(null);
-            MapState.route.startMarker = null;
-            MapState.route.startPosition = null;
-        }
-        // 경로 지우기 버튼 숨김
-        document.getElementById('rc-clear').style.display = 'none';
+        showToast('🗺️ 경로가 삭제되었습니다');
+        // 경로만 지우고, 시작 지점은 유지
+        // 시작 지점 완전 초기화는 rc-reset 버튼으로
     };
+    
+    // 시작 지점 초기화 버튼
+    const resetBtn = document.getElementById('rc-reset');
+    if (resetBtn) {
+        resetBtn.onclick = () => {
+            SoundEffects.playClick();
+            clearRoute(map);
+            if (MapState.route.startMarker) {
+                MapState.route.startMarker.setMap(null);
+                MapState.route.startMarker = null;
+                MapState.route.startPosition = null;
+            }
+            // 버튼 숨김
+            document.getElementById('rc-clear').style.display = 'none';
+            document.getElementById('rc-reset').style.display = 'none';
+            showToast('🚩 시작 지점이 초기화되었습니다');
+        };
+    }
     
     // 서버에서 홈 위치 로드
     JJUApi.applyHomeLocation(map);
@@ -1406,8 +1612,9 @@ function showRouteStartModal(map) {
     document.getElementById('modal-gps').onclick = () => {
         modal.remove();
         setStartFromGeolocation(map);
-        // 경로 지우기 버튼 표시
+        // 경로 관련 버튼 표시
         document.getElementById('rc-clear').style.display = 'flex';
+        document.getElementById('rc-reset').style.display = 'flex';
     };
 
     // 수동 선택 버튼
@@ -1415,8 +1622,9 @@ function showRouteStartModal(map) {
         modal.remove();
         toggleStartPickMode(map, true);
         alert('지도를 클릭하여 시작 지점을 선택하세요.');
-        // 경로 지우기 버튼 표시
+        // 경로 관련 버튼 표시
         document.getElementById('rc-clear').style.display = 'flex';
+        document.getElementById('rc-reset').style.display = 'flex';
     };
 
     // 닫기 버튼
@@ -1698,13 +1906,27 @@ async function searchPlacesByKeyword(keyword, map, callback, skipCache = false) 
  * 왼쪽 사이드바에 장소 목록을 표시하는 함수입니다.
  * - results: Places API에서 받은 장소 배열
  * - map: 지도 객체
+ * - skipSort: 정렬 건너뛰기 (기존 정렬 유지)
  */
-function displayPlacesList(results, map) {
+function displayPlacesList(results, map, skipSort = false) {
     const listContainer = document.getElementById('places-list');
     if (!listContainer) return;
 
+    // 검색 기준점
+    const center = getSearchCenter(map);
+    
+    // 거리 정보 추가
+    let processedResults = addDistanceToResults(results, center);
+    
+    // 원본 저장 (첫 호출 시만)
+    if (!skipSort) {
+        MapState.currentResultsOriginal = processedResults;
+        // 기본 정렬: 거리순
+        processedResults = sortResults(processedResults, MapState.currentSort, center);
+    }
+    
     // 현재 결과 저장 (즐겨찾기 토글 시 사용)
-    MapState.currentResults = results;
+    MapState.currentResults = processedResults;
 
     // 기존 목록 초기화
     listContainer.innerHTML = '';
@@ -1712,48 +1934,124 @@ function displayPlacesList(results, map) {
     // 결과 개수 업데이트 (새로운 UI용)
     const resultsCount = document.getElementById('resultsCount');
     if (resultsCount) {
-        resultsCount.textContent = results.length + '개';
+        resultsCount.textContent = processedResults.length + '개';
+    }
+    
+    // 정렬 드롭다운 추가 (결과가 있을 때만)
+    if (processedResults.length > 0) {
+        const sortContainer = document.createElement('div');
+        sortContainer.className = 'results-sort-container';
+        sortContainer.innerHTML = `
+            <label for="sortSelect">정렬:</label>
+            <select id="sortSelect" class="sort-select">
+                <option value="distance" ${MapState.currentSort === 'distance' ? 'selected' : ''}>거리순</option>
+                <option value="name" ${MapState.currentSort === 'name' ? 'selected' : ''}>이름순</option>
+            </select>
+        `;
+        listContainer.appendChild(sortContainer);
+        
+        // 정렬 변경 이벤트
+        const sortSelect = sortContainer.querySelector('#sortSelect');
+        sortSelect.addEventListener('change', function() {
+            MapState.currentSort = this.value;
+            const sorted = sortResults(MapState.currentResultsOriginal, this.value, center);
+            displayPlacesList(sorted, map, true);
+            // 마커도 재표시 (순서 동기화)
+            displayMarkers(sorted, map, true);
+        });
     }
 
-    // 각 장소를 목록으로 표시
-    results.forEach((place, index) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'result-item';
+    // 각 장소를 목록으로 표시 (새 카드 디자인)
+    processedResults.forEach((place, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'result-card';
 
-        // 카테고리명 추출 (마지막 카테고리)
-        const categoryText = place.category_name ?
-            place.category_name.split(' > ').pop() : '';
+        // 카테고리 색상 가져오기
+        const colors = typeof getCategoryColor === 'function' 
+            ? getCategoryColor(place.category_name) 
+            : { primary: '#4c6ef5', bg: '#f3f6ff', border: '#c5d4ff' };
         
-        // 즐겨찾기 여부 확인
-        const placeId = place.id || place.place_id;
-        const isFavorite = MapState.favorites.has(placeId);
+        // CSS 변수로 색상 적용
+        cardDiv.style.setProperty('--card-accent', colors.primary);
+        cardDiv.style.setProperty('--card-bg', colors.bg);
+        cardDiv.style.setProperty('--card-border', colors.border);
 
-        // 장소 정보 HTML (즐겨찾기 버튼 포함)
-        itemDiv.innerHTML = `
-            <div class="result-item-header">
-                <h3>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    ${place.place_name}
-                    ${categoryText ? `<span class="category-badge">${categoryText}</span>` : ''}
-                </h3>
-                <button class="favorite-btn ${isFavorite ? 'active' : ''}" 
-                        data-place-id="${placeId}" 
-                        data-index="${index}"
-                        title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFavorite ? '#ff6b6b' : 'none'}" stroke="${isFavorite ? '#ff6b6b' : 'currentColor'}" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
+        // 카테고리명 추출 (마지막 카테고리) - XSS 방지
+        const categoryText = place.category_name ?
+            escapeHtml(place.category_name.split(' > ').pop()) : '';
+        
+        // 카테고리 아이콘 가져오기
+        const categoryIcon = typeof getCategoryInfo === 'function' && place.category_name
+            ? getCategoryInfo(place.category_name.split(' > ').pop())?.icon || '📍'
+            : '📍';
+        
+        // 즐겨찾기 여부 확인 - XSS 방지
+        const placeId = escapeHtml(place.id || place.place_id);
+        const isFavorite = MapState.favorites.has(place.id || place.place_id);
+        
+        // XSS 방지를 위한 이스케이프
+        const placeName = escapeHtml(place.place_name);
+        const address = escapeHtml(place.road_address_name || place.address_name);
+        const phone = place.phone ? escapeHtml(place.phone) : '';
+        
+        // 거리 표시
+        const distanceText = place._distance ? formatDistance(place._distance) : '';
+        
+        // 순위 번호 (1, 2, 3은 특별 스타일)
+        const rankNum = index + 1;
+        let rankClass = 'result-card-rank';
+        if (rankNum === 1) rankClass += ' result-card-rank--gold';
+        else if (rankNum === 2) rankClass += ' result-card-rank--silver';
+        else if (rankNum === 3) rankClass += ' result-card-rank--bronze';
+
+        // 새 카드 HTML
+        cardDiv.innerHTML = `
+            <div class="${rankClass}">${rankNum}</div>
+            <div class="result-card-content">
+                <div class="result-card-header">
+                    <h3 class="result-card-title">${placeName}</h3>
+                    <button class="result-card-favorite ${isFavorite ? 'active' : ''}" 
+                            data-place-id="${placeId}" 
+                            data-index="${index}"
+                            title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
+                        <svg viewBox="0 0 24 24" fill="${isFavorite ? '#ff6b6b' : 'none'}" stroke="${isFavorite ? '#ff6b6b' : '#adb5bd'}" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="result-card-meta">
+                    ${categoryText ? `<span class="result-card-category"><span class="result-card-category-icon">${categoryIcon}</span>${categoryText}</span>` : ''}
+                    ${distanceText ? `<span class="result-card-distance">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        ${distanceText}
+                    </span>` : ''}
+                </div>
+                <div class="result-card-divider"></div>
+                <div class="result-card-info">
+                    <div class="result-card-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>${address}</span>
+                    </div>
+                    ${phone ? `
+                    <div class="result-card-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <span>${phone}</span>
+                    </div>
+                    ` : ''}
+                </div>
             </div>
-            <p>${place.road_address_name || place.address_name}</p>
-            ${place.phone ? `<p>${place.phone}</p>` : ''}
         `;
         
         // 즐겨찾기 버튼 클릭 이벤트
-        const favBtn = itemDiv.querySelector('.favorite-btn');
+        const favBtn = cardDiv.querySelector('.result-card-favorite');
         favBtn.onclick = async (e) => {
             e.stopPropagation(); // 부모 클릭 이벤트 방지
             
@@ -1770,7 +2068,7 @@ function displayPlacesList(results, map) {
                     // 아이콘 업데이트
                     const svg = btn.querySelector('svg');
                     svg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
-                    svg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : 'currentColor');
+                    svg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : '#adb5bd');
                     
                     // 피드백 사운드
                     SoundEffects.playClick();
@@ -1785,10 +2083,10 @@ function displayPlacesList(results, map) {
             }
         };
         
-        // 아이템 클릭 시 해당 마커로 이동 및 상세 패널 표시
-        itemDiv.onclick = (e) => {
+        // 카드 클릭 시 해당 마커로 이동 및 상세 패널 표시
+        cardDiv.onclick = (e) => {
             // 즐겨찾기 버튼 클릭은 무시
-            if (e.target.closest('.favorite-btn')) return;
+            if (e.target.closest('.result-card-favorite')) return;
             
             // 🔊 클릭 사운드 재생
             SoundEffects.playClick();
@@ -1827,7 +2125,10 @@ function displayPlacesList(results, map) {
             }
         };
         
-        listContainer.appendChild(itemDiv);
+        // 키보드 접근성 속성 추가
+        addAccessibilityToResultItem(cardDiv, place, index);
+        
+        listContainer.appendChild(cardDiv);
     });
 }
 
@@ -1874,13 +2175,17 @@ function hidePlaceDetailPanel() {
  * 패널 콘텐츠 생성 (프로젝트 스타일 적용)
  */
 function createPlacePanelContent(place, index, isFavorite) {
-    const categoryText = place.category_name ? place.category_name.split(' > ').pop() : '';
-    const placeId = place.id || place.place_id;
+    const categoryText = place.category_name ? escapeHtml(place.category_name.split(' > ').pop()) : '';
+    const placeId = escapeHtml(place.id || place.place_id);
+    const placeName = escapeHtml(place.place_name);
+    const address = escapeHtml(place.road_address_name || place.address_name);
+    const phone = place.phone ? escapeHtml(place.phone) : '';
+    const placeUrl = place.place_url ? escapeHtml(place.place_url) : '';
     
     return `
         <div class="panel-header">
             <div class="panel-title-wrap">
-                <div class="panel-title">${place.place_name}</div>
+                <div class="panel-title">${placeName}</div>
                 ${categoryText ? `<span class="panel-badge">${categoryText}</span>` : ''}
             </div>
             <button class="panel-close-btn" onclick="hidePlaceDetailPanel()" title="닫기">
@@ -1895,14 +2200,14 @@ function createPlacePanelContent(place, index, isFavorite) {
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                <span>${place.road_address_name || place.address_name}</span>
+                <span>${address}</span>
             </div>
-            ${place.phone ? `
+            ${phone ? `
                 <div class="panel-info-row">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
-                    <span>${place.phone}</span>
+                    <span>${phone}</span>
                 </div>
             ` : ''}
         </div>
@@ -1915,8 +2220,8 @@ function createPlacePanelContent(place, index, isFavorite) {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
             </button>
-            ${place.place_url ? `
-                <a href="${place.place_url}" target="_blank" class="panel-btn panel-btn-primary">
+            ${placeUrl ? `
+                <a href="${placeUrl}" target="_blank" class="panel-btn panel-btn-primary">
                     상세보기
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -2014,15 +2319,20 @@ window.hidePlaceDetailPanel = hidePlaceDetailPanel;
 /**
  * 인포윈도우 콘텐츠 생성 (즐겨찾기 버튼 포함)
  * - 프로젝트 스타일과 일관된 디자인 적용
+ * - XSS 방지를 위한 이스케이프 적용
  */
 function createInfoWindowContent(place, index, isFavorite) {
-    const placeId = place.id || place.place_id;
-    const categoryText = place.category_name ? place.category_name.split(' > ').pop() : '';
+    const placeId = escapeHtml(place.id || place.place_id);
+    const categoryText = place.category_name ? escapeHtml(place.category_name.split(' > ').pop()) : '';
+    const placeName = escapeHtml(place.place_name);
+    const address = escapeHtml(place.road_address_name || place.address_name);
+    const phone = place.phone ? escapeHtml(place.phone) : '';
+    const placeUrl = place.place_url ? escapeHtml(place.place_url) : '';
     
     return `
         <div class="jju-infowindow">
             <div class="jju-infowindow-header">
-                <div class="jju-infowindow-title">${place.place_name}</div>
+                <div class="jju-infowindow-title">${placeName}</div>
                 <button class="jju-infowindow-fav ${isFavorite ? 'active' : ''}"
                         onclick="toggleInfoWindowFavorite('${placeId}', ${index}, this)" 
                         title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
@@ -2036,19 +2346,19 @@ function createInfoWindowContent(place, index, isFavorite) {
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                ${place.road_address_name || place.address_name}
+                ${address}
             </div>
-            ${place.phone ? `
+            ${phone ? `
                 <div class="jju-infowindow-phone">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
-                    ${place.phone}
+                    ${phone}
                 </div>
             ` : ''}
             ${categoryText ? `<span class="jju-infowindow-badge">${categoryText}</span>` : ''}
-            ${place.place_url ? `
-                <a href="${place.place_url}" target="_blank" class="jju-infowindow-link">
+            ${placeUrl ? `
+                <a href="${placeUrl}" target="_blank" class="jju-infowindow-link">
                     상세보기
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -2142,8 +2452,9 @@ function getCategoryEmoji(categoryName) {
  * 검색 결과를 지도에 마커로 표시하는 함수입니다.
  * - results: Places API에서 받은 장소 배열
  * - map: 지도 객체
+ * - skipListUpdate: 목록 업데이트 건너뛰기 (정렬 변경 시)
  */
-function displayMarkers(results, map) {
+function displayMarkers(results, map, skipListUpdate = false) {
     // 기존 마커들을 모두 제거
     clearMarkers();
     
@@ -2156,17 +2467,24 @@ function displayMarkers(results, map) {
         return;
     }
     
-    // 🔊 검색 성공 사운드 재생
-    SoundEffects.playSearchComplete();
+    // 🔊 검색 성공 사운드 재생 (목록 업데이트 시만)
+    if (!skipListUpdate) {
+        SoundEffects.playSearchComplete();
+    }
     
-    // 왼쪽 사이드바에 목록 표시
-    displayPlacesList(results, map);
+    // 왼쪽 사이드바에 목록 표시 (skipListUpdate가 false일 때만)
+    if (!skipListUpdate) {
+        displayPlacesList(results, map);
+    }
     
     // 지도 크기 재조정 먼저 수행
     map.relayout();
     
     // 마커들을 표시할 영역을 계산하기 위한 LatLngBounds 객체 생성
     const bounds = new kakao.maps.LatLngBounds();
+    
+    // 클러스터링 사용 여부 (결과가 15개 이상일 때만)
+    const useClusterer = MapState.clusterer && results.length >= 15;
     
     // 새로운 검색 결과로 마커 생성
     results.forEach((place, index) => {
@@ -2175,10 +2493,12 @@ function displayMarkers(results, map) {
             position: markerPosition
         });
 
-        // 마커를 지도에 표시
-        marker.setMap(map);
-        // 드롭 애니메이션 (살짝 스태거)
-        setTimeout(() => dropMarker(marker, markerPosition, 600, 35), 20 * index);
+        // 클러스터링 사용 시 지도에 직접 표시하지 않음
+        if (!useClusterer) {
+            marker.setMap(map);
+            // 드롭 애니메이션 (살짝 스태거)
+            setTimeout(() => dropMarker(marker, markerPosition, 600, 35), 20 * index);
+        }
         
         // 생성된 마커를 배열에 추가
         MapState.markers.push(marker);
@@ -2205,6 +2525,12 @@ function displayMarkers(results, map) {
             }
         });
     });
+    
+    // 클러스터러에 마커 추가
+    if (useClusterer) {
+        MapState.clusterer.addMarkers(MapState.markers);
+        console.log(`[Clusterer] ${results.length}개 마커 클러스터링 적용`);
+    }
     
     // 지도 빈 영역 클릭 시 패널 닫기
     if (!map._panelCloseHandlerAdded) {
@@ -2520,3 +2846,190 @@ async function updateFavoritesCount() {
 window.onload = function() {
     // 자동 초기화/검색은 각 페이지에서 수행합니다.
 };
+
+// ============================================
+// 키보드 접근성 개선
+// ============================================
+
+/**
+ * 키보드 접근성 초기화
+ * - 사이드바 항목에 키보드 이벤트 추가
+ * - 검색 결과에 키보드 탐색 지원
+ * - 모달에 focus trap 추가
+ */
+function initKeyboardAccessibility() {
+    // 사이드바 버튼 키보드 접근성
+    document.querySelectorAll('.sidebar-item').forEach((item, index) => {
+        // tabindex 추가
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('role', 'button');
+        
+        // Enter/Space 키로 클릭
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+            // 화살표 키로 탐색
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const next = this.nextElementSibling;
+                if (next && next.classList.contains('sidebar-item')) {
+                    next.focus();
+                }
+            }
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const prev = this.previousElementSibling;
+                if (prev && prev.classList.contains('sidebar-item')) {
+                    prev.focus();
+                }
+            }
+        });
+    });
+    
+    // ESC 키로 모달/패널 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // 모달 닫기
+            const routeModal = document.getElementById('route-start-modal');
+            const homeModal = document.getElementById('home-setting-modal');
+            if (routeModal) routeModal.remove();
+            if (homeModal) homeModal.remove();
+            
+            // 패널 닫기
+            hidePlaceDetailPanel();
+            closeFavoritesPanel();
+            
+            // 모바일 사이드바 닫기
+            const sidebar = document.getElementById('mapSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay?.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+    });
+    
+    // 검색 결과 목록 키보드 탐색 (동적으로 생성되므로 이벤트 위임)
+    const resultsList = document.getElementById('places-list');
+    if (resultsList) {
+        resultsList.addEventListener('keydown', function(e) {
+            const focusedItem = document.activeElement;
+            // result-item 또는 result-card 클래스 모두 지원
+            if (!focusedItem.classList.contains('result-item') && !focusedItem.classList.contains('result-card')) return;
+            
+            const items = Array.from(this.querySelectorAll('.result-item, .result-card'));
+            const currentIndex = items.indexOf(focusedItem);
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentIndex < items.length - 1) {
+                    items[currentIndex + 1].focus();
+                }
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    items[currentIndex - 1].focus();
+                }
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                focusedItem.click();
+            }
+        });
+    }
+    
+    console.log('[Accessibility] 키보드 접근성 초기화 완료');
+}
+
+/**
+ * 검색 결과 아이템에 접근성 속성 추가
+ * - displayPlacesList에서 각 아이템 생성 후 호출
+ */
+function addAccessibilityToResultItem(itemDiv, place, index) {
+    // 키보드 접근 가능하도록
+    itemDiv.setAttribute('tabindex', '0');
+    itemDiv.setAttribute('role', 'button');
+    itemDiv.setAttribute('aria-label', `${place.place_name}, ${place.road_address_name || place.address_name}`);
+    
+    // Enter 키로 클릭
+    itemDiv.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.click();
+        }
+    });
+}
+
+/**
+ * Focus Trap 유틸리티
+ * - 모달 내에서 Tab 키가 모달 밖으로 나가지 않도록 제한
+ */
+function createFocusTrap(container) {
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = container.querySelectorAll(focusableSelectors);
+    
+    if (focusables.length === 0) return null;
+    
+    const firstFocusable = focusables[0];
+    const lastFocusable = focusables[focusables.length - 1];
+    
+    function handleKeydown(e) {
+        if (e.key !== 'Tab') return;
+        
+        if (e.shiftKey) {
+            // Shift+Tab
+            if (document.activeElement === firstFocusable) {
+                e.preventDefault();
+                lastFocusable.focus();
+            }
+        } else {
+            // Tab
+            if (document.activeElement === lastFocusable) {
+                e.preventDefault();
+                firstFocusable.focus();
+            }
+        }
+    }
+    
+    container.addEventListener('keydown', handleKeydown);
+    
+    // 첫 번째 포커스 가능한 요소에 포커스
+    firstFocusable.focus();
+    
+    return {
+        destroy: () => container.removeEventListener('keydown', handleKeydown)
+    };
+}
+
+/**
+ * Skip Link 생성 (스크린 리더용)
+ */
+function createSkipLink() {
+    if (document.getElementById('skip-link')) return;
+    
+    const skipLink = document.createElement('a');
+    skipLink.id = 'skip-link';
+    skipLink.href = '#map';
+    skipLink.className = 'skip-link';
+    skipLink.textContent = '지도로 바로가기';
+    skipLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const mapEl = document.getElementById('map');
+        if (mapEl) {
+            mapEl.setAttribute('tabindex', '-1');
+            mapEl.focus();
+        }
+    });
+    
+    document.body.insertBefore(skipLink, document.body.firstChild);
+}
+
+// DOM 로드 시 접근성 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initKeyboardAccessibility();
+    createSkipLink();
+});

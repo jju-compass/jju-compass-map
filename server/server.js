@@ -6,11 +6,13 @@
  * 2. 검색 결과 캐싱 (SQLite)
  * 3. 즐겨찾기 관리
  * 4. 검색 히스토리
+ * 5. Rate Limiting (API 보호)
  */
 
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
@@ -18,6 +20,34 @@ const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ============================================
+// Rate Limiting 설정
+// ============================================
+
+// 일반 API용 Rate Limiter (분당 100회)
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1분
+    max: 100, // IP당 최대 100회 요청
+    message: { 
+        error: '요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
+        retryAfter: '1분' 
+    },
+    standardHeaders: true, // `RateLimit-*` 헤더 포함
+    legacyHeaders: false, // `X-RateLimit-*` 헤더 비활성화
+});
+
+// 검색 API용 Rate Limiter (분당 30회 - 더 엄격)
+const searchLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1분
+    max: 30, // IP당 최대 30회 검색
+    message: { 
+        error: '검색 요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
+        retryAfter: '1분' 
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // CORS 설정
 app.use(cors({
@@ -27,6 +57,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// 모든 API 경로에 기본 Rate Limiting 적용
+app.use('/api/', apiLimiter);
 
 // ============================================
 // 미들웨어: 사용자 ID 처리
@@ -45,7 +78,7 @@ app.use((req, res, next) => {
  * 캐시된 검색 결과 조회
  * GET /api/cache/search?keyword=한식
  */
-app.get('/api/cache/search', async (req, res) => {
+app.get('/api/cache/search', searchLimiter, async (req, res) => {
     try {
         const { keyword } = req.query;
         
@@ -82,7 +115,7 @@ app.get('/api/cache/search', async (req, res) => {
  * POST /api/cache/search
  * Body: { keyword: string, results: array }
  */
-app.post('/api/cache/search', async (req, res) => {
+app.post('/api/cache/search', searchLimiter, async (req, res) => {
     try {
         const { keyword, results } = req.body;
         
