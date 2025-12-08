@@ -32,7 +32,12 @@ const MapState = {
     // 즐겨찾기 상태
     favorites: new Set(),
     // 현재 검색 결과
-    currentResults: []
+    currentResults: [],
+    // 선택된 마커 상태
+    selectedMarker: {
+        index: null,           // 선택된 마커 인덱스
+        highlightOverlay: null // 하이라이트 오버레이
+    }
 };
 
 // 서버 API 엔드포인트
@@ -1780,7 +1785,7 @@ function displayPlacesList(results, map) {
             }
         };
         
-        // 아이템 클릭 시 해당 마커로 이동 및 인포윈도우 표시
+        // 아이템 클릭 시 해당 마커로 이동 및 상세 패널 표시
         itemDiv.onclick = (e) => {
             // 즐겨찾기 버튼 클릭은 무시
             if (e.target.closest('.favorite-btn')) return;
@@ -1799,14 +1804,8 @@ function displayPlacesList(results, map) {
                 try { map.setLevel(3, { animate: true }); } catch (_) { map.setLevel(3); }
             }
             
-            // 해당 마커의 인포윈도우 표시 (즐겨찾기 버튼 포함)
-            const infoIsFavorite = MapState.favorites.has(placeId);
-            const content = createInfoWindowContent(place, index, infoIsFavorite);
-            
-            if (MapState.infowindow) {
-                MapState.infowindow.setContent(content);
-                MapState.infowindow.open(map, MapState.markers[index]);
-            }
+            // 상세 패널 표시 (인포윈도우 대신)
+            showPlaceDetailPanel(place, index, map);
 
             // 리플 + 바운스
             showRippleEffect(map, markerPosition);
@@ -1831,6 +1830,186 @@ function displayPlacesList(results, map) {
         listContainer.appendChild(itemDiv);
     });
 }
+
+// ============================================
+// 장소 상세 정보 패널 (좌측 상단 고정)
+// ============================================
+
+/**
+ * 장소 상세 정보 패널 표시
+ * - 인포윈도우 대신 좌측 상단에 고정된 패널 표시
+ * - 경로 표시 시 가려지지 않음
+ */
+function showPlaceDetailPanel(place, index, map) {
+    const panel = document.getElementById('place-detail-panel');
+    if (!panel) return;
+    
+    const placeId = place.id || place.place_id;
+    const isFavorite = MapState.favorites.has(placeId);
+    
+    panel.innerHTML = createPlacePanelContent(place, index, isFavorite);
+    panel.classList.remove('hidden');
+    
+    // 선택된 마커 하이라이트 표시
+    showSelectedMarkerHighlight(place, index, map);
+    
+    // 패널 내 이벤트 바인딩
+    bindPanelEvents(panel, place, index, map);
+}
+
+/**
+ * 장소 상세 정보 패널 숨기기
+ */
+function hidePlaceDetailPanel() {
+    const panel = document.getElementById('place-detail-panel');
+    if (panel) {
+        panel.classList.add('hidden');
+    }
+    
+    // 선택된 마커 하이라이트 제거
+    clearSelectedMarkerHighlight();
+}
+
+/**
+ * 패널 콘텐츠 생성 (프로젝트 스타일 적용)
+ */
+function createPlacePanelContent(place, index, isFavorite) {
+    const categoryText = place.category_name ? place.category_name.split(' > ').pop() : '';
+    const placeId = place.id || place.place_id;
+    
+    return `
+        <div class="panel-header">
+            <div class="panel-title-wrap">
+                <div class="panel-title">${place.place_name}</div>
+                ${categoryText ? `<span class="panel-badge">${categoryText}</span>` : ''}
+            </div>
+            <button class="panel-close-btn" onclick="hidePlaceDetailPanel()" title="닫기">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="panel-info-row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>${place.road_address_name || place.address_name}</span>
+            </div>
+            ${place.phone ? `
+                <div class="panel-info-row">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <span>${place.phone}</span>
+                </div>
+            ` : ''}
+        </div>
+        <div class="panel-footer">
+            <button class="panel-btn panel-btn-fav ${isFavorite ? 'active' : ''}" 
+                    data-place-id="${placeId}" 
+                    data-index="${index}"
+                    title="${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFavorite ? '#ff6b6b' : 'none'}" stroke="${isFavorite ? '#ff6b6b' : 'currentColor'}" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
+            ${place.place_url ? `
+                <a href="${place.place_url}" target="_blank" class="panel-btn panel-btn-primary">
+                    상세보기
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * 패널 내 이벤트 바인딩
+ */
+function bindPanelEvents(panel, place, index, map) {
+    // 즐겨찾기 버튼 이벤트
+    const favBtn = panel.querySelector('.panel-btn-fav');
+    if (favBtn) {
+        favBtn.addEventListener('click', async function() {
+            const placeId = this.dataset.placeId;
+            const idx = parseInt(this.dataset.index, 10);
+            
+            try {
+                const result = await JJUApi.toggleFavorite(place);
+                if (result) {
+                    const isNowFavorite = MapState.favorites.has(placeId);
+                    
+                    // 버튼 상태 업데이트
+                    this.classList.toggle('active', isNowFavorite);
+                    const svg = this.querySelector('svg');
+                    svg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
+                    svg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : 'currentColor');
+                    this.title = isNowFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
+                    
+                    // 사이드바 목록도 업데이트
+                    const listBtn = document.querySelector(`.favorite-btn[data-place-id="${placeId}"]`);
+                    if (listBtn) {
+                        listBtn.classList.toggle('active', isNowFavorite);
+                        const listSvg = listBtn.querySelector('svg');
+                        listSvg.setAttribute('fill', isNowFavorite ? '#ff6b6b' : 'none');
+                        listSvg.setAttribute('stroke', isNowFavorite ? '#ff6b6b' : 'currentColor');
+                    }
+                    
+                    SoundEffects.playClick();
+                    showToast(result.message);
+                }
+            } catch (e) {
+                console.error('즐겨찾기 토글 실패:', e);
+            }
+        });
+    }
+}
+
+/**
+ * 선택된 마커 하이라이트 표시
+ */
+function showSelectedMarkerHighlight(place, index, map) {
+    // 기존 하이라이트 제거
+    clearSelectedMarkerHighlight();
+    
+    const markerPosition = new kakao.maps.LatLng(place.y, place.x);
+    
+    // 커스텀 오버레이로 하이라이트 표시
+    const highlightContent = document.createElement('div');
+    highlightContent.className = 'selected-marker-highlight';
+    
+    const highlightOverlay = new kakao.maps.CustomOverlay({
+        position: markerPosition,
+        content: highlightContent,
+        yAnchor: 1,
+        zIndex: 50
+    });
+    
+    highlightOverlay.setMap(map);
+    
+    MapState.selectedMarker.index = index;
+    MapState.selectedMarker.highlightOverlay = highlightOverlay;
+}
+
+/**
+ * 선택된 마커 하이라이트 제거
+ */
+function clearSelectedMarkerHighlight() {
+    if (MapState.selectedMarker.highlightOverlay) {
+        MapState.selectedMarker.highlightOverlay.setMap(null);
+        MapState.selectedMarker.highlightOverlay = null;
+    }
+    MapState.selectedMarker.index = null;
+}
+
+// 전역 함수로 노출 (onclick에서 호출)
+window.hidePlaceDetailPanel = hidePlaceDetailPanel;
 
 /**
  * 인포윈도우 콘텐츠 생성 (즐겨찾기 버튼 포함)
@@ -1968,13 +2147,8 @@ function displayMarkers(results, map) {
     // 기존 마커들을 모두 제거
     clearMarkers();
     
-    // 인포윈도우가 없으면 생성 (재사용을 위해 한 번만 생성)
-    if (!MapState.infowindow) {
-        MapState.infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
-    }
-    
-    // infowindow 지역 변수로 참조 (기존 코드 호환)
-    const infowindow = MapState.infowindow;
+    // 기존 패널 숨기기
+    hidePlaceDetailPanel();
     
     // 검색 결과가 없을 경우
     if (results.length === 0) {
@@ -2012,19 +2186,13 @@ function displayMarkers(results, map) {
         // bounds에 마커 위치 추가
         bounds.extend(markerPosition);
 
-        // 마커 클릭 시 인포윈도우 표시 (인포윈도우 재사용으로 성능 개선)
+        // 마커 클릭 시 상세 패널 표시 (좌측 상단 고정)
         kakao.maps.event.addListener(marker, 'click', function() {
             // 🔊 클릭 사운드 재생
             SoundEffects.playClick();
             
-            // 즐겨찾기 여부 확인
-            const placeId = place.id || place.place_id;
-            const isFavorite = MapState.favorites.has(placeId);
-            
-            // 상세 정보 HTML 생성 (즐겨찾기 버튼 포함)
-            const content = createInfoWindowContent(place, index, isFavorite);
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
+            // 상세 패널 표시 (인포윈도우 대신)
+            showPlaceDetailPanel(place, index, map);
 
             // 리플 + 바운스 + 부드러운 이동
             showRippleEffect(map, markerPosition);
@@ -2037,6 +2205,14 @@ function displayMarkers(results, map) {
             }
         });
     });
+    
+    // 지도 빈 영역 클릭 시 패널 닫기
+    if (!map._panelCloseHandlerAdded) {
+        kakao.maps.event.addListener(map, 'click', function() {
+            hidePlaceDetailPanel();
+        });
+        map._panelCloseHandlerAdded = true;
+    }
     
     // 모든 마커가 보이도록 지도 범위 재설정 (padding 추가)
     const padding = 50; // 여유 공간

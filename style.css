@@ -1605,6 +1605,7 @@ body {
 
 /* 지도 컨테이너 */
 .map-container {
+    position: relative;
     flex: 1;
     background: white;
     border-radius: 12px;
@@ -3350,5 +3351,297 @@ body:not(.landing-page):not(.map-page):not(.map-page-sidebar) footer p {
     
     .rc-divider {
         height: 24px;
+    }
+}
+
+/* ============================================
+   장소 상세 정보 패널 (좌측 상단 고정)
+   ============================================ */
+.place-detail-panel {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 100;
+    
+    background: var(--bg-white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-xl);
+    padding: 0;
+    min-width: 300px;
+    max-width: 340px;
+    overflow: hidden;
+    
+    /* 애니메이션 */
+    animation: panel-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.place-detail-panel.hidden {
+    display: none;
+}
+
+@keyframes panel-slide-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 패널 헤더 */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 18px 20px 14px;
+    background: linear-gradient(135deg, rgba(76, 110, 245, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.panel-title-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.panel-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.4;
+    word-break: keep-all;
+    margin-bottom: 4px;
+}
+
+.panel-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--primary-blue);
+    background: rgba(76, 110, 245, 0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+/* 닫기 버튼 */
+.panel-close-btn {
+    appearance: none;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 12px;
+    transition: all 0.2s ease;
+    color: var(--text-light);
+}
+
+.panel-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-dark);
+    transform: rotate(90deg);
+}
+
+.panel-close-btn:active {
+    transform: rotate(90deg) scale(0.9);
+}
+
+/* 패널 본문 */
+.panel-body {
+    padding: 16px 20px;
+}
+
+.panel-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.panel-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.panel-info-row svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    stroke: var(--text-light);
+}
+
+.panel-info-row span {
+    flex: 1;
+    word-break: break-word;
+}
+
+/* 패널 푸터 */
+.panel-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px 18px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-gray);
+}
+
+.panel-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+/* 상세보기 버튼 (그라데이션) */
+.panel-btn-primary {
+    color: white;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    box-shadow: 0 2px 8px rgba(76, 110, 245, 0.3);
+}
+
+.panel-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 110, 245, 0.4);
+}
+
+.panel-btn-primary:active {
+    transform: translateY(0);
+}
+
+.panel-btn-primary svg {
+    stroke: white;
+}
+
+/* 즐겨찾기 버튼 */
+.panel-btn-fav {
+    background: #f8f9fa;
+    color: var(--text-gray);
+    flex: 0 0 auto;
+    padding: 10px 14px;
+}
+
+.panel-btn-fav:hover {
+    background: #fff0f0;
+    transform: scale(1.05);
+}
+
+.panel-btn-fav:active {
+    transform: scale(0.95);
+}
+
+.panel-btn-fav.active {
+    background: #fff0f0;
+    color: #ff6b6b;
+}
+
+.panel-btn-fav.active svg {
+    fill: #ff6b6b;
+    stroke: #ff6b6b;
+}
+
+/* 선택된 마커 하이라이트용 커스텀 오버레이 */
+.selected-marker-highlight {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    margin-left: -24px;
+    margin-top: -48px;
+}
+
+.selected-marker-highlight::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 56px;
+    height: 56px;
+    background: rgba(76, 110, 245, 0.2);
+    border: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: marker-pulse 1.5s ease-out infinite;
+}
+
+.selected-marker-highlight::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    background: var(--primary-blue);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 8px rgba(76, 110, 245, 0.5);
+}
+
+@keyframes marker-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+    }
+}
+
+/* 모바일 반응형 - 패널 하단 고정 */
+@media (max-width: 768px) {
+    .place-detail-panel {
+        top: auto;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        max-width: none;
+        min-width: auto;
+        border-radius: 20px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    @keyframes panel-slide-in {
+        0% {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .panel-header {
+        padding: 16px 18px 12px;
+    }
+    
+    .panel-title {
+        font-size: 16px;
+    }
+    
+    .panel-body {
+        padding: 14px 18px;
+    }
+    
+    .panel-footer {
+        padding: 12px 18px 16px;
+    }
+    
+    .panel-btn {
+        padding: 12px 14px;
     }
 }
