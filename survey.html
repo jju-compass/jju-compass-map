@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJU Map 사용자 설문조사 - 아름다운 디자인</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #004d80;
+            /* 전주대 메인색 (짙은 남색 계열) */
+            --secondary-color: #e6b800;
+            /* 황금색 계열 */
+            --accent-color: #3498db;
+            /* 강조 파란색 */
+            --text-color: #333;
+            --light-text-color: #666;
+            --background-color: #f8faff;
+            /* 아주 연한 하늘색 배경 */
+            --card-background: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            /* 상단 정렬 */
+            min-height: 100vh;
+        }
+
+        .survey-container {
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+            /* 중앙 정렬 */
+            padding: 40px;
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: var(--shadow-medium);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .survey-header {
+            text-align: center;
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .survey-header h1 {
+            color: var(--primary-color);
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .survey-header p {
+            font-size: 1.05em;
+            color: var(--light-text-color);
+            text-align: left;
+            padding: 0 10px;
+        }
+
+        .survey-header strong {
+            color: var(--primary-color);
+        }
+
+        .question-group {
+            margin-bottom: 40px;
+        }
+
+        .question-group h2 {
+            font-size: 1.8em;
+            color: var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .question-group h2 i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+
+        .question-item {
+            margin-bottom: 25px;
+            background: #fdfdfd;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-light);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .question-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-item p {
+            font-weight: 500;
+            margin: 0 0 18px 0;
+            color: var(--text-color);
+            font-size: 1.1em;
+        }
+
+        .question-item label {
+            display: flex;
+            /* 아이콘과 텍스트 정렬 */
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 12px 15px;
+            border-radius: 7px;
+            transition: background-color 0.2s, color 0.2s;
+            border: 1px solid transparent;
+            /* 기본 투명 테두리 */
+        }
+
+        .question-item label:hover {
+            background-color: #e8f5fd;
+            /* 연한 파랑 */
+            border-color: #a7d9f3;
+        }
+
+        .question-item input[type="radio"],
+        .question-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            /* 라디오 버튼 크기 키우기 */
+            accent-color: var(--primary-color);
+            /* 체크 시 색상 */
+        }
+
+        .question-item textarea {
+            width: calc(100% - 20px);
+            /* 패딩 고려 */
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            min-height: 120px;
+            margin-top: 10px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .question-item textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        .likert-table {
+            width: 100%;
+            border-collapse: separate;
+            /* border-spacing 사용 위함 */
+            border-spacing: 0;
+            text-align: center;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            /* 둥근 테두리 적용 */
+        }
+
+        .likert-table th,
+        .likert-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .likert-table th:last-child,
+        .likert-table td:last-child {
+            border-right: none;
+        }
+
+        .likert-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .likert-table th {
+            background-color: #f0f4f8;
+            /* 옅은 파랑 회색 */
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .likert-table td:first-child {
+            text-align: left;
+            font-weight: 400;
+            color: var(--text-color);
+            width: 40%;
+            /* 기능명 셀 너비 */
+            background-color: #fafafa;
+        }
+
+        .likert-table input[type="radio"] {
+            transform: scale(1.1);
+        }
+
+        /* 제출 버튼 */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #fff;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s ease-in-out;
+            margin-top: 40px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .submit-btn:hover {
+            background-color: #003a66;
+            /* 더 진한 남색 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .required {
+            color: var(--secondary-color);
+            /* 강조색으로 변경 */
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .survey-container {
+                padding: 25px;
+            }
+
+            .survey-header h1 {
+                font-size: 2em;
+            }
+
+            .question-group h2 {
+                font-size: 1.5em;
+            }
+
+            .question-item {
+                padding: 15px;
+            }
+
+            .question-item p {
+                font-size: 1em;
+                margin-bottom: 10px;
+            }
+
+            .likert-table th,
+            .likert-table td {
+                padding: 10px 5px;
+                font-size: 0.85em;
+            }
+
+            .likert-table td:first-child {
+                width: auto;
+                /* 모바일에서 자동 너비 */
+            }
+
+            .submit-btn {
+                font-size: 1.1em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="survey-container">
+        <header class="survey-header">
+            <h1>JJU Map 사용자 설문조사</h1>
+            <p>
+                <b>[안내문]</b><br>
+                안녕하십니까?<br>
+                저희는 웹프로그래밍 수업에서 '전주대 주변 탐색지도(JJU Map)' 프로젝트를 진행하고 있는 <strong>'나침반'</strong> 팀입니다.<br><br>
+                본 프로젝트는 신입생과 재학생 여러분이 전주대학교 주변의 다양한 장소를 쉽고 빠르게 찾을 수 있도록 돕는 웹 서비스를 개발하는 것을 목표로 합니다.<br><br>
+                본 설문은 서비스 개발에 앞서 여러분의 소중한 의견을 듣고, 더 정확하고 유용한 서비스를 만들기 위해 진행됩니다. 잠시 시간을 내어 답변해주시면 프로젝트에 큰 도움이 될
+                것입니다.<br><br>
+                ※ 본 조사를 통해 수집된 정보는 통계법 제33조 '비밀 보호의 원칙'에 따라 통계 처리 목적으로만 사용되며, 개인 정보는 공개되지 않음을 약속드립니다.<br><br>
+                설문에 응해주셔서 진심으로 감사합니다.
+            </p>
+        </header>
+
+        <form action="#" method="POST">
+            <section class="question-group">
+                <h2><i class="fas fa-user-circle"></i> 1. 일반 사항</h2>
+                <div class="question-item">
+                    <p>1. 귀하의 소속은 어떻게 되십니까?<span class="required">*</span></p>
+                    <label><input type="radio" name="affiliation" value="freshman" required> 1. 전주대학교 신입생</label>
+                    <label><input type="radio" name="affiliation" value="student"> 2. 전주대학교 재학생 (2학년 이상)</label>
+                    <label><input type="radio" name="affiliation" value="graduate"> 3. 전주대학교 대학원생</label>
+                    <label><input type="radio" name="affiliation" value="etc"> 4. 기타</label>
+                </div>
+
+                <div class="question-item">
+                    <p>2. 'JJU Map'과 같은 전주대 주변 정보 안내 서비스가 본인에게 도움이 될 것이라고 생각하십니까?<span class="required">*</span></p>
+                    <label><input type="radio" name="helpfulness" value="4" required> 1. 매우 그렇다</label>
+                    <label><input type="radio" name="helpfulness" value="3"> 2. 그렇다</label>
+                    <label><input type="radio" name="helpfulness" value="2"> 3. 그렇지 않다</label>
+                    <label><input type="radio" name="helpfulness" value="1"> 4. 전혀 그렇지 않다</label>
+                </div>
+
+                <div class="question-item">
+                    <p>3. 전주대 주변의 특정 장소를 찾을 때, 원하는 정보를 얻는 데 어려움을 겪은 적이 있습니까?<span class="required">*</span></p>
+                    <label><input type="radio" name="difficulty" value="4" required> 1. 매우 자주 있다</label>
+                    <label><input type="radio" name="difficulty" value="3"> 2. 가끔 있다</label>
+                    <label><input type="radio" name="difficulty" value="2"> 3. 거의 없다</label>
+                    <label><input type="radio" name="difficulty" value="1"> 4. 전혀 없다</label>
+                </div>
+            </section>
+
+            <section class="question-group">
+                <h2><i class="fas fa-map-marked-alt"></i> 2. 'JJU Map' 주요 기능에 대한 의견</h2>
+                <div class="question-item">
+                    <p>4. 'JJU Map'에 다음과 같은 기능이 있다면 얼마나 유용할 것이라고 생각하십니까?<span class="required">*</span></p>
+                    <table class="likert-table">
+                        <thead>
+                            <tr>
+                                <th>기능</th>
+                                <th>매우 유용</th>
+                                <th>다소 유용</th>
+                                <th>별로</th>
+                                <th>전혀</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1) '한식', '카페' 등 카테고리 버튼으로 빠른 검색</td>
+                                <td><input type="radio" name="feature_category" value="4" required></td>
+                                <td><input type="radio" name="feature_category" value="3"></td>
+                                <td><input type="radio" name="feature_category" value="2"></td>
+                                <td><input type="radio" name="feature_category" value="1"></td>
+                            </tr>
+                            <tr>
+                                <td>2) 사용자가 직접 남기는 '리뷰' 및 '별점' 기능</td>
+                                <td><input type="radio" name="feature_review" value="4" required></td>
+                                <td><input type="radio" name="feature_review" value="3"></td>
+                                <td><input type="radio" name="feature_review" value="2"></td>
+                                <td><input type="radio" name="feature_review" value="1"></td>
+                            </tr>
+                            <tr>
+                                <td>3) 자주 가는 곳을 저장하는 '북마크(즐겨찾기)' 기능</td>
+                                <td><input type="radio" name="feature_bookmark" value="4" required></td>
+                                <td><input type="radio" name="feature_bookmark" value="3"></td>
+                                <td><input type="radio" name="feature_bookmark" value="2"></td>
+                                <td><input type="radio" name="feature_bookmark" value="1"></td>
+                            </tr>
+                            <tr>
+                                <td>4) 현재 '영업 중'인 곳만 필터링하여 보여주는 기능</td>
+                                <td><input type="radio" name="feature_filter" value="4" required></td>
+                                <td><input type="radio" name="feature_filter" value="3"></td>
+                                <td><input type="radio" name="feature_filter" value="2"></td>
+                                <td><input type="radio" name="feature_filter" value="1"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="question-item">
+                    <p>5. 위 기능 외에 'JJU Map'에 추가되었으면 하는 기능이나 장소 카테고리가 있다면 자유롭게 작성해주세요.</p>
+                    <textarea name="additional_features" placeholder="예) 복사/인쇄소, 세탁소, 학생 할인 정보 등"></textarea>
+                </div>
+            </section>
+
+            <section class="question-group">
+                <h2><i class="fas fa-lightbulb"></i> 3. 전반적인 만족도 및 기타 의견</h2>
+                <div class="question-item">
+                    <p>6. '전주대 주변 탐색지도(JJU Map)' 사업에 대한 전반적인 만족도를 선택해 주세요. (향후 기대 포함)<span class="required">*</span></p>
+                    <label><input type="radio" name="overall_satisfaction" value="4" required> 1. 매우 만족</label>
+                    <label><input type="radio" name="overall_satisfaction" value="3"> 2. 만족</label>
+                    <label><input type="radio" name="overall_satisfaction" value="2"> 3. 불만족</label>
+                    <label><input type="radio" name="overall_satisfaction" value="1"> 4. 매우 불만족</label>
+                </div>
+
+                <div class="question-item">
+                    <p>7. 위 6번 문항에서 '불만족' 또는 '매우 불만족'을 선택한 경우, 그 이유는 무엇인가요?</p>
+                    <textarea name="dissatisfaction_reason" placeholder="서비스의 단점이나 우려되는 점을 알려주세요."></textarea>
+                </div>
+
+                <div class="question-item">
+                    <p>8. 마지막으로 'JJU Map' 서비스 개발팀에게 하고 싶은 말씀이나 제안이 있다면 자유롭게 남겨주세요.</p>
+                    <textarea name="final_comment" placeholder="응원의 메시지나 추가적인 아이디어를 자유롭게 남겨주세요!"></textarea>
+                </div>
+            </section>
+
+            <button type="submit" class="submit-btn">설문 제출하기</button>
+
+        </form>
+    </div>
+
+</body>
+
+</html>

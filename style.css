@@ -327,13 +327,14 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 14px 28px;
+    padding: 14px 32px;
     font-size: 16px;
     font-weight: 600;
     border-radius: 10px;
     text-decoration: none;
     transition: all 0.3s;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .btn-primary {
@@ -630,6 +631,24 @@ body {
 .cta .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-outline-light {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: white;
 }
 
 /* 랜딩 푸터 */
