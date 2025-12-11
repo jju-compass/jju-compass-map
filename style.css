@@ -810,9 +810,9 @@ body {
     display: flex;
     align-items: center;
     background: white;
-    border-radius: 8px;
-    padding: 8px 16px;
-    gap: 8px;
+    border-radius: 6px;
+    padding: 6px 12px;
+    gap: 6px;
 }
 
 .navbar-search input {
