@@ -445,7 +445,7 @@
                         <div class="dropdown-item" data-keyword="${escapeHtml(item.keyword)}">
                             <span class="dropdown-rank">${idx + 1}</span>
                             <span class="dropdown-text">${escapeHtml(item.keyword)}</span>
-                            <span class="dropdown-count">${item.count}회</span>
+                            <span class="dropdown-count">${item.search_count}회</span>
                         </div>
                     `).join('');
                     document.getElementById('popularSection').style.display = 'block';
