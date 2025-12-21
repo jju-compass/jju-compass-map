@@ -423,13 +423,70 @@ app.post('/api/user/create', (req, res) => {
 const routeCache = new Map();
 const ROUTE_CACHE_TTL = 60 * 60 * 1000;
 
+// ============================================
+// 입력 검증 함수
+// ============================================
+
+/**
+ * 좌표 형식 검증 함수
+ * @param {string} coord - "lng,lat" 형식의 좌표 문자열
+ * @returns {object} { valid: boolean, lng?: number, lat?: number, error?: string }
+ */
+function validateCoordinate(coord) {
+    if (!coord || typeof coord !== 'string') {
+        return { valid: false, error: '좌표가 제공되지 않았습니다' };
+    }
+
+    const parts = coord.split(',');
+    if (parts.length !== 2) {
+        return { valid: false, error: '좌표 형식이 올바르지 않습니다 (예: 127.092,35.814)' };
+    }
+
+    const lng = parseFloat(parts[0].trim());
+    const lat = parseFloat(parts[1].trim());
+
+    if (isNaN(lng) || isNaN(lat)) {
+        return { valid: false, error: '좌표 값이 숫자가 아닙니다' };
+    }
+
+    // 한국 범위 체크 (대략적인 범위)
+    // 경도: 124~132, 위도: 33~43
+    if (lng < 124 || lng > 132) {
+        return { valid: false, error: '경도 범위가 유효하지 않습니다 (124~132)' };
+    }
+    if (lat < 33 || lat > 43) {
+        return { valid: false, error: '위도 범위가 유효하지 않습니다 (33~43)' };
+    }
+
+    return { valid: true, lng, lat };
+}
+
+/**
+ * priority 값 검증 함수
+ * @param {string} priority - 우선순위 문자열
+ * @returns {object} { valid: boolean, value?: string, error?: string }
+ */
+function validatePriority(priority) {
+    const allowedValues = ['RECOMMEND', 'DISTANCE', 'TIME'];
+    const normalized = (priority || 'RECOMMEND').toUpperCase().trim();
+    
+    if (!allowedValues.includes(normalized)) {
+        return { 
+            valid: false, 
+            error: `priority 값이 유효하지 않습니다. 허용값: ${allowedValues.join(', ')}` 
+        };
+    }
+    
+    return { valid: true, value: normalized };
+}
+
 /**
  * 경로 찾기 엔드포인트
  * GET /api/directions?origin=lng,lat&destination=lng,lat&priority=RECOMMEND
  */
 app.get('/api/directions', async (req, res) => {
     try {
-        const { origin, destination, priority = 'RECOMMEND' } = req.query;
+        const { origin, destination, priority } = req.query;
 
         if (!origin || !destination) {
             return res.status(400).json({
@@ -438,7 +495,34 @@ app.get('/api/directions', async (req, res) => {
             });
         }
 
-        const cacheKey = `${origin}_${destination}_${priority}`;
+        // 좌표 형식 검증
+        const originCheck = validateCoordinate(origin);
+        if (!originCheck.valid) {
+            return res.status(400).json({
+                error: 'origin 좌표 오류',
+                message: originCheck.error
+            });
+        }
+
+        const destCheck = validateCoordinate(destination);
+        if (!destCheck.valid) {
+            return res.status(400).json({
+                error: 'destination 좌표 오류',
+                message: destCheck.error
+            });
+        }
+
+        // priority 검증
+        const priorityCheck = validatePriority(priority);
+        if (!priorityCheck.valid) {
+            return res.status(400).json({
+                error: 'priority 오류',
+                message: priorityCheck.error
+            });
+        }
+        const validatedPriority = priorityCheck.value;
+
+        const cacheKey = `${origin}_${destination}_${validatedPriority}`;
 
         // 메모리 캐시 확인
         const cached = routeCache.get(cacheKey);
@@ -453,13 +537,14 @@ app.get('/api/directions', async (req, res) => {
 
         const apiKey = process.env.KAKAO_REST_API_KEY;
         if (!apiKey) {
+            console.error('[Config Error] KAKAO_REST_API_KEY not set');
             return res.status(500).json({
-                error: 'KAKAO_REST_API_KEY가 설정되지 않았습니다',
-                message: '.env 파일에 KAKAO_REST_API_KEY를 추가하세요'
+                error: '서버 설정 오류',
+                message: '관리자에게 문의해주세요'
             });
         }
 
-        const kakaoUrl = `https://apis-navi.kakaomobility.com/v1/directions?origin=${origin}&destination=${destination}&priority=${priority}`;
+        const kakaoUrl = `https://apis-navi.kakaomobility.com/v1/directions?origin=${origin}&destination=${destination}&priority=${validatedPriority}`;
         console.log(`[Directions API Call] ${kakaoUrl}`);
 
         const response = await fetch(kakaoUrl, {
@@ -473,10 +558,10 @@ app.get('/api/directions', async (req, res) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`[Kakao API Error] ${response.status}: ${errorText}`);
+            // 사용자에게는 간소화된 메시지 반환
             return res.status(response.status).json({
-                error: '카카오 API 호출 실패',
-                status: response.status,
-                message: errorText
+                error: '경로 조회 실패',
+                message: '카카오 API 서비스에 일시적인 문제가 있습니다. 잠시 후 다시 시도해주세요.'
             });
         }
 
@@ -507,7 +592,7 @@ app.get('/api/directions', async (req, res) => {
                 path: allRoads,
                 distance: route.summary?.distance || 0,
                 duration: route.summary?.duration || 0,
-                priority: priority,
+                priority: validatedPriority,
                 cached: false
             };
 
@@ -524,11 +609,17 @@ app.get('/api/directions', async (req, res) => {
             console.log(`[Directions Success] 경로 길이: ${allRoads.length}개 점, 거리: ${result.distance}m`);
             return res.json(result);
         } else {
-            return res.status(404).json({ error: '경로를 찾을 수 없습니다', data });
+            return res.status(404).json({
+                error: '경로를 찾을 수 없습니다',
+                message: '출발지와 도착지 사이의 경로를 찾을 수 없습니다'
+            });
         }
     } catch (error) {
         console.error('[Server Error]', error);
-        res.status(500).json({ error: '서버 오류', message: error.message });
+        res.status(500).json({
+            error: '서버 오류',
+            message: '요청을 처리하는 중 오류가 발생했습니다'
+        });
     }
 });
 
