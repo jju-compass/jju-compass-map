@@ -480,6 +480,30 @@ function validatePriority(priority) {
     return { valid: true, value: normalized };
 }
 
+// ============================================
+// 전역 일일 API 호출 한도 (Kakao Mobility API 비용 보호)
+// ============================================
+let globalDailyDirectionsCount = 0;
+let lastDirectionsResetDate = new Date().toDateString();
+const GLOBAL_DAILY_DIRECTIONS_LIMIT = 5000; // 일 최대 5000건
+
+/**
+ * 일일 한도 체크 및 리셋
+ * @returns {boolean} 한도 초과 여부
+ */
+function checkDailyDirectionsLimit() {
+    const today = new Date().toDateString();
+    
+    // 날짜가 바뀌면 카운터 리셋
+    if (today !== lastDirectionsResetDate) {
+        console.log(`[Directions] Daily limit reset. Previous count: ${globalDailyDirectionsCount}`);
+        globalDailyDirectionsCount = 0;
+        lastDirectionsResetDate = today;
+    }
+    
+    return globalDailyDirectionsCount >= GLOBAL_DAILY_DIRECTIONS_LIMIT;
+}
+
 /**
  * 경로 찾기 엔드포인트
  * GET /api/directions?origin=lng,lat&destination=lng,lat&priority=RECOMMEND
@@ -535,6 +559,17 @@ app.get('/api/directions', async (req, res) => {
             });
         }
 
+        // 일일 한도 체크 (캐시 미스 시에만 적용)
+        if (checkDailyDirectionsLimit()) {
+            console.warn(`[Directions] Daily limit exceeded: ${globalDailyDirectionsCount}/${GLOBAL_DAILY_DIRECTIONS_LIMIT}`);
+            return res.status(429).json({
+                error: '일일 경로 조회 한도에 도달했습니다',
+                message: '내일 다시 시도해 주세요',
+                limit: GLOBAL_DAILY_DIRECTIONS_LIMIT,
+                current: globalDailyDirectionsCount
+            });
+        }
+
         const apiKey = process.env.KAKAO_REST_API_KEY;
         if (!apiKey) {
             console.error('[Config Error] KAKAO_REST_API_KEY not set');
@@ -546,6 +581,9 @@ app.get('/api/directions', async (req, res) => {
 
         const kakaoUrl = `https://apis-navi.kakaomobility.com/v1/directions?origin=${origin}&destination=${destination}&priority=${validatedPriority}`;
         console.log(`[Directions API Call] ${kakaoUrl}`);
+
+        // API 호출 카운터 증가
+        globalDailyDirectionsCount++;
 
         const response = await fetch(kakaoUrl, {
             method: 'GET',
@@ -606,7 +644,7 @@ app.get('/api/directions', async (req, res) => {
                 routeCache.delete(firstKey);
             }
 
-            console.log(`[Directions Success] 경로 길이: ${allRoads.length}개 점, 거리: ${result.distance}m`);
+            console.log(`[Directions Success] 경로 길이: ${allRoads.length}개 점, 거리: ${result.distance}m (일일: ${globalDailyDirectionsCount}/${GLOBAL_DAILY_DIRECTIONS_LIMIT})`);
             return res.json(result);
         } else {
             return res.status(404).json({
