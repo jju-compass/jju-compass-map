@@ -57,6 +57,7 @@
 ├── config.js           # 카테고리 정보, 색상 테마
 ├── style.css           # 통합 스타일시트
 │
+├── food.html           # 음식점 통합
 ├── food-*.html         # 음식점 카테고리 (한식/중식/일식/양식/분식)
 ├── cafe.html           # 카페
 ├── convenience.html    # 편의점
@@ -71,61 +72,26 @@
 │
 ├── about.html          # 서비스 소개
 ├── guide.html          # 이용 가이드
+├── search.html         # 검색 페이지
+├── survey.html         # 설문조사
 │
 └── server/             # API 서버
-    ├── server.js       # Express 서버 (v2.0)
+    ├── server.js       # Express 서버 (v2.1)
     ├── database.js     # SQLite 데이터베이스
     └── .env.example    # 환경변수 템플릿
 ```
 
 ---
 
-## 로컬 개발
-
-### 프론트엔드
-```bash
-# Python
-python -m http.server 5500
-
-# Node.js
-npx http-server -p 5500
-
-# VS Code Live Server 확장 사용
-```
-
-### 백엔드 서버
-```bash
-cd server
-cp .env.example .env    # 환경변수 설정
-npm install
-npm start               # http://localhost:3000
-```
-
-### 환경변수 (.env)
-```
-KAKAO_REST_API_KEY=발급받은_REST_키
-PORT=3000
-```
-
-> Kakao Developers에서 `localhost:5500` 도메인 등록 필요
-
----
-
-## API 엔드포인트
-
-| 엔드포인트 | 메서드 | 설명 |
-|------------|--------|------|
-| `/api/cache/search` | GET/POST | 검색 결과 캐시 |
-| `/api/favorites` | GET/POST/DELETE | 즐겨찾기 관리 |
-| `/api/history` | GET/DELETE | 검색 히스토리 |
-| `/api/history/popular` | GET | 인기 검색어 |
-| `/api/settings/home` | GET/POST/DELETE | 홈 위치 설정 |
-| `/api/directions` | GET | 도보 경로 찾기 |
-| `/health` | GET | 서버 상태 확인 |
-
----
-
 ## 버전 히스토리
+
+### v2.1.0 (2025-01)
+- 일일 API 호출 한도 (5000건/일) - Kakao Directions API 비용 보호
+- 설문조사 페이지 추가
+- Directions API 보안 강화 (입력 검증)
+- UX 개선: 결과 카드 리디자인, 인포윈도우 → 고정 패널
+- 모바일 UI/애니메이션 개선
+- 인기 검색어 버그 수정
 
 ### v2.0.0 (2025-12)
 - SQLite 데이터베이스 연동
@@ -171,4 +137,3 @@ MIT License
 ## 링크
 
 - **GitHub**: https://github.com/jju-compass/jju-compass-map
-- **Issues**: https://github.com/jju-compass/jju-compass-map/issues
