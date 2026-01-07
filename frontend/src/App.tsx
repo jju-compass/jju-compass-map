@@ -4,7 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from './components/panels';
 import { DirectionsPanel, RoutePolyline } from './components/directions';
 import type { TransportMode } from './components/directions/DirectionsPanel/DirectionsPanel';
-import { Loading } from './components/common';
+import { Loading, ToastContainer } from './components/common';
 import { useMapStore } from './store/mapStore';
 import { useUserStore } from './store/userStore';
 import { useFavorites } from './hooks/useFavorites';
@@ -345,6 +345,9 @@ const App: React.FC = () => {
           <span className="app-nav-label">길찾기</span>
         </button>
       </nav>
+
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 };
