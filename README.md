@@ -51,20 +51,28 @@ jju-compass-map/
 
 ## 개발 환경 설정
 
+### 환경 변수 설정
+
+```bash
+cp .env.example .env
+# .env 파일에서 KAKAO_API_KEY 설정 필수
+```
+
 ### 프론트엔드
 
 ```bash
 cd frontend
 npm install
-npm run dev     # 개발 서버 (localhost:3000)
+npm start       # 개발 서버 (localhost:3000)
 npm run build   # 프로덕션 빌드
 ```
+
+> Kakao Maps API 키는 `frontend/public/index.html`의 `KAKAO_APP_KEY` 부분을 교체하세요.
 
 ### 백엔드
 
 ```bash
 cd backend
-cp .env.example .env  # 환경변수 설정
 go mod download
 go run ./cmd/server   # 개발 서버 (localhost:8080)
 ```

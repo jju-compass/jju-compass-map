@@ -17,7 +17,9 @@ backend/jju-server.exe
 
 # Database
 database/*.db
-!database/.gitkeep
+database/*.db-shm
+database/*.db-wal
+database/*.db-journal
 
 # IDE
 .idea/
@@ -42,6 +44,10 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Windows artifacts
+nul
+*/nul
 
 # Build cache
 .cache/
