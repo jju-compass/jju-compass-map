@@ -1,6 +1,6 @@
 module github.com/jju-compass/jju-compass-map
 
-go 1.24.0
+go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.11.0
