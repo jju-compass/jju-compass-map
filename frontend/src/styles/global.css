@@ -134,3 +134,47 @@ input:focus, textarea:focus, button:focus {
   }
 }
 
+/* 도보 경로 애니메이션 스타일 */
+@keyframes bounce-marker {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes footstep-fade {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* 워커 아바타 */
+.walker-avatar {
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  transition: transform 0.1s ease-out;
+}
+
+/* 발자국 트레일 */
+.footstep-trail {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(76, 110, 245, 0.6) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: footstep-fade 1.2s ease-out forwards;
+}
+

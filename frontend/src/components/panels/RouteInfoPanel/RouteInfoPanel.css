@@ -1,0 +1,133 @@
+.route-info-panel {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 240px;
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.route-info-panel.animating {
+  border: 2px solid #4c6ef5;
+}
+
+.route-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.route-info-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.route-info-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  flex: 1;
+}
+
+.route-info-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.route-info-close:hover {
+  background: #e5e7eb;
+  color: #333;
+}
+
+.route-info-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.route-info-stat {
+  text-align: center;
+}
+
+.route-info-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #4c6ef5;
+  line-height: 1.2;
+}
+
+.route-info-stat-value .unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+.route-info-stat-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.route-info-divider {
+  width: 1px;
+  height: 40px;
+  background: #e5e7eb;
+}
+
+/* 진행률 바 */
+.route-info-progress {
+  margin-top: 12px;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.route-info-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4c6ef5 0%, #3b82f6 100%);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+/* 모바일 */
+@media (max-width: 480px) {
+  .route-info-panel {
+    bottom: 70px;
+    width: calc(100% - 32px);
+    max-width: 320px;
+    padding: 14px 16px;
+  }
+
+  .route-info-stat-value {
+    font-size: 24px;
+  }
+}
