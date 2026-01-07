@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // DB holds the database connection
@@ -14,7 +14,7 @@ var DB *sql.DB
 // Connect establishes a connection to the SQLite database
 func Connect(dbPath string) error {
 	var err error
-	DB, err = sql.Open("sqlite3", dbPath+"?_foreign_keys=on&_journal_mode=WAL")
+	DB, err = sql.Open("sqlite", dbPath+"?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}

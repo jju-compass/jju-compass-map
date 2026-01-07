@@ -11,12 +11,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jju-compass/jju-compass-map/internal/config"
+	"github.com/jju-compass/jju-compass-map/internal/database"
 	"github.com/jju-compass/jju-compass-map/internal/middleware"
 )
 
 func main() {
 	// Load configuration
 	cfg := config.Load()
+
+	// Connect to database
+	if err := database.Connect(cfg.Database.Path); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	// Initialize database schema
+	if err := database.InitSchema(); err != nil {
+		log.Fatalf("Failed to initialize database schema: %v", err)
+	}
 
 	// Set Gin mode
 	gin.SetMode(cfg.Server.Mode)
@@ -69,6 +81,11 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down server...")
+
+	// Close database connection
+	if err := database.Close(); err != nil {
+		log.Printf("Error closing database: %v", err)
+	}
 
 	// Give outstanding requests 5 seconds to complete
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
