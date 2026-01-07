@@ -79,12 +79,12 @@ cp .env.example .env
 
 ```bash
 cd frontend
+cp .env.example .env
+# .env 파일에서 KAKAO_API_KEY 설정
 npm install
-npm start       # 개발 서버 (localhost:3000)
+npm run dev     # 개발 서버 (localhost:3000)
 npm run build   # 프로덕션 빌드
 ```
-
-> `frontend/public/index.html`의 `KAKAO_APP_KEY`를 실제 키로 교체하세요.
 
 ### 3. 백엔드
 
@@ -101,8 +101,11 @@ go run ./cmd/server   # 개발 서버 (localhost:8080)
 ### 빌드
 
 ```bash
-# 프론트엔드
-cd frontend && npm run build
+# 프론트엔드 (.env 파일 필요)
+cd frontend
+echo "KAKAO_API_KEY=your_key" > .env
+npm install
+npm run build
 
 # 백엔드 (ARM64)
 cd backend && GOOS=linux GOARCH=arm64 go build -o jju-server ./cmd/server
@@ -118,8 +121,14 @@ ssh ubuntu@jju-map.duckdns.org
 cd /var/www/jju-compass-map
 git pull
 
+# 프론트엔드 빌드 (.env 파일 설정 필요)
+cd frontend
+# .env 파일이 없으면 생성: echo "KAKAO_API_KEY=your_key" > .env
+npm install
+npm run build
+
 # 백엔드 재시작 (API 변경 시)
-cd backend
+cd ../backend
 go build -o jju-server ./cmd/server
 sudo systemctl restart jju-server
 ```

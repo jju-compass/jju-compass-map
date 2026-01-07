@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+require('dotenv').config();
 
 module.exports = (env, argv) => {
   const isDev = argv.mode === 'development';
@@ -60,6 +61,7 @@ module.exports = (env, argv) => {
       new HtmlWebpackPlugin({
         template: './public/index.html',
         favicon: './public/favicon.ico',
+        kakaoApiKey: process.env.KAKAO_API_KEY || '',
       }),
       new MiniCssExtractPlugin({
         filename: isDev ? '[name].css' : '[name].[contenthash].css',
