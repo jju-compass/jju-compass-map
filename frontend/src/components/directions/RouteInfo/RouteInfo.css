@@ -1,0 +1,153 @@
+.route-info {
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+/* Summary */
+.route-info-summary {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.route-info-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.route-info-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.route-info-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-info-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.route-info-stat-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.route-info-stat-divider {
+  width: 1px;
+  height: 40px;
+  background: #e5e7eb;
+}
+
+/* Steps */
+.route-info-steps {
+  padding: 16px;
+}
+
+.route-info-steps-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
+}
+
+.route-info-steps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.route-step {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.route-step::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: 0;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.route-step-last::before {
+  display: none;
+}
+
+.route-step-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #3b82f6;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 50%;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.route-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.route-step-roads {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  word-break: keep-all;
+}
+
+.route-step-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Scrollbar */
+.route-info-steps::-webkit-scrollbar {
+  width: 6px;
+}
+
+.route-info-steps::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.route-info-steps::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .route-info-summary {
+    padding: 12px;
+  }
+
+  .route-info-stat-value {
+    font-size: 20px;
+  }
+
+  .route-info-steps {
+    padding: 12px;
+  }
+}
