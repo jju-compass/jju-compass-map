@@ -188,6 +188,61 @@ declare namespace kakao.maps {
 
   type StrokeStyles = 'solid' | 'shortdash' | 'shortdot' | 'shortdashdot' | 'shortdashdotdot' | 'dot' | 'dash' | 'dashdot' | 'longdash' | 'longdashdot' | 'longdashdotdot';
 
+  // ============================================
+  // MarkerClusterer (clusterer 라이브러리)
+  // ============================================
+  interface ClusterStyle {
+    width?: string;
+    height?: string;
+    background?: string;
+    borderRadius?: string;
+    color?: string;
+    textAlign?: string;
+    fontWeight?: string;
+    lineHeight?: string;
+    fontSize?: string;
+    boxShadow?: string;
+  }
+
+  interface MarkerClustererOptions {
+    map?: Map;
+    markers?: Marker[];
+    gridSize?: number;
+    averageCenter?: boolean;
+    minLevel?: number;
+    minClusterSize?: number;
+    styles?: ClusterStyle[];
+    texts?: string[] | ((count: number) => string);
+    calculator?: number[] | ((count: number) => number);
+    disableClickZoom?: boolean;
+    clickable?: boolean;
+    hoverable?: boolean;
+  }
+
+  class MarkerClusterer {
+    constructor(options: MarkerClustererOptions);
+    addMarker(marker: Marker, nodraw?: boolean): void;
+    addMarkers(markers: Marker[], nodraw?: boolean): void;
+    removeMarker(marker: Marker, nodraw?: boolean): void;
+    removeMarkers(markers: Marker[], nodraw?: boolean): void;
+    clear(): void;
+    redraw(): void;
+    getGridSize(): number;
+    setGridSize(size: number): void;
+    getMinClusterSize(): number;
+    setMinClusterSize(size: number): void;
+    getAverageCenter(): boolean;
+    setAverageCenter(bool: boolean): void;
+    getMinLevel(): number;
+    setMinLevel(level: number): void;
+    getTexts(): string[] | ((count: number) => string);
+    setTexts(texts: string[] | ((count: number) => string)): void;
+    getCalculator(): number[] | ((count: number) => number);
+    setCalculator(calculator: number[] | ((count: number) => number)): void;
+    getStyles(): ClusterStyle[];
+    setStyles(styles: ClusterStyle[]): void;
+  }
+
   class Size {
     constructor(width: number, height: number);
     equals(size: Size): boolean;
