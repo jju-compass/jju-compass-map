@@ -20,35 +20,7 @@ html, body {
   height: 100%;
 }
 
-.app {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem;
-  text-align: center;
-}
-
-.app-header h1 {
-  font-size: 1.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.app-header p {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.app-main {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
+/* .app, .app-main 스타일은 App.css에서 정의됨 */
 
 .loading-message {
   display: flex;
