@@ -6,6 +6,7 @@ import { useMapStore } from '@store/mapStore';
 import { useUserStore } from '@store/userStore';
 import { useSearch } from '@hooks/useSearch';
 import { useFavorites } from '@hooks/useFavorites';
+import { useHistory } from '@hooks/useHistory';
 import type { Place } from '../../../types';
 import './Sidebar.css';
 
@@ -26,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { searchKeyword } = useUserStore();
   const { search } = useSearch();
   const { favorites, toggleFavorite } = useFavorites();
+  const { popularKeywords } = useHistory();
 
   // Convert favorites array to Set<string> for SearchResults component
   const favoritesSet = new Set(favorites.map(f => f.place_id));
@@ -49,6 +51,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleDirections = (place: Place) => {
     onDirections?.(place);
+  };
+
+  const handlePopularKeywordClick = (keyword: string) => {
+    search(keyword);
   };
 
   const toggleCollapse = () => {
@@ -96,9 +102,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               isLoading={isLoading}
               error={error}
               keyword={searchKeyword}
+              popularKeywords={popularKeywords}
               onPlaceClick={handlePlaceClick}
               onFavoriteToggle={handleFavoriteToggle}
               onDirections={handleDirections}
+              onPopularKeywordClick={handlePopularKeywordClick}
             />
           </div>
         </>

@@ -153,6 +153,139 @@
   color: #ef4444;
 }
 
+/* Popular Keywords */
+.popular-keywords {
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.popular-keywords-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.popular-keywords-header .icon {
+  color: #f59e0b;
+}
+
+.popular-keywords-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popular-keyword-item {
+  animation: keyword-slide-in 0.3s ease-out both;
+}
+
+.popular-keyword-item:nth-child(1) { animation-delay: 0ms; }
+.popular-keyword-item:nth-child(2) { animation-delay: 30ms; }
+.popular-keyword-item:nth-child(3) { animation-delay: 60ms; }
+.popular-keyword-item:nth-child(4) { animation-delay: 90ms; }
+.popular-keyword-item:nth-child(5) { animation-delay: 120ms; }
+.popular-keyword-item:nth-child(6) { animation-delay: 150ms; }
+.popular-keyword-item:nth-child(7) { animation-delay: 180ms; }
+.popular-keyword-item:nth-child(8) { animation-delay: 210ms; }
+.popular-keyword-item:nth-child(9) { animation-delay: 240ms; }
+.popular-keyword-item:nth-child(10) { animation-delay: 270ms; }
+
+@keyframes keyword-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.popular-keyword-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  text-align: left;
+}
+
+.popular-keyword-button:hover {
+  background: #eff6ff;
+}
+
+.popular-keyword-button:active {
+  transform: scale(0.98);
+}
+
+.popular-keyword-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.popular-keyword-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* 상위 3개 강조 */
+.popular-keyword-item:nth-child(1) .popular-keyword-rank {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.popular-keyword-item:nth-child(2) .popular-keyword-rank {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.popular-keyword-item:nth-child(3) .popular-keyword-rank {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.popular-keyword-item:nth-child(n+4) .popular-keyword-rank {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.popular-keyword-text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popular-keyword-count {
+  font-size: 11px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .search-results-header {
@@ -162,5 +295,13 @@
   .search-results-list {
     padding: 6px;
     gap: 6px;
+  }
+
+  .popular-keywords {
+    padding: 12px;
+  }
+
+  .popular-keyword-button {
+    padding: 6px 8px;
   }
 }

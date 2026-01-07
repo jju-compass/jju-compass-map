@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { PlaceItem } from '../PlaceItem';
 import { Loading, Icon, PlaceListSkeleton } from '@components/common';
 import { addDistanceToPlaces, sortPlaces, formatDistance, type SortType } from '../../../utils';
-import type { Place } from '../../../types';
+import type { Place, PopularKeyword } from '../../../types';
 import './SearchResults.css';
 
 export interface SearchResultsProps {
@@ -12,9 +12,11 @@ export interface SearchResultsProps {
   isLoading?: boolean;
   error?: string | null;
   keyword?: string;
+  popularKeywords?: PopularKeyword[];
   onPlaceClick?: (place: Place) => void;
   onFavoriteToggle?: (place: Place) => void;
   onDirections?: (place: Place) => void;
+  onPopularKeywordClick?: (keyword: string) => void;
   className?: string;
 }
 
@@ -25,9 +27,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   isLoading = false,
   error,
   keyword,
+  popularKeywords = [],
   onPlaceClick,
   onFavoriteToggle,
   onDirections,
+  onPopularKeywordClick,
   className = '',
 }) => {
   const [sortBy, setSortBy] = useState<SortType>('distance');
@@ -80,7 +84,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     );
   }
 
-  // No search yet
+  // No search yet - 인기 검색어 표시
   if (results.length === 0) {
     return (
       <div className={classes}>
@@ -89,6 +93,30 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           <p>장소를 검색해보세요</p>
           <span>전주대학교 주변 장소를 찾아드립니다.</span>
         </div>
+        
+        {popularKeywords.length > 0 && (
+          <div className="popular-keywords">
+            <div className="popular-keywords-header">
+              <Icon name="trending" size="sm" />
+              <span>인기 검색어</span>
+            </div>
+            <ul className="popular-keywords-list">
+              {popularKeywords.slice(0, 10).map((item, index) => (
+                <li key={item.keyword} className="popular-keyword-item">
+                  <button
+                    className="popular-keyword-button"
+                    onClick={() => onPopularKeywordClick?.(item.keyword)}
+                    aria-label={`${item.keyword} 검색`}
+                  >
+                    <span className="popular-keyword-rank">{index + 1}</span>
+                    <span className="popular-keyword-text">{item.keyword}</span>
+                    <span className="popular-keyword-count">{item.count}회</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
