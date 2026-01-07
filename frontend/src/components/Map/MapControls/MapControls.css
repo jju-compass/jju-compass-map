@@ -1,0 +1,81 @@
+.map-controls {
+  position: absolute;
+  right: 16px;
+  bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.map-controls-group {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.map-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.map-control-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.map-control-btn:active {
+  background-color: #e8e8e8;
+}
+
+.map-control-btn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.map-control-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.map-control-btn.loading {
+  color: #3b82f6;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.map-controls-group .map-control-btn:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .map-controls {
+    right: 12px;
+    bottom: 24px;
+  }
+
+  .map-control-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
