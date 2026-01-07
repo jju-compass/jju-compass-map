@@ -269,6 +269,11 @@ declare namespace kakao.maps {
   }
 
   namespace event {
+    interface MouseEvent {
+      latLng: LatLng;
+      point: Point;
+    }
+
     function addListener(target: object, type: string, handler: (...args: unknown[]) => void): void;
     function removeListener(target: object, type: string, handler: (...args: unknown[]) => void): void;
     function trigger(target: object, type: string, data?: unknown): void;

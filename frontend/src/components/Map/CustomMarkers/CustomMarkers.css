@@ -1,0 +1,109 @@
+.home-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.home-marker:hover {
+  transform: scale(1.1);
+}
+
+.home-icon {
+  font-size: 36px;
+  line-height: 1;
+  animation: home-float 3s ease-in-out infinite;
+}
+
+@keyframes home-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.home-pulse {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 24px;
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 50%;
+  animation: home-pulse-anim 2s ease-out infinite;
+}
+
+@keyframes home-pulse-anim {
+  0% { transform: translateX(-50%) scale(0.8); opacity: 1; }
+  100% { transform: translateX(-50%) scale(2); opacity: 0; }
+}
+
+/* 출발지 깃발 마커 */
+.start-flag-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  animation: flag-wave 2s ease-in-out infinite;
+}
+
+.flag-pole {
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(180deg, #666 0%, #333 100%);
+  border-radius: 2px;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+.flag-icon {
+  position: absolute;
+  top: -10px;
+  left: 3px;
+  font-size: 28px;
+  animation: flag-flutter 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes flag-wave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes flag-flutter {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+/* 워커 마커 */
+.walker-avatar {
+  position: relative;
+  display: inline-block;
+  font-size: 40px;
+  line-height: 1;
+  animation: walker-walk 0.6s ease-in-out infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+}
+
+@keyframes walker-walk {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0) rotate(-5deg); }
+  50% { transform: translate(-50%, -50%) translateY(-5px) rotate(5deg); }
+}
+
+/* 발자국 트레일 */
+.footstep-trail {
+  width: 10px;
+  height: 10px;
+  background: rgba(76, 110, 245, 0.5);
+  border-radius: 50%;
+  animation: footstep-fade 1s ease-out forwards;
+}
+
+@keyframes footstep-fade {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}

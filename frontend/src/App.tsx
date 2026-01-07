@@ -1,15 +1,19 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { KakaoMap, MapMarker, MapControls } from './components/Map';
+import { HomeMarker, StartFlagMarker } from './components/Map/CustomMarkers';
 import { Sidebar } from './components/Sidebar';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from './components/panels';
 import { DirectionsPanel, RoutePolyline } from './components/directions';
 import type { TransportMode } from './components/directions/DirectionsPanel/DirectionsPanel';
 import { Loading, ToastContainer } from './components/common';
+import { HomeSettingModal, RouteStartModal } from './components/modals';
 import { useMapStore } from './store/mapStore';
 import { useUserStore } from './store/userStore';
+import { useRouteStore } from './store/routeStore';
 import { useFavorites } from './hooks/useFavorites';
 import { useHistory } from './hooks/useHistory';
 import { directionsAPI } from './api';
+import { toast } from './store/toastStore';
 import type { Place, Favorite, Coordinates, RouteInfo } from './types';
 import './App.css';
 
@@ -51,12 +55,54 @@ const App: React.FC = () => {
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
   const { loadHistory, loadPopularKeywords } = useHistory();
 
+  const {
+    homePickMode,
+    setHomePickMode,
+    setHomePosition,
+    startPickMode,
+    setStartPickMode,
+    setStartPosition,
+    setHomeModalOpen,
+  } = useRouteStore();
+
+  // Handle home button click
+  const handleHomeClick = useCallback(() => {
+    setHomeModalOpen(true);
+  }, [setHomeModalOpen]);
+
   // Load initial data on mount
   useEffect(() => {
     loadFavorites();
     loadHistory();
     loadPopularKeywords();
   }, [loadFavorites, loadHistory, loadPopularKeywords]);
+
+  // Handle map click for home/start pick mode
+  useEffect(() => {
+    if (!map) return;
+
+    const handleMapClick = (...args: unknown[]) => {
+      const mouseEvent = args[0] as kakao.maps.event.MouseEvent;
+      const latlng = mouseEvent.latLng;
+      const position = { lat: latlng.getLat(), lng: latlng.getLng() };
+
+      if (homePickMode) {
+        setHomePosition(position);
+        setHomePickMode(false);
+        toast.success('홈 위치가 설정되었습니다');
+      } else if (startPickMode) {
+        setStartPosition(position);
+        setStartPickMode(false);
+        toast.success('출발지가 설정되었습니다');
+      }
+    };
+
+    kakao.maps.event.addListener(map, 'click', handleMapClick);
+
+    return () => {
+      kakao.maps.event.removeListener(map, 'click', handleMapClick);
+    };
+  }, [map, homePickMode, startPickMode, setHomePosition, setHomePickMode, setStartPosition, setStartPickMode]);
 
   // Handle map ready
   const handleMapReady = useCallback((mapInstance: kakao.maps.Map) => {
@@ -230,7 +276,8 @@ const App: React.FC = () => {
             <MapControls
               showZoom
               showMyLocation
-              showHome={false}
+              showHome
+              onHomeClick={handleHomeClick}
             />
           )}
 
@@ -243,6 +290,14 @@ const App: React.FC = () => {
               onClick={handlePlaceSelect}
             />
           ))}
+
+          {/* Custom Markers (Home, Start Flag) */}
+          {isMapReady && (
+            <>
+              <HomeMarker />
+              <StartFlagMarker />
+            </>
+          )}
 
           {/* Route Polyline */}
           {routePath.length > 0 && (
@@ -348,6 +403,10 @@ const App: React.FC = () => {
 
       {/* Toast Container */}
       <ToastContainer />
+
+      {/* Modals */}
+      <HomeSettingModal />
+      <RouteStartModal />
     </div>
   );
 };
