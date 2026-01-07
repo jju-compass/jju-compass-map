@@ -118,7 +118,7 @@ cd backend && GOOS=linux GOARCH=arm64 go build -o jju-server ./cmd/server
 ssh ubuntu@jju-map.duckdns.org
 
 # 코드 업데이트
-cd /var/www/jju-compass-map
+cd ./jju-compass-map
 git pull
 
 # 프론트엔드 빌드 (.env 파일 설정 필요)
