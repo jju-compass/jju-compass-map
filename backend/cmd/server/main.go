@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jju-compass/jju-compass-map/internal/config"
+	"github.com/jju-compass/jju-compass-map/internal/middleware"
 )
 
 func main() {
@@ -21,7 +22,14 @@ func main() {
 	gin.SetMode(cfg.Server.Mode)
 
 	// Create router
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
+	// Apply middlewares
+	router.Use(middleware.CORS(&cfg.CORS))
+	rateLimiter := middleware.NewRateLimiter(100, time.Minute) // 100 requests per minute
+	router.Use(rateLimiter.RateLimit())
 
 	// Health check endpoints
 	router.GET("/health", func(c *gin.Context) {
