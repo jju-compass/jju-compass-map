@@ -5,7 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from './components/panels';
 import { DirectionsPanel, RoutePolyline } from './components/directions';
 import type { TransportMode } from './components/directions/DirectionsPanel/DirectionsPanel';
-import { Loading, ToastContainer } from './components/common';
+import { Loading, ToastContainer, SoundToggle } from './components/common';
 import { HomeSettingModal, RouteStartModal } from './components/modals';
 import { useMapStore } from './store/mapStore';
 import { useUserStore } from './store/userStore';
@@ -403,6 +403,9 @@ const App: React.FC = () => {
 
       {/* Toast Container */}
       <ToastContainer />
+
+      {/* Sound Toggle */}
+      <SoundToggle />
 
       {/* Modals */}
       <HomeSettingModal />

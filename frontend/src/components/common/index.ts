@@ -15,3 +15,4 @@ export {
   DetailSkeleton,
   type SkeletonProps,
 } from './Skeleton';
+export { SoundToggle } from './SoundToggle';

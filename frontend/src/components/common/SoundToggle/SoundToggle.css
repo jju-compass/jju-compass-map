@@ -1,0 +1,54 @@
+.sound-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.sound-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sound-toggle:active {
+  transform: scale(0.95);
+}
+
+.sound-toggle.enabled {
+  color: #4c6ef5;
+}
+
+.sound-toggle.disabled {
+  color: #9ca3af;
+}
+
+.sound-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 모바일 위치 조정 */
+@media (max-width: 768px) {
+  .sound-toggle {
+    bottom: 80px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .sound-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+}
