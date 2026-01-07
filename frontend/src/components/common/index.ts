@@ -16,3 +16,4 @@ export {
   type SkeletonProps,
 } from './Skeleton';
 export { SoundToggle } from './SoundToggle';
+export { SkipLink } from './SkipLink';

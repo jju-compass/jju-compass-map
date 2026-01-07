@@ -5,13 +5,14 @@ import { Sidebar } from './components/Sidebar';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from './components/panels';
 import { DirectionsPanel, RoutePolyline } from './components/directions';
 import type { TransportMode } from './components/directions/DirectionsPanel/DirectionsPanel';
-import { Loading, ToastContainer, SoundToggle } from './components/common';
+import { Loading, ToastContainer, SoundToggle, SkipLink } from './components/common';
 import { HomeSettingModal, RouteStartModal } from './components/modals';
 import { useMapStore } from './store/mapStore';
 import { useUserStore } from './store/userStore';
 import { useRouteStore } from './store/routeStore';
 import { useFavorites } from './hooks/useFavorites';
 import { useHistory } from './hooks/useHistory';
+import { useKeyboardShortcuts } from './hooks/useKeyboardAccessibility';
 import { directionsAPI } from './api';
 import { toast } from './store/toastStore';
 import type { Place, Favorite, Coordinates, RouteInfo } from './types';
@@ -69,6 +70,30 @@ const App: React.FC = () => {
   const handleHomeClick = useCallback(() => {
     setHomeModalOpen(true);
   }, [setHomeModalOpen]);
+
+  // Keyboard shortcuts (ESC to close modals/panels)
+  useKeyboardShortcuts({
+    onEscape: useCallback(() => {
+      // 모달 닫기
+      if (useRouteStore.getState().isHomeModalOpen) {
+        setHomeModalOpen(false);
+        return;
+      }
+      if (useRouteStore.getState().isRouteModalOpen) {
+        useRouteStore.getState().setRouteModalOpen(false);
+        return;
+      }
+      // 상세 패널 닫기
+      if (selectedPlace) {
+        setSelectedPlace(null);
+        return;
+      }
+      // 패널 닫기
+      if (activeView !== 'search') {
+        setActiveView('search');
+      }
+    }, [selectedPlace, activeView, setHomeModalOpen, setSelectedPlace]),
+  });
 
   // Load initial data on mount
   useEffect(() => {
@@ -258,6 +283,9 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
+      {/* Skip Link for accessibility */}
+      <SkipLink targetId="map">지도로 바로가기</SkipLink>
+
       {/* Sidebar */}
       <Sidebar
         className="app-sidebar"
@@ -268,7 +296,7 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="app-main">
         {/* Map */}
-        <div className="app-map">
+        <div className="app-map" id="map">
           <KakaoMap onMapReady={handleMapReady} />
           
           {/* Map Controls */}
