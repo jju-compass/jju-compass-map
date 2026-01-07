@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { PlaceItem } from '../PlaceItem';
-import { Loading, Icon } from '@components/common';
+import { Loading, Icon, PlaceListSkeleton } from '@components/common';
+import { addDistanceToPlaces, sortPlaces, formatDistance, type SortType } from '../../../utils';
 import type { Place } from '../../../types';
 import './SearchResults.css';
 
@@ -29,14 +30,26 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onDirections,
   className = '',
 }) => {
+  const [sortBy, setSortBy] = useState<SortType>('distance');
+
+  // 거리 정보 추가 및 정렬
+  const sortedResults = useMemo(() => {
+    if (results.length === 0) return [];
+    const withDistance = addDistanceToPlaces(results);
+    return sortPlaces(withDistance, sortBy);
+  }, [results, sortBy]);
+
   const classes = ['search-results', className].filter(Boolean).join(' ');
 
-  // Loading state
+  // Loading state - 스켈레톤 UI 사용
   if (isLoading) {
     return (
       <div className={classes}>
-        <div className="search-results-loading">
-          <Loading size="md" text="검색 중..." />
+        <div className="search-results-header">
+          <span className="search-results-count">검색 중...</span>
+        </div>
+        <div className="search-results-list">
+          <PlaceListSkeleton count={5} showRank={true} />
         </div>
       </div>
     );
@@ -87,18 +100,28 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         <span className="search-results-count">
           검색 결과 <strong>{results.length}</strong>건
         </span>
-        {keyword && (
-          <span className="search-results-keyword">"{keyword}"</span>
-        )}
+        <div className="search-results-sort">
+          <label htmlFor="sortSelect" className="sr-only">정렬</label>
+          <select
+            id="sortSelect"
+            className="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortType)}
+          >
+            <option value="distance">거리순</option>
+            <option value="name">이름순</option>
+          </select>
+        </div>
       </div>
       <div className="search-results-list">
-        {results.map((place, index) => (
+        {sortedResults.map((place, index) => (
           <PlaceItem
             key={place.id}
             place={place}
             index={index}
             isSelected={selectedPlace?.id === place.id}
             isFavorite={favorites.has(place.id)}
+            distance={place._distance ? formatDistance(place._distance) : undefined}
             onClick={onPlaceClick}
             onFavoriteToggle={onFavoriteToggle}
             onDirections={onDirections}

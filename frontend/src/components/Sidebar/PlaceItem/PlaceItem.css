@@ -42,6 +42,31 @@
   flex-shrink: 0;
 }
 
+/* Rank Badges */
+.place-item-index.rank-gold {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb300 100%);
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.place-item-index.rank-silver {
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.place-item-index.rank-bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+}
+
 /* Content */
 .place-item-content {
   flex: 1;

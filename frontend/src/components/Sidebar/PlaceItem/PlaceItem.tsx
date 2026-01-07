@@ -8,6 +8,7 @@ export interface PlaceItemProps {
   index?: number;
   isSelected?: boolean;
   isFavorite?: boolean;
+  distance?: string; // 외부에서 계산된 거리 문자열
   onClick?: (place: Place) => void;
   onFavoriteToggle?: (place: Place) => void;
   onDirections?: (place: Place) => void;
@@ -19,6 +20,7 @@ export const PlaceItem: React.FC<PlaceItemProps> = ({
   index,
   isSelected = false,
   isFavorite = false,
+  distance,
   onClick,
   onFavoriteToggle,
   onDirections,
@@ -41,6 +43,9 @@ export const PlaceItem: React.FC<PlaceItemProps> = ({
     onDirections?.(place);
   };
 
+  // 거리 표시 (외부에서 전달받은 distance 우선, 없으면 place.distance 사용)
+  const displayDistance = distance || (place.distance ? formatDistanceFromString(place.distance) : null);
+
   const classes = [
     'place-item',
     isSelected && 'place-item-selected',
@@ -49,7 +54,9 @@ export const PlaceItem: React.FC<PlaceItemProps> = ({
   return (
     <div className={classes} onClick={handleClick} role="button" tabIndex={0}>
       {typeof index === 'number' && (
-        <div className="place-item-index">{index + 1}</div>
+        <div className={`place-item-index ${getRankClass(index)}`}>
+          {getRankBadge(index)}
+        </div>
       )}
       
       <div className="place-item-content">
@@ -76,9 +83,9 @@ export const PlaceItem: React.FC<PlaceItemProps> = ({
           </p>
         )}
         
-        {showDistance && place.distance && (
+        {showDistance && displayDistance && (
           <p className="place-item-distance">
-            {formatDistance(parseInt(place.distance, 10))}
+            {displayDistance}
           </p>
         )}
       </div>
@@ -109,11 +116,34 @@ export const PlaceItem: React.FC<PlaceItemProps> = ({
   );
 };
 
-function formatDistance(meters: number): string {
+// 카카오 API의 distance 문자열을 포맷팅
+function formatDistanceFromString(distanceStr: string): string {
+  const meters = parseInt(distanceStr, 10);
+  if (isNaN(meters)) return distanceStr;
   if (meters < 1000) {
     return `${meters}m`;
   }
   return `${(meters / 1000).toFixed(1)}km`;
+}
+
+// 상위 3개에 랭킹 뱃지 클래스 반환
+function getRankClass(index: number): string {
+  switch (index) {
+    case 0: return 'rank-gold';
+    case 1: return 'rank-silver';
+    case 2: return 'rank-bronze';
+    default: return '';
+  }
+}
+
+// 랭킹 뱃지 또는 숫자 반환
+function getRankBadge(index: number): string | number {
+  switch (index) {
+    case 0: return '🥇';
+    case 1: return '🥈';
+    case 2: return '🥉';
+    default: return index + 1;
+  }
 }
 
 export default PlaceItem;
