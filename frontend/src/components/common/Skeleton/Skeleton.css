@@ -1,0 +1,197 @@
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-text {
+  height: 1em;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-rect {
+  border-radius: 8px;
+}
+
+/* 검색 결과 아이템 스켈레톤 */
+.skeleton-place-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-place-rank {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.skeleton-place-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-place-title {
+  height: 18px;
+  width: 60%;
+}
+
+.skeleton-place-category {
+  height: 14px;
+  width: 40%;
+}
+
+.skeleton-place-address {
+  height: 14px;
+  width: 80%;
+}
+
+.skeleton-place-distance {
+  height: 12px;
+  width: 30%;
+}
+
+.skeleton-place-action {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* 즐겨찾기 아이템 스켈레톤 */
+.skeleton-favorite-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-favorite-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.skeleton-favorite-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-favorite-name {
+  height: 16px;
+  width: 50%;
+}
+
+.skeleton-favorite-address {
+  height: 14px;
+  width: 70%;
+}
+
+/* 히스토리 아이템 스켈레톤 */
+.skeleton-history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-history-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.skeleton-history-text {
+  height: 16px;
+  flex: 1;
+}
+
+/* 디테일 패널 스켈레톤 */
+.skeleton-detail {
+  padding: 20px;
+}
+
+.skeleton-detail-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.skeleton-detail-image {
+  width: 80px;
+  height: 80px;
+}
+
+.skeleton-detail-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-detail-title {
+  height: 24px;
+  width: 70%;
+}
+
+.skeleton-detail-category {
+  height: 16px;
+  width: 40%;
+}
+
+.skeleton-detail-rating {
+  height: 16px;
+  width: 30%;
+}
+
+.skeleton-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.skeleton-detail-row-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.skeleton-detail-row-text {
+  height: 16px;
+  flex: 1;
+}
+
+.skeleton-detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.skeleton-detail-btn {
+  height: 44px;
+  flex: 1;
+}
+
+/* 애니메이션 */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
