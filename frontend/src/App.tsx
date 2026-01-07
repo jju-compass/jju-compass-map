@@ -3,11 +3,14 @@ import { KakaoMap, MapMarker, MapControls } from './components/Map';
 import { Sidebar } from './components/Sidebar';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from './components/panels';
 import { DirectionsPanel, RoutePolyline } from './components/directions';
+import type { TransportMode } from './components/directions/DirectionsPanel/DirectionsPanel';
 import { Loading } from './components/common';
 import { useMapStore } from './store/mapStore';
 import { useUserStore } from './store/userStore';
 import { useFavorites } from './hooks/useFavorites';
-import type { Place, Favorite, Coordinates } from './types';
+import { useHistory } from './hooks/useHistory';
+import { directionsAPI } from './api';
+import type { Place, Favorite, Coordinates, RouteInfo } from './types';
 import './App.css';
 
 type ActiveView = 'search' | 'favorites' | 'history' | 'directions' | null;
@@ -26,6 +29,9 @@ const App: React.FC = () => {
     place?: Place;
   } | null>(null);
   const [routePath, setRoutePath] = useState<Coordinates[]>([]);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [isDirectionsLoading, setIsDirectionsLoading] = useState(false);
+  const [directionsError, setDirectionsError] = useState<string | null>(null);
 
   const {
     map,
@@ -42,7 +48,15 @@ const App: React.FC = () => {
     searchKeyword,
   } = useUserStore();
 
-  const { toggleFavorite, checkFavorite } = useFavorites();
+  const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
+  const { loadHistory, loadPopularKeywords } = useHistory();
+
+  // Load initial data on mount
+  useEffect(() => {
+    loadFavorites();
+    loadHistory();
+    loadPopularKeywords();
+  }, [loadFavorites, loadHistory, loadPopularKeywords]);
 
   // Handle map ready
   const handleMapReady = useCallback((mapInstance: kakao.maps.Map) => {
@@ -120,6 +134,81 @@ const App: React.FC = () => {
     setDirectionsOrigin(directionsDestination);
     setDirectionsDestination(temp);
   }, [directionsOrigin, directionsDestination]);
+
+  // Handle directions search
+  const handleDirectionsSearch = useCallback(async (mode: TransportMode) => {
+    if (!directionsOrigin || !directionsDestination) return;
+
+    setIsDirectionsLoading(true);
+    setDirectionsError(null);
+    setRoutePath([]);
+    setRouteInfo(null);
+
+    try {
+      const origin = `${directionsOrigin.coordinates.lng},${directionsOrigin.coordinates.lat}`;
+      const destination = `${directionsDestination.coordinates.lng},${directionsDestination.coordinates.lat}`;
+      
+      const response = await directionsAPI.getDirections(origin, destination) as {
+        routes?: Array<{
+          summary?: { distance?: number; duration?: number };
+          sections?: Array<{
+            roads?: Array<{
+              vertexes?: number[];
+            }>;
+          }>;
+        }>;
+      };
+
+      if (response.routes && response.routes.length > 0) {
+        const route = response.routes[0];
+        
+        // Extract route info
+        if (route.summary) {
+          setRouteInfo({
+            distance: route.summary.distance || 0,
+            duration: route.summary.duration || 0,
+          });
+        }
+
+        // Extract route path from vertexes
+        const path: Coordinates[] = [];
+        if (route.sections) {
+          for (const section of route.sections) {
+            if (section.roads) {
+              for (const road of section.roads) {
+                if (road.vertexes) {
+                  for (let i = 0; i < road.vertexes.length; i += 2) {
+                    path.push({
+                      lng: road.vertexes[i],
+                      lat: road.vertexes[i + 1],
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        setRoutePath(path);
+
+        // Fit map bounds to route
+        if (map && path.length > 0) {
+          const bounds = new kakao.maps.LatLngBounds();
+          path.forEach(coord => {
+            bounds.extend(new kakao.maps.LatLng(coord.lat, coord.lng));
+          });
+          map.setBounds(bounds);
+        }
+      } else {
+        setDirectionsError('경로를 찾을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to get directions:', error);
+      setDirectionsError('경로 검색에 실패했습니다.');
+    } finally {
+      setIsDirectionsLoading(false);
+    }
+  }, [directionsOrigin, directionsDestination, map]);
 
   return (
     <div className="app">
@@ -212,8 +301,12 @@ const App: React.FC = () => {
           <DirectionsPanel
             origin={directionsOrigin}
             destination={directionsDestination}
+            routeInfo={routeInfo}
+            isLoading={isDirectionsLoading}
+            error={directionsError}
             onOriginChange={setDirectionsOrigin}
             onDestinationChange={setDirectionsDestination}
+            onSearch={handleDirectionsSearch}
             onSwap={handleSwapDirections}
             onUseCurrentLocation={handleUseCurrentLocation}
             onClose={() => setActiveView('search')}

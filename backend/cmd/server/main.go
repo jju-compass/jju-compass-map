@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -50,6 +52,23 @@ func main() {
 	// Create handlers and register routes
 	handlers := handler.NewHandlers(database.DB, cfg, apiLimiter)
 	handlers.RegisterRoutes(router)
+
+	// Serve static files from frontend/dist
+	staticPath := cfg.Static.Path
+
+	// Serve static assets (JS, CSS, images, etc.)
+	router.Static("/assets", filepath.Join(staticPath, "assets"))
+	router.StaticFile("/favicon.ico", filepath.Join(staticPath, "favicon.ico"))
+
+	// SPA fallback - serve index.html for all non-API routes
+	router.NoRoute(func(c *gin.Context) {
+		// Don't serve index.html for API routes
+		if strings.HasPrefix(c.Request.URL.Path, "/api") {
+			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Not found"})
+			return
+		}
+		c.File(filepath.Join(staticPath, "index.html"))
+	})
 
 	// Create server with timeouts
 	srv := &http.Server{

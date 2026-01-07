@@ -16,9 +16,10 @@ export function useFavorites() {
   const loadFavorites = useCallback(async () => {
     try {
       const response = await favoritesAPI.getAll();
-      setFavorites(response.favorites);
+      setFavorites(response.favorites || []);
     } catch (error) {
-      console.error('Failed to load favorites:', error);
+      console.warn('Failed to load favorites:', error);
+      setFavorites([]);
     }
   }, [setFavorites]);
 

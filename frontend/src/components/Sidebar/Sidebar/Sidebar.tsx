@@ -5,6 +5,7 @@ import { Icon } from '@components/common';
 import { useMapStore } from '@store/mapStore';
 import { useUserStore } from '@store/userStore';
 import { useSearch } from '@hooks/useSearch';
+import { useFavorites } from '@hooks/useFavorites';
 import type { Place } from '../../../types';
 import './Sidebar.css';
 
@@ -20,11 +21,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDirections,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   
   const { searchResults, selectedPlace, setSelectedPlace, isLoading, error } = useMapStore();
   const { searchKeyword } = useUserStore();
   const { search } = useSearch();
+  const { favorites, toggleFavorite } = useFavorites();
+
+  // Convert favorites array to Set<string> for SearchResults component
+  const favoritesSet = new Set(favorites.map(f => f.place_id));
 
   const handleSearch = async (searchKeyword: string) => {
     await search(searchKeyword);
@@ -35,17 +39,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onPlaceSelect?.(place);
   };
 
-  const handleFavoriteToggle = (place: Place) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(place.id)) {
-        next.delete(place.id);
-      } else {
-        next.add(place.id);
-      }
-      return next;
-    });
-    // TODO: Call API to save favorite
+  const handleFavoriteToggle = async (place: Place) => {
+    try {
+      await toggleFavorite(place);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
   };
 
   const handleDirections = (place: Place) => {
@@ -93,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <SearchResults
               results={searchResults}
               selectedPlace={selectedPlace}
-              favorites={favorites}
+              favorites={favoritesSet}
               isLoading={isLoading}
               error={error}
               keyword={searchKeyword}

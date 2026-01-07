@@ -11,12 +11,13 @@ import (
 
 // CacheHandler handles cache-related requests
 type CacheHandler struct {
-	repo *repository.CacheRepository
+	repo        *repository.CacheRepository
+	historyRepo *repository.HistoryRepository
 }
 
 // NewCacheHandler creates a new cache handler
-func NewCacheHandler(repo *repository.CacheRepository) *CacheHandler {
-	return &CacheHandler{repo: repo}
+func NewCacheHandler(repo *repository.CacheRepository, historyRepo *repository.HistoryRepository) *CacheHandler {
+	return &CacheHandler{repo: repo, historyRepo: historyRepo}
 }
 
 // GetSearchCache retrieves cached search results
@@ -79,6 +80,12 @@ func (h *CacheHandler) SetSearchCache(c *gin.Context) {
 	if err := h.repo.Set(req.Keyword, req.Results, ttl); err != nil {
 		InternalError(c, "캐시 저장 실패")
 		return
+	}
+
+	// 검색 히스토리에도 자동 추가
+	if h.historyRepo != nil {
+		userID := GetUserID(c)
+		_ = h.historyRepo.Add(userID, req.Keyword, len(req.Results))
 	}
 
 	SuccessMessage(c, "캐시가 저장되었습니다")

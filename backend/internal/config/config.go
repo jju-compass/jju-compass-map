@@ -11,6 +11,7 @@ type Config struct {
 	Database DatabaseConfig
 	Kakao    KakaoConfig
 	CORS     CORSConfig
+	Static   StaticConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -37,6 +38,11 @@ type CORSConfig struct {
 	AllowedOrigins []string
 }
 
+// StaticConfig holds static file serving configuration
+type StaticConfig struct {
+	Path string
+}
+
 // Load reads configuration from environment variables with defaults
 func Load() *Config {
 	return &Config{
@@ -59,6 +65,9 @@ func Load() *Config {
 				"http://localhost:8080",
 				"https://jju-map.duckdns.org",
 			},
+		},
+		Static: StaticConfig{
+			Path: getEnv("STATIC_PATH", "../frontend/dist"),
 		},
 	}
 }

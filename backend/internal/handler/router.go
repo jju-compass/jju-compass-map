@@ -21,10 +21,11 @@ type Handlers struct {
 
 // NewHandlers creates all handlers with their dependencies
 func NewHandlers(db *sql.DB, cfg *config.Config, apiLimiter *middleware.DailyAPILimiter) *Handlers {
+	historyRepo := repository.NewHistoryRepository(db)
 	return &Handlers{
-		Cache:      NewCacheHandler(repository.NewCacheRepository(db)),
+		Cache:      NewCacheHandler(repository.NewCacheRepository(db), historyRepo),
 		Favorite:   NewFavoriteHandler(repository.NewFavoriteRepository(db)),
-		History:    NewHistoryHandler(repository.NewHistoryRepository(db)),
+		History:    NewHistoryHandler(historyRepo),
 		Settings:   NewSettingsHandler(repository.NewSettingsRepository(db)),
 		Directions: NewDirectionsHandler(&cfg.Kakao, apiLimiter),
 	}
