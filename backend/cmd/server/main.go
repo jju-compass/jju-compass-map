@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jju-compass/jju-compass-map/internal/config"
 	"github.com/jju-compass/jju-compass-map/internal/database"
+	"github.com/jju-compass/jju-compass-map/internal/handler"
 	"github.com/jju-compass/jju-compass-map/internal/middleware"
 )
 
@@ -43,21 +44,12 @@ func main() {
 	rateLimiter := middleware.NewRateLimiter(100, time.Minute) // 100 requests per minute
 	router.Use(rateLimiter.RateLimit())
 
-	// Health check endpoints
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "JJU Compass Map API Server",
-		})
-	})
+	// Create daily API limiter for Kakao Directions
+	apiLimiter := middleware.NewDailyAPILimiter(cfg.Kakao.DailyAPILimit)
 
-	router.GET("/api", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"version": "2.0.0",
-			"message": "JJU Compass Map API",
-		})
-	})
+	// Create handlers and register routes
+	handlers := handler.NewHandlers(database.DB, cfg, apiLimiter)
+	handlers.RegisterRoutes(router)
 
 	// Create server with timeouts
 	srv := &http.Server{
