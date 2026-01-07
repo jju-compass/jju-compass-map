@@ -41,11 +41,14 @@ interface MapState {
   setCurrentLocation: (location: Coordinates | null) => void;
 }
 
-// Jeonju University coordinates (default center)
+// 전주대학교 정문 좌표 (기본 중심)
 const JJU_CENTER: Coordinates = {
-  lat: 35.8428,
-  lng: 127.1353,
+  lat: 35.814445811028584,
+  lng: 127.09236571436321,
 };
+
+// 검색 반경 (미터)
+export const SEARCH_RADIUS = 2000;
 
 export const useMapStore = create<MapState>((set) => ({
   // Map
