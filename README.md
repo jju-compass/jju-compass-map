@@ -1,39 +1,8 @@
 # JJU Compass Map
 
-전주대학교 주변 시설 정보를 카카오맵 기반으로 제공하는 웹 서비스입니다.
+전주대학교 주변 시설 검색 서비스 (카카오맵 기반)
 
-## 배포 정보
-
-- **URL**: https://jju-map.duckdns.org
-- **서버**: Oracle Cloud (Ubuntu 22.04) + Nginx
-- **SSL**: Let's Encrypt 인증서 적용
-
----
-
-## 주요 기능
-
-### 지도 & 검색
-- 카카오맵 SDK 연동 (2km 반경, 최대 45개 결과)
-- 16개 카테고리 검색 (음식점 6종 + 편의시설 10종)
-- 검색 결과 정렬 (거리순/이름순)
-- 마커 클러스터링 (15개 이상 시 자동 그룹화)
-- 홈 위치 설정 (검색 기준점 커스터마이징)
-
-### 즐겨찾기 & 히스토리
-- 장소 즐겨찾기 (서버 저장)
-- 검색 히스토리 & 인기 검색어
-- 검색 결과 서버 캐싱 (1시간 TTL)
-
-### 경로 안내
-- 도보 경로 표시 (Kakao Directions API)
-- 경로 애니메이션 (발자국 트레일)
-- 거리/예상 시간 표시
-
-### UI/UX
-- 반응형 디자인 (PC/모바일)
-- 장소 상세 패널 (좌측 고정)
-- 사운드 효과 (토글 가능)
-- 키보드 접근성 지원
+**Live:** https://jju-map.duckdns.org
 
 ---
 
@@ -42,9 +11,103 @@
 | 구분 | 기술 |
 |------|------|
 | Frontend | HTML5, CSS3, JavaScript (ES6+) |
-| API | Kakao Maps SDK v2, Kakao Directions API |
 | Backend | Node.js, Express, SQLite |
-| 배포 | Oracle Cloud, Nginx, Let's Encrypt |
+| API | Kakao Maps SDK, Kakao Mobility API |
+| Infra | Oracle Cloud, Nginx, PM2, Let's Encrypt |
+
+---
+
+## 서버 아키텍처
+
+```
+┌─────────────────────────────────────────┐
+│            Oracle Cloud Ubuntu          │
+├─────────────────────────────────────────┤
+│  [Nginx :443]                           │
+│      ├── /api/* → localhost:3000        │
+│      └── /* → 정적 파일 서빙             │
+│                                         │
+│  [PM2]                                  │
+│      └── jju-directions (port 3000)     │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 배포 명령어
+
+| 변경 대상 | 명령어 |
+|-----------|--------|
+| 정적 파일 (HTML/CSS/JS) | `git pull` |
+| API 서버 (server/) | `git pull && pm2 restart jju-directions` |
+
+### PM2 관리
+
+```bash
+pm2 list                    # 프로세스 목록
+pm2 logs jju-directions     # 로그 확인
+pm2 monit                   # 실시간 모니터링
+pm2 restart jju-directions  # 재시작
+```
+
+---
+
+## REST API
+
+Base URL: `https://jju-map.duckdns.org/api`
+
+### 검색 캐시
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/cache/search?keyword=` | 캐시된 검색 결과 조회 |
+| POST | `/cache/search` | 검색 결과 캐시 저장 |
+| GET | `/cache/stats` | 캐시 통계 |
+| DELETE | `/cache` | 캐시 정리 |
+
+### 즐겨찾기
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/favorites` | 목록 조회 |
+| POST | `/favorites` | 추가 |
+| DELETE | `/favorites/:placeId` | 제거 |
+| GET | `/favorites/check/:placeId` | 단건 확인 |
+| POST | `/favorites/check` | 일괄 확인 |
+
+### 검색 히스토리
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/history` | 검색 기록 |
+| GET | `/history/popular` | 인기 검색어 |
+| DELETE | `/history` | 기록 삭제 |
+
+### 사용자 설정
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/settings/home` | 홈 위치 조회 |
+| POST | `/settings/home` | 홈 위치 저장 |
+| DELETE | `/settings/home` | 홈 위치 삭제 |
+
+### 경로 찾기
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/directions?origin=lng,lat&destination=lng,lat` | 도보 경로 |
+
+### Rate Limiting
+
+| 대상 | 제한 |
+|------|------|
+| 일반 API | 100회/분 |
+| 검색 API | 30회/분 |
+| Directions | 5,000회/일 |
+
+### 헤더
+
+- `X-User-Id`: 사용자 식별 (선택)
 
 ---
 
@@ -52,88 +115,123 @@
 
 ```
 ├── index.html          # 랜딩 페이지
-├── map.html            # 메인 지도 페이지 (통합)
-├── map.js              # 지도 핵심 로직 (3000+ lines)
-├── config.js           # 카테고리 정보, 색상 테마
-├── style.css           # 통합 스타일시트
+├── map.html            # 메인 지도 (카카오맵)
+├── map.js              # 지도 핵심 로직 (111KB, 3035줄)
+├── config.js           # 카테고리, 색상 테마 (14KB)
+├── style.css           # 통합 스타일 (86KB)
+├── pathfinder.js       # A* 경로 탐색
+├── roadNetwork.js      # 도로 네트워크 데이터
 │
-├── food.html           # 음식점 통합
-├── food-*.html         # 음식점 카테고리 (한식/중식/일식/양식/분식)
+├── food-*.html         # 음식점 카테고리 페이지
 ├── cafe.html           # 카페
-├── convenience.html    # 편의점
 ├── pharmacy.html       # 약국
-├── hospital.html       # 병원
-├── bank.html           # 은행/ATM
-├── stationery.html     # 문구점
-├── salon.html          # 미용실
-├── pcroom.html         # PC방
-├── gym.html            # 헬스장
-├── karaoke.html        # 노래방
+├── ...                 # 기타 카테고리
 │
 ├── about.html          # 서비스 소개
 ├── guide.html          # 이용 가이드
-├── search.html         # 검색 페이지
 ├── survey.html         # 설문조사
 │
-└── server/             # API 서버
-    ├── server.js       # Express 서버 (v2.1)
-    ├── database.js     # SQLite 데이터베이스
+└── server/
+    ├── server.js       # Express API 서버
+    ├── database.js     # SQLite 관리
     └── .env.example    # 환경변수 템플릿
 ```
+
+---
+
+## 핵심 코드 (map.js)
+
+### MapState 객체
+
+```javascript
+MapState = {
+    markers: [],              // 활성 마커 배열
+    clusterer: null,          // 마커 클러스터러
+    infowindow: null,         // 싱글톤 인포윈도우
+    transientOverlays: [],    // 임시 오버레이 (애니메이션)
+    route: {
+        startPosition: null,
+        polyline: null,
+        animMarker: null
+    },
+    home: {
+        position: null,
+        marker: null
+    },
+    favorites: new Set(),
+    currentResults: [],
+    currentSort: 'distance'
+};
+```
+
+### 주요 함수
+
+| 함수 | 라인 | 설명 |
+|------|------|------|
+| `initializeMap()` | 788 | 카카오맵 초기화 |
+| `clearMarkers()` | 1029 | 마커 정리 (메모리 관리) |
+| `initClusterer()` | 719 | 클러스터러 초기화 |
+| `dropMarker()` | 860 | 마커 드롭 애니메이션 |
+| `bounceMarker()` | 889 | 마커 바운스 효과 |
+
+---
+
+## 로컬 개발
+
+### 프론트엔드
+
+```bash
+npx http-server -p 5500
+# 또는
+python3 -m http.server 5500
+```
+
+### 백엔드
+
+```bash
+cd server
+cp .env.example .env  # API 키 설정
+npm install
+npm start
+```
+
+### Kakao API 설정
+
+1. [Kakao Developers](https://developers.kakao.com) 접속
+2. 앱 생성 → JavaScript 키 발급
+3. 플랫폼 등록: `http://localhost:5500`
+4. `map.html`의 appkey 수정
+
+---
+
+## 주요 기능
+
+- 16개 카테고리 검색 (음식점 6종 + 편의시설 10종)
+- 2km 반경, 최대 45개 결과
+- 마커 클러스터링 (15개 이상)
+- 즐겨찾기 (서버 저장)
+- 검색 히스토리 & 인기 검색어
+- 도보 경로 안내 + 애니메이션
+- 홈 위치 설정
+- 반응형 (PC/모바일)
 
 ---
 
 ## 버전 히스토리
 
 ### v2.1.0 (2025-01)
-- 일일 API 호출 한도 (5000건/일) - Kakao Directions API 비용 보호
-- 설문조사 페이지 추가
-- Directions API 보안 강화 (입력 검증)
-- UX 개선: 결과 카드 리디자인, 인포윈도우 → 고정 패널
-- 모바일 UI/애니메이션 개선
-- 인기 검색어 버그 수정
+- Directions API 일일 한도 (5000건)
+- 설문조사 페이지
+- 입력 검증 강화
 
-### v2.0.0 (2025-12)
-- SQLite 데이터베이스 연동
-- 즐겨찾기 시스템 (서버 저장)
-- 검색 히스토리 & 인기 검색어
-- 홈 위치(검색 기준점) 설정
+### v2.0.0 (2024-12)
+- SQLite + 즐겨찾기/히스토리
 - 마커 클러스터링
-- 검색 결과 정렬 (거리순/이름순)
-- 장소 상세 패널 UI
-- 사운드 효과 시스템
-- 키보드 접근성 개선
-- Rate Limiting (API 보호)
-- config.js 분리 (카테고리/색상 테마)
-
-### v1.3.0 (2025-11-14)
-- 도보 경로 애니메이션 추가
-- 시작 지점 지정 UI
-- 마커 드롭/바운스/리플 애니메이션
-- Directions 프록시 서버 구조 설계
-
-### v1.2.0 (2025-11-07)
-- CSS 통합 (style.css)
-- 검색 반경 2km 확대
-- 페이지네이션 (최대 45개 결과)
-
-### v1.1.0 (2025-11-06)
-- 모바일 반응형 디자인
-- HTTPS 적용
-
-### v1.0.0 (2025-11-05)
-- 카카오맵 API 연동
-- 9개 카테고리 구현
-- Oracle Cloud 배포
+- 홈 위치 설정
+- Rate Limiting
 
 ---
 
 ## 라이선스
 
 MIT License
-
----
-
-## 링크
-
-- **GitHub**: https://github.com/jju-compass/jju-compass-map
