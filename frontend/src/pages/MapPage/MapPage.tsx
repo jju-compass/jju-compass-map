@@ -1,9 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { KakaoMap, MapMarker, MapControls } from '../../components/Map';
+import {
+  KakaoMap,
+  MapMarker,
+  MapControls,
+  MapNavbar,
+  CategorySidebar,
+  CategoryHeader,
+  PlaceList,
+  categoryData,
+  type Category,
+} from '../../components/Map';
 import { HomeMarker, StartFlagMarker } from '../../components/Map/CustomMarkers';
-import { Sidebar } from '../../components/Sidebar';
-import { PlaceDetail, FavoritesPanel, HistoryPanel } from '../../components/panels';
+import { PlaceDetail } from '../../components/panels';
 import { DirectionsPanel, RoutePolyline } from '../../components/directions';
 import type { TransportMode } from '../../components/directions/DirectionsPanel/DirectionsPanel';
 import { Loading, ToastContainer, SoundToggle, SkipLink } from '../../components/common';
@@ -14,17 +23,20 @@ import { useRouteStore } from '../../store/routeStore';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useHistory } from '../../hooks/useHistory';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardAccessibility';
+import { useSearch } from '../../hooks/useSearch';
 import { directionsAPI } from '../../api';
 import { toast } from '../../store/toastStore';
-import type { Place, Favorite, Coordinates, RouteInfo } from '../../types';
+import type { Place, Coordinates, RouteInfo } from '../../types';
 import './MapPage.css';
-
-type ActiveView = 'search' | 'favorites' | 'history' | 'directions' | null;
 
 const MapPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [activeView, setActiveView] = useState<ActiveView>('search');
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [showDirections, setShowDirections] = useState(false);
+  
+  // Directions state
   const [directionsOrigin, setDirectionsOrigin] = useState<{
     name: string;
     coordinates: Coordinates;
@@ -49,15 +61,11 @@ const MapPage: React.FC = () => {
     selectedPlace,
     setSelectedPlace,
     currentLocation,
-    setCenter,
+    isLoading,
   } = useMapStore();
 
-  const {
-    favorites,
-    history,
-    searchKeyword,
-  } = useUserStore();
-
+  const { favorites } = useUserStore();
+  const { search } = useSearch();
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
   const { loadHistory, loadPopularKeywords } = useHistory();
 
@@ -71,6 +79,28 @@ const MapPage: React.FC = () => {
     setHomeModalOpen,
   } = useRouteStore();
 
+  // Initialize with first category or URL param
+  useEffect(() => {
+    if (categoryParam) {
+      // Find category by name
+      for (const group of categoryData) {
+        const found = group.categories.find(c => c.name === categoryParam || c.searchKeyword === categoryParam);
+        if (found) {
+          setSelectedCategory(found);
+          search(found.searchKeyword);
+          return;
+        }
+      }
+    }
+    
+    // Default to first category if no URL param
+    if (!selectedCategory && categoryData[0]?.categories[0]) {
+      const defaultCategory = categoryData[0].categories[0];
+      setSelectedCategory(defaultCategory);
+      search(defaultCategory.searchKeyword);
+    }
+  }, [categoryParam]);
+
   // Handle home button click
   const handleHomeClick = useCallback(() => {
     setHomeModalOpen(true);
@@ -79,7 +109,6 @@ const MapPage: React.FC = () => {
   // Keyboard shortcuts (ESC to close modals/panels)
   useKeyboardShortcuts({
     onEscape: useCallback(() => {
-      // 모달 닫기
       if (useRouteStore.getState().isHomeModalOpen) {
         setHomeModalOpen(false);
         return;
@@ -88,16 +117,18 @@ const MapPage: React.FC = () => {
         useRouteStore.getState().setRouteModalOpen(false);
         return;
       }
-      // 상세 패널 닫기
       if (selectedPlace) {
         setSelectedPlace(null);
         return;
       }
-      // 패널 닫기
-      if (activeView !== 'search') {
-        setActiveView('search');
+      if (showDirections) {
+        setShowDirections(false);
+        return;
       }
-    }, [selectedPlace, activeView, setHomeModalOpen, setSelectedPlace]),
+      if (isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    }, [selectedPlace, showDirections, isSidebarOpen, setHomeModalOpen, setSelectedPlace]),
   });
 
   // Load initial data on mount
@@ -135,16 +166,28 @@ const MapPage: React.FC = () => {
   }, [map, homePickMode, startPickMode, setHomePosition, setHomePickMode, setStartPosition, setStartPickMode]);
 
   // Handle map ready
-  const handleMapReady = useCallback((mapInstance: kakao.maps.Map) => {
+  const handleMapReady = useCallback(() => {
     setIsMapReady(true);
     console.log('Map initialized');
   }, []);
 
-  // Handle place selection from search results
-  const handlePlaceSelect = useCallback((place: Place) => {
+  // Handle navbar search
+  const handleNavbarSearch = useCallback((keyword: string) => {
+    search(keyword);
+    setSelectedCategory(null);
+  }, [search]);
+
+  // Handle category selection
+  const handleCategorySelect = useCallback((category: Category) => {
+    setSelectedCategory(category);
+    search(category.searchKeyword);
+    setIsSidebarOpen(false);
+  }, [search]);
+
+  // Handle place selection from list
+  const handlePlaceClick = useCallback((place: Place) => {
     setSelectedPlace(place);
     
-    // Move map to selected place
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
     if (!isNaN(lat) && !isNaN(lng) && map) {
@@ -163,7 +206,6 @@ const MapPage: React.FC = () => {
       place,
     });
 
-    // Use current location as origin if available
     if (currentLocation) {
       setDirectionsOrigin({
         name: '현재 위치',
@@ -171,23 +213,8 @@ const MapPage: React.FC = () => {
       });
     }
 
-    setActiveView('directions');
+    setShowDirections(true);
   }, [currentLocation]);
-
-  // Handle favorite selection
-  const handleFavoriteSelect = useCallback((favorite: Favorite) => {
-    if (map) {
-      map.panTo(new kakao.maps.LatLng(favorite.lat, favorite.lng));
-    }
-    setActiveView('search');
-  }, [map]);
-
-  // Handle history keyword selection
-  const handleHistorySelect = useCallback((keyword: string) => {
-    // This will trigger a new search
-    setActiveView('search');
-    // The search will be handled by the Sidebar component
-  }, []);
 
   // Handle closing place detail
   const handleClosePlaceDetail = useCallback(() => {
@@ -238,7 +265,6 @@ const MapPage: React.FC = () => {
       if (response.routes && response.routes.length > 0) {
         const route = response.routes[0];
         
-        // Extract route info
         if (route.summary) {
           setRouteInfo({
             distance: route.summary.distance || 0,
@@ -246,7 +272,6 @@ const MapPage: React.FC = () => {
           });
         }
 
-        // Extract route path from vertexes
         const path: Coordinates[] = [];
         if (route.sections) {
           for (const section of route.sections) {
@@ -267,7 +292,6 @@ const MapPage: React.FC = () => {
         
         setRoutePath(path);
 
-        // Fit map bounds to route
         if (map && path.length > 0) {
           const bounds = new kakao.maps.LatLngBounds();
           path.forEach(coord => {
@@ -286,73 +310,100 @@ const MapPage: React.FC = () => {
     }
   }, [directionsOrigin, directionsDestination, map]);
 
+  // Get current category info for header
+  const currentCategoryIcon = selectedCategory?.icon || 'food';
+  const currentCategoryName = selectedCategory?.name || '검색 결과';
+
   return (
     <div className="map-page">
-      {/* Skip Link for accessibility */}
-      <SkipLink targetId="map">지도로 바로가기</SkipLink>
+      <SkipLink targetId="map-container">지도로 바로가기</SkipLink>
 
-      {/* Sidebar */}
-      <Sidebar
-        className="map-page-sidebar"
-        onPlaceSelect={handlePlaceSelect}
-        onDirections={handleDirections}
-        initialSearchKeyword={categoryParam || undefined}
+      {/* Navbar */}
+      <MapNavbar
+        onSearch={handleNavbarSearch}
+        onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        isMenuOpen={isSidebarOpen}
       />
 
-      {/* Main Content */}
-      <main className="map-page-main">
-        {/* Map */}
-        <div className="map-page-map" id="map">
-          <KakaoMap onMapReady={handleMapReady} />
-          
-          {/* Map Controls */}
-          {isMapReady && (
-            <MapControls
-              showZoom
-              showMyLocation
-              showHome
-              onHomeClick={handleHomeClick}
+      {/* Main Layout */}
+      <div className="map-page-body">
+        {/* Category Sidebar */}
+        <CategorySidebar
+          selectedCategoryId={selectedCategory?.id || null}
+          onCategorySelect={handleCategorySelect}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+
+        {/* Main Content */}
+        <main className="map-page-main">
+          {/* Category Header */}
+          <CategoryHeader
+            categoryName={currentCategoryName}
+            categoryIcon={currentCategoryIcon}
+          />
+
+          {/* Map Area */}
+          <div className="map-page-map" id="map-container">
+            <KakaoMap onMapReady={handleMapReady} />
+            
+            {isMapReady && (
+              <MapControls
+                showZoom
+                showMyLocation
+                showHome
+                onHomeClick={handleHomeClick}
+              />
+            )}
+
+            {isMapReady && searchResults.map((place) => (
+              <MapMarker
+                key={place.id}
+                place={place}
+                isSelected={selectedPlace?.id === place.id}
+                onClick={handlePlaceClick}
+              />
+            ))}
+
+            {isMapReady && (
+              <>
+                <HomeMarker />
+                <StartFlagMarker />
+              </>
+            )}
+
+            {routePath.length > 0 && (
+              <RoutePolyline
+                path={routePath}
+                strokeColor="#3b82f6"
+                strokeWeight={5}
+              />
+            )}
+
+            {!isMapReady && (
+              <div className="map-page-map-loading">
+                <Loading size="lg" text="지도를 불러오는 중..." />
+              </div>
+            )}
+          </div>
+
+          {/* Place List */}
+          <div className="map-page-places">
+            <PlaceList
+              places={searchResults}
+              selectedPlaceId={selectedPlace?.id}
+              isLoading={isLoading}
+              onPlaceClick={handlePlaceClick}
+              onDirectionsClick={handleDirections}
             />
-          )}
+          </div>
+        </main>
+      </div>
 
-          {/* Search Result Markers */}
-          {isMapReady && searchResults.map((place) => (
-            <MapMarker
-              key={place.id}
-              place={place}
-              isSelected={selectedPlace?.id === place.id}
-              onClick={handlePlaceSelect}
-            />
-          ))}
-
-          {/* Custom Markers (Home, Start Flag) */}
-          {isMapReady && (
-            <>
-              <HomeMarker />
-              <StartFlagMarker />
-            </>
-          )}
-
-          {/* Route Polyline */}
-          {routePath.length > 0 && (
-            <RoutePolyline
-              path={routePath}
-              strokeColor="#3b82f6"
-              strokeWeight={5}
-            />
-          )}
-
-          {/* Loading Overlay */}
-          {!isMapReady && (
-            <div className="map-page-map-loading">
-              <Loading size="lg" text="지도를 불러오는 중..." />
-            </div>
-          )}
-        </div>
-
-        {/* Place Detail Panel */}
-        {selectedPlace && (
-          <div className="map-page-place-detail">
+      {/* Place Detail Modal/Panel */}
+      {selectedPlace && (
+        <div className="map-page-detail-overlay" onClick={handleClosePlaceDetail}>
+          <div className="map-page-detail" onClick={(e) => e.stopPropagation()}>
             <PlaceDetail
               place={selectedPlace}
               isFavorite={checkFavorite(selectedPlace.id)}
@@ -361,79 +412,29 @@ const MapPage: React.FC = () => {
               onDirections={() => handleDirections(selectedPlace)}
             />
           </div>
-        )}
-      </main>
-
-      {/* Side Panels */}
-      {activeView === 'favorites' && (
-        <div className="map-page-panel">
-          <FavoritesPanel
-            favorites={favorites}
-            onSelect={handleFavoriteSelect}
-            onClose={() => setActiveView('search')}
-          />
         </div>
       )}
 
-      {activeView === 'history' && (
-        <div className="map-page-panel">
-          <HistoryPanel
-            history={history}
-            onSelect={handleHistorySelect}
-            onClose={() => setActiveView('search')}
-          />
+      {/* Directions Panel */}
+      {showDirections && (
+        <div className="map-page-directions-overlay" onClick={() => setShowDirections(false)}>
+          <div className="map-page-directions" onClick={(e) => e.stopPropagation()}>
+            <DirectionsPanel
+              origin={directionsOrigin}
+              destination={directionsDestination}
+              routeInfo={routeInfo}
+              isLoading={isDirectionsLoading}
+              error={directionsError}
+              onOriginChange={setDirectionsOrigin}
+              onDestinationChange={setDirectionsDestination}
+              onSearch={handleDirectionsSearch}
+              onSwap={handleSwapDirections}
+              onUseCurrentLocation={handleUseCurrentLocation}
+              onClose={() => setShowDirections(false)}
+            />
+          </div>
         </div>
       )}
-
-      {activeView === 'directions' && (
-        <div className="map-page-panel">
-          <DirectionsPanel
-            origin={directionsOrigin}
-            destination={directionsDestination}
-            routeInfo={routeInfo}
-            isLoading={isDirectionsLoading}
-            error={directionsError}
-            onOriginChange={setDirectionsOrigin}
-            onDestinationChange={setDirectionsDestination}
-            onSearch={handleDirectionsSearch}
-            onSwap={handleSwapDirections}
-            onUseCurrentLocation={handleUseCurrentLocation}
-            onClose={() => setActiveView('search')}
-          />
-        </div>
-      )}
-
-      {/* Bottom Navigation (Mobile) */}
-      <nav className="map-page-nav">
-        <button
-          className={`map-page-nav-item ${activeView === 'search' ? 'active' : ''}`}
-          onClick={() => setActiveView('search')}
-        >
-          <span className="map-page-nav-icon">🔍</span>
-          <span className="map-page-nav-label">검색</span>
-        </button>
-        <button
-          className={`map-page-nav-item ${activeView === 'favorites' ? 'active' : ''}`}
-          onClick={() => setActiveView('favorites')}
-        >
-          <span className="map-page-nav-icon">⭐</span>
-          <span className="map-page-nav-label">즐겨찾기</span>
-        </button>
-        <button
-          className={`map-page-nav-item ${activeView === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveView('history')}
-        >
-          <span className="map-page-nav-icon">🕐</span>
-          <span className="map-page-nav-label">기록</span>
-        </button>
-        <button
-          className={`map-page-nav-item ${activeView === 'directions' ? 'active' : ''}`}
-          onClick={() => setActiveView('directions')}
-        >
-          <span className="map-page-nav-icon">🧭</span>
-          <span className="map-page-nav-label">길찾기</span>
-        </button>
-      </nav>
 
       {/* Toast Container */}
       <ToastContainer />

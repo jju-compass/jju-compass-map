@@ -26,7 +26,24 @@ export type IconName =
   | 'phone'
   | 'clock'
   | 'delete'
-  | 'trending';
+  | 'trending'
+  // Category icons
+  | 'food'
+  | 'rice'
+  | 'noodle'
+  | 'sushi'
+  | 'pasta'
+  | 'snack'
+  | 'cafe'
+  | 'store'
+  | 'pharmacy'
+  | 'hospital'
+  | 'bank'
+  | 'pencil'
+  | 'scissors'
+  | 'computer'
+  | 'dumbbell'
+  | 'mic';
 
 export interface IconProps {
   name: IconName;
@@ -211,6 +228,119 @@ const iconPaths: Record<IconName, React.ReactNode> = {
   trending: (
     <path
       d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  // Category icons
+  food: (
+    <path
+      d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513c0 1.135.845 2.098 1.976 2.192 1.327.11 2.669.166 4.024.166 1.355 0 2.697-.056 4.024-.166C17.155 15.22 18 14.257 18 13.122v-2.513c0-1.135-.845-2.098-1.976-2.192A48.424 48.424 0 0012 8.25zm0 0V6.75m0 0h.008v.008H12V6.75zm-3 4.5h.008v.008H9v-.008zm3 0h.008v.008H12v-.008zm3 0h.008v.008H15v-.008zm-6 3h.008v.008H9v-.008zm3 0h.008v.008H12v-.008zm3 0h.008v.008H15v-.008zm1.5 3.75H5.25a1.5 1.5 0 01-1.5-1.5v-.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  rice: (
+    <path
+      d="M12 3c-4.97 0-9 2.686-9 6v6c0 3.314 4.03 6 9 6s9-2.686 9-6V9c0-3.314-4.03-6-9-6zm0 3c3.314 0 6 1.343 6 3s-2.686 3-6 3-6-1.343-6-3 2.686-3 6-3zm-6 6c0 1.657 2.686 3 6 3s6-1.343 6-3v2c0 1.657-2.686 3-6 3s-6-1.343-6-3v-2z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  noodle: (
+    <path
+      d="M4 6h16M4 6v2c0 1.5 1 3 4 3m-4-5c0-1 1-2 2-2m14 2v2c0 1.5-1 3-4 3m4-5c0-1-1-2-2-2M8 11v8c0 1 1 2 2 2h4c1 0 2-1 2-2v-8M12 6v5m-4 0c0 3 1.5 5 4 5s4-2 4-5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  sushi: (
+    <path
+      d="M12 4c-4.418 0-8 1.79-8 4v8c0 2.21 3.582 4 8 4s8-1.79 8-4V8c0-2.21-3.582-4-8-4zm0 3c2.761 0 5 .895 5 2s-2.239 2-5 2-5-.895-5-2 2.239-2 5-2zm0 10c-2.761 0-5-.895-5-2v-3c1.194.638 3.024 1 5 1s3.806-.362 5-1v3c0 1.105-2.239 2-5 2z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  pasta: (
+    <path
+      d="M12 3v3m0 0c-3 0-6 1-6 4v1h12v-1c0-3-3-4-6-4zm-6 8h12v2c0 3-2.686 5-6 5s-6-2-6-5v-2zm3 3h.01M12 14h.01M15 14h.01"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  snack: (
+    <path
+      d="M9 3v2m6-2v2M6 8h12c1 0 2 1 2 2v8c0 1-1 2-2 2H6c-1 0-2-1-2-2v-8c0-1 1-2 2-2zm3 4v5m3-5v5m3-5v5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  cafe: (
+    <path
+      d="M18 8h1a3 3 0 010 6h-1m-1-6H5v6a4 4 0 004 4h4a4 4 0 004-4V8zM6 21h12"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  store: (
+    <path
+      d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  pharmacy: (
+    <path
+      d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  hospital: (
+    <path
+      d="M12 6v6m0 0v6m0-6h6m-6 0H6m13.5-3.25a9 9 0 11-18 0 9 9 0 0118 0z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  bank: (
+    <path
+      d="M12 3L2 9h20L12 3zm0 3v1m-7 5v4m4-4v4m6-4v4m4-4v4M4 21h16M3 17h18"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  pencil: (
+    <path
+      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  scissors: (
+    <path
+      d="M7.848 8.25l1.536.887M7.848 8.25a3 3 0 11-5.196-3 3 3 0 015.196 3zm9.304 0l-1.536.887M17.152 8.25a3 3 0 105.196-3 3 3 0 00-5.196 3zM12 17.25l-3.616-2.087m0 0a3 3 0 10-3 5.196l6.616-3.109m-3.616-2.087L12 12m3.616 3.163l3.616-2.087m0 0L12 12m7.232 1.076a3 3 0 103-5.196l-6.616 3.109"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  computer: (
+    <path
+      d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  dumbbell: (
+    <path
+      d="M6 6.5v11M18 6.5v11M6 12h12M4 8v8a1 1 0 001 1h1V7H5a1 1 0 00-1 1zm16 0v8a1 1 0 01-1 1h-1V7h1a1 1 0 011 1zM2 9v6m20-6v6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  mic: (
+    <path
+      d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
