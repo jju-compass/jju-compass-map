@@ -23,8 +23,10 @@ import { useFavorites } from '../../hooks/useFavorites';
 import { useHistory } from '../../hooks/useHistory';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardAccessibility';
 import { useSearch } from '../../hooks/useSearch';
+import { useWalkingAnimation } from '../../hooks';
 import { directionsAPI } from '../../api';
 import { toast } from '../../store/toastStore';
+import { SoundEffects } from '../../utils/soundEffects';
 import type { Place, Coordinates, RouteInfo } from '../../types';
 import './MapPage.css';
 
@@ -67,6 +69,9 @@ const MapPage: React.FC = () => {
   const { search } = useSearch();
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
   const { popularKeywords, loadHistory, loadPopularKeywords } = useHistory();
+
+  // Walking animation hook
+  const { startAnimation, stopAnimation } = useWalkingAnimation();
 
   const {
     homePickMode,
@@ -181,6 +186,7 @@ const MapPage: React.FC = () => {
     setSelectedCategory(category);
     search(category.searchKeyword);
     setIsSidebarOpen(false);
+    SoundEffects.playSearchComplete();
   }, [search]);
 
   // Handle place selection from list
@@ -235,6 +241,7 @@ const MapPage: React.FC = () => {
     setDirectionsError(null);
     setRoutePath([]);
     setRouteInfo(null);
+    stopAnimation(); // 기존 애니메이션 정지
 
     try {
       const origin = `${directionsOrigin.coordinates.lng},${directionsOrigin.coordinates.lat}`;
@@ -281,6 +288,16 @@ const MapPage: React.FC = () => {
         
         setRoutePath(path);
 
+        // 패널 닫기
+        setShowDirections(false);
+        setSelectedPlace(null);
+
+        // 사운드 효과 및 걷는 애니메이션
+        SoundEffects.playRouteStart();
+        startAnimation(path, () => {
+          SoundEffects.playRouteComplete();
+        });
+
         if (map && path.length > 0) {
           const bounds = new kakao.maps.LatLngBounds();
           path.forEach(coord => {
@@ -290,14 +307,16 @@ const MapPage: React.FC = () => {
         }
       } else {
         setDirectionsError('경로를 찾을 수 없습니다.');
+        SoundEffects.playError();
       }
     } catch (error) {
       console.error('Failed to get directions:', error);
       setDirectionsError('경로 검색에 실패했습니다.');
+      SoundEffects.playError();
     } finally {
       setIsDirectionsLoading(false);
     }
-  }, [directionsOrigin, directionsDestination, map]);
+  }, [directionsOrigin, directionsDestination, map, setSelectedPlace, startAnimation, stopAnimation]);
 
   // Get current category info for header
   const currentCategoryIcon = selectedCategory?.icon || 'food';
