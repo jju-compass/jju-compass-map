@@ -106,7 +106,8 @@ export const PlaceList: React.FC<PlaceListProps> = ({
                     }}
                     aria-label={`${place.place_name} 길찾기`}
                   >
-                    <Icon name="directions" size="sm" />
+                    <Icon name="directions" size={14} />
+                    <span>길찾기</span>
                   </button>
                 )}
               </article>

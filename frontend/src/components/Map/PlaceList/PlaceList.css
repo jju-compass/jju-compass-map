@@ -2,10 +2,13 @@
 .place-list {
   display: flex;
   flex-direction: column;
-  width: 320px;
+  min-width: 320px;
+  max-width: 400px;
+  flex: 0 1 360px;
   height: 100%;
   background: white;
-  border-left: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -144,22 +147,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  gap: 4px;
+  padding: 6px 12px;
   border: none;
-  background: white;
-  color: #6b7280;
-  border-radius: 8px;
+  background: #4c6ef5;
+  color: white;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .place-card-directions:hover {
-  background: #4c6ef5;
-  color: white;
+  background: #3b5bdb;
 }
 
 /* Loading State */
@@ -242,7 +244,9 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .place-list {
-    width: 280px;
+    min-width: 280px;
+    max-width: 320px;
+    flex: 0 1 300px;
   }
 
   .place-list-header {
@@ -270,11 +274,12 @@
     left: 0;
     right: 0;
     width: 100%;
+    min-width: unset;
+    max-width: unset;
+    flex: none;
     height: auto;
     max-height: 45%;
     min-height: 200px;
-    border-left: none;
-    border-top: 1px solid #e5e7eb;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
     z-index: 50;

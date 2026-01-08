@@ -14,7 +14,6 @@ import {
 import { HomeMarker, StartFlagMarker } from '../../components/Map/CustomMarkers';
 import { PlaceDetail } from '../../components/panels';
 import { DirectionsPanel, RoutePolyline } from '../../components/directions';
-import type { TransportMode } from '../../components/directions/DirectionsPanel/DirectionsPanel';
 import { Loading, ToastContainer, SoundToggle, SkipLink } from '../../components/common';
 import { HomeSettingModal, RouteStartModal } from '../../components/modals';
 import { useMapStore } from '../../store/mapStore';
@@ -200,36 +199,26 @@ const MapPage: React.FC = () => {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
     
+    // 출발지: 전주대학교 공학1관 (기본값)
+    setDirectionsOrigin({
+      name: '전주대학교 공학1관',
+      coordinates: { lat: 35.814445811028584, lng: 127.09236571436321 },
+    });
+    
+    // 도착지: 선택한 장소
     setDirectionsDestination({
       name: place.place_name,
       coordinates: { lat, lng },
       place,
     });
 
-    if (currentLocation) {
-      setDirectionsOrigin({
-        name: '현재 위치',
-        coordinates: currentLocation,
-      });
-    }
-
     setShowDirections(true);
-  }, [currentLocation]);
+  }, []);
 
   // Handle closing place detail
   const handleClosePlaceDetail = useCallback(() => {
     setSelectedPlace(null);
   }, [setSelectedPlace]);
-
-  // Use current location for directions
-  const handleUseCurrentLocation = useCallback(() => {
-    if (currentLocation) {
-      setDirectionsOrigin({
-        name: '현재 위치',
-        coordinates: currentLocation,
-      });
-    }
-  }, [currentLocation]);
 
   // Swap origin and destination
   const handleSwapDirections = useCallback(() => {
@@ -239,7 +228,7 @@ const MapPage: React.FC = () => {
   }, [directionsOrigin, directionsDestination]);
 
   // Handle directions search
-  const handleDirectionsSearch = useCallback(async (mode: TransportMode) => {
+  const handleDirectionsSearch = useCallback(async () => {
     if (!directionsOrigin || !directionsDestination) return;
 
     setIsDirectionsLoading(true);
@@ -427,7 +416,6 @@ const MapPage: React.FC = () => {
               onDestinationChange={setDirectionsDestination}
               onSearch={handleDirectionsSearch}
               onSwap={handleSwapDirections}
-              onUseCurrentLocation={handleUseCurrentLocation}
               onClose={() => setShowDirections(false)}
             />
           </div>

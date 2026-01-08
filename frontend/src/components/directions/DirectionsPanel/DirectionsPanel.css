@@ -163,45 +163,6 @@
   margin: -4px 0;
 }
 
-/* Transport Modes */
-.directions-panel-modes {
-  display: flex;
-  gap: 8px;
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.directions-mode-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  color: #6b7280;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.directions-mode-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.directions-mode-btn.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  color: #3b82f6;
-}
-
-.directions-mode-btn span {
-  font-size: 12px;
-  font-weight: 500;
-}
-
 /* Actions */
 .directions-panel-actions {
   padding: 16px;

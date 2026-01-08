@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Icon, Input, Loading } from '@components/common';
+import React from 'react';
+import { Button, Icon } from '@components/common';
 import type { Place, Coordinates, RouteInfo } from '../../../types';
 import './DirectionsPanel.css';
-
-export type TransportMode = 'walking' | 'car' | 'transit';
 
 export interface DirectionsLocation {
   name: string;
@@ -19,9 +17,8 @@ export interface DirectionsPanelProps {
   error?: string | null;
   onOriginChange?: (location: DirectionsLocation | null) => void;
   onDestinationChange?: (location: DirectionsLocation | null) => void;
-  onSearch?: (mode: TransportMode) => void;
+  onSearch?: () => void;
   onSwap?: () => void;
-  onUseCurrentLocation?: () => void;
   onClose?: () => void;
   className?: string;
 }
@@ -36,15 +33,12 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
   onDestinationChange,
   onSearch,
   onSwap,
-  onUseCurrentLocation,
   onClose,
   className = '',
 }) => {
-  const [transportMode, setTransportMode] = useState<TransportMode>('walking');
-
   const handleSearch = () => {
     if (origin && destination && onSearch) {
-      onSearch(transportMode);
+      onSearch();
     }
   };
 
@@ -61,8 +55,8 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
       {/* Header */}
       <div className="directions-panel-header">
         <h2 className="directions-panel-title">
-          <Icon name="directions" size="md" />
-          길찾기
+          <Icon name="walking" size="md" />
+          도보 경로
         </h2>
         {onClose && (
           <button className="directions-panel-close" onClick={onClose} aria-label="닫기">
@@ -78,20 +72,11 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
           <div className="directions-location-input">
             <input
               type="text"
-              placeholder="출발지 입력"
+              placeholder="출발지"
               value={origin?.name || ''}
               readOnly
               className="directions-input"
             />
-            {onUseCurrentLocation && !origin && (
-              <button
-                className="directions-current-btn"
-                onClick={onUseCurrentLocation}
-                title="현재 위치 사용"
-              >
-                <Icon name="my-location" size="sm" />
-              </button>
-            )}
             {origin && (
               <button
                 className="directions-clear-btn"
@@ -114,7 +99,7 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
           <div className="directions-location-input">
             <input
               type="text"
-              placeholder="도착지 입력"
+              placeholder="도착지"
               value={destination?.name || ''}
               readOnly
               className="directions-input"
@@ -130,31 +115,6 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
             )}
           </div>
         </div>
-      </div>
-
-      {/* Transport Mode */}
-      <div className="directions-panel-modes">
-        <button
-          className={`directions-mode-btn ${transportMode === 'walking' ? 'active' : ''}`}
-          onClick={() => setTransportMode('walking')}
-        >
-          <Icon name="walking" size="md" />
-          <span>도보</span>
-        </button>
-        <button
-          className={`directions-mode-btn ${transportMode === 'car' ? 'active' : ''}`}
-          onClick={() => setTransportMode('car')}
-        >
-          <Icon name="car" size="md" />
-          <span>자동차</span>
-        </button>
-        <button
-          className={`directions-mode-btn ${transportMode === 'transit' ? 'active' : ''}`}
-          onClick={() => setTransportMode('transit')}
-        >
-          <Icon name="transit" size="md" />
-          <span>대중교통</span>
-        </button>
       </div>
 
       {/* Search Button */}

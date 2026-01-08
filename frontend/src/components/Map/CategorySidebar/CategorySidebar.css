@@ -4,7 +4,8 @@
   width: 240px;
   height: 100%;
   background: white;
-  border-right: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   flex-shrink: 0;
 }

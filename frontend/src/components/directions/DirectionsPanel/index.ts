@@ -1,2 +1,2 @@
-export { DirectionsPanel, type DirectionsPanelProps, type DirectionsLocation, type TransportMode } from './DirectionsPanel';
+export { DirectionsPanel, type DirectionsPanelProps, type DirectionsLocation } from './DirectionsPanel';
 export { default } from './DirectionsPanel';
