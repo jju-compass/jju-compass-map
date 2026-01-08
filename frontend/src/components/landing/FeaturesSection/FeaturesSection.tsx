@@ -36,14 +36,20 @@ const features = [
 const FeaturesSection: React.FC = () => {
   return (
     <section className="features">
-      <div className="features-content">
-        {features.map((feature, index) => (
-          <div key={index} className="feature-item">
-            <div className="feature-icon">{feature.icon}</div>
-            <h3>{feature.title}</h3>
-            <p>{feature.description}</p>
-          </div>
-        ))}
+      <div className="features-container">
+        <div className="section-header">
+          <h2>왜 JJU Map인가요?</h2>
+          <p>전주대 학생들을 위해 만들었어요</p>
+        </div>
+        <div className="features-content">
+          {features.map((feature, index) => (
+            <div key={index} className="feature-item">
+              <div className="feature-icon">{feature.icon}</div>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
