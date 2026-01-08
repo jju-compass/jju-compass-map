@@ -52,3 +52,6 @@ nul
 # Build cache
 .cache/
 .parcel-cache/
+
+# Server documentation (local only)
+ORACLE_CLOUD_SERVER.md
