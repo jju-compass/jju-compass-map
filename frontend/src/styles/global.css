@@ -5,6 +5,7 @@
   /* 배경 색상 */
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f3f4f6;
   --color-bg-card: #ffffff;
   --color-bg-hover: #f9fafb;
   --color-bg-active: #eff6ff;
@@ -14,6 +15,7 @@
   /* 텍스트 색상 */
   --color-text-primary: #333333;
   --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
   --color-text-muted: #9ca3af;
   --color-text-inverse: #ffffff;
   --color-text-link: #4c6ef5;
@@ -22,6 +24,7 @@
   --color-border: #e5e7eb;
   --color-border-light: #f3f4f6;
   --color-border-dark: #d1d5db;
+  --color-border-hover: #d1d5db;
   
   /* Primary 색상 */
   --color-primary: #4c6ef5;
