@@ -327,7 +327,7 @@ const MapPage: React.FC = () => {
 
       {/* Main Layout */}
       <div className="map-page-body">
-        {/* Category Sidebar */}
+        {/* Category Sidebar (Left) */}
         <CategorySidebar
           selectedCategoryId={selectedCategory?.id || null}
           onCategorySelect={handleCategorySelect}
@@ -335,7 +335,7 @@ const MapPage: React.FC = () => {
           onClose={() => setIsSidebarOpen(false)}
         />
 
-        {/* Main Content */}
+        {/* Center Content (Map) */}
         <main className="map-page-main">
           {/* Category Header */}
           <CategoryHeader
@@ -386,18 +386,16 @@ const MapPage: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Place List */}
-          <div className="map-page-places">
-            <PlaceList
-              places={searchResults}
-              selectedPlaceId={selectedPlace?.id}
-              isLoading={isLoading}
-              onPlaceClick={handlePlaceClick}
-              onDirectionsClick={handleDirections}
-            />
-          </div>
         </main>
+
+        {/* Place List Sidebar (Right) */}
+        <PlaceList
+          places={searchResults}
+          selectedPlaceId={selectedPlace?.id}
+          isLoading={isLoading}
+          onPlaceClick={handlePlaceClick}
+          onDirectionsClick={handleDirections}
+        />
       </div>
 
       {/* Place Detail Modal/Panel */}

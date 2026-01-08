@@ -7,14 +7,14 @@
   overflow: hidden;
 }
 
-/* Body (Below Navbar) */
+/* Body - 3 Column Layout: Sidebar(left) + Map(center) + PlaceList(right) */
 .map-page-body {
   flex: 1;
   display: flex;
   overflow: hidden;
 }
 
-/* Main Content Area */
+/* Main Content Area (Center - CategoryHeader + Map) */
 .map-page-main {
   flex: 1;
   display: flex;
@@ -25,9 +25,9 @@
 
 /* Map Container */
 .map-page-map {
-  flex: 1.5;
+  flex: 1;
   position: relative;
-  min-height: 300px;
+  min-height: 0;
 }
 
 .map-page-map-loading {
@@ -41,15 +41,6 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.9);
   z-index: 10;
-}
-
-/* Place List Area */
-.map-page-places {
-  flex: 1;
-  min-height: 250px;
-  max-height: 40%;
-  overflow: hidden;
-  border-top: 1px solid #e5e7eb;
 }
 
 /* Place Detail Overlay */
@@ -125,36 +116,8 @@
   }
 }
 
-/* Tablet */
-@media (max-width: 1024px) {
-  .map-page-places {
-    min-height: 220px;
-    max-height: 45%;
-  }
-}
-
 /* Mobile */
 @media (max-width: 768px) {
-  .map-page-body {
-    flex-direction: column;
-  }
-
-  .map-page-map {
-    flex: 1;
-    min-height: 40%;
-  }
-
-  .map-page-places {
-    position: relative;
-    flex: none;
-    min-height: 35%;
-    max-height: 50%;
-    border-top: none;
-    border-radius: 16px 16px 0 0;
-    margin-top: -16px;
-    z-index: 10;
-  }
-
   .map-page-detail-overlay,
   .map-page-directions-overlay {
     align-items: flex-end;
@@ -166,41 +129,5 @@
     max-width: none;
     max-height: 85vh;
     border-radius: 16px 16px 0 0;
-  }
-}
-
-/* Small Mobile */
-@media (max-width: 480px) {
-  .map-page-map {
-    min-height: 35%;
-  }
-
-  .map-page-places {
-    min-height: 40%;
-    max-height: 55%;
-  }
-}
-
-/* Landscape Mobile */
-@media (max-width: 768px) and (orientation: landscape) {
-  .map-page-body {
-    flex-direction: row;
-  }
-
-  .map-page-map {
-    flex: 1;
-    min-height: auto;
-  }
-
-  .map-page-places {
-    flex: none;
-    width: 320px;
-    min-height: auto;
-    max-height: none;
-    height: 100%;
-    margin-top: 0;
-    border-radius: 0;
-    border-top: none;
-    border-left: 1px solid #e5e7eb;
   }
 }
