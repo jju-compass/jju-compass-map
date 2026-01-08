@@ -22,7 +22,7 @@
 | 구분 | 기술 |
 |------|------|
 | Frontend | React 18, TypeScript, Webpack 5, Zustand |
-| Backend | Go 1.21+, Gin, SQLite (pure Go driver) |
+| Backend | Go 1.18+, Gin, SQLite (pure Go driver) |
 | API | Kakao Maps SDK, Kakao Mobility API |
 | Infra | Oracle Cloud (ARM64), Nginx, Let's Encrypt |
 
