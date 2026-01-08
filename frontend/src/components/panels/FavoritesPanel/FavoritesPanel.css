@@ -1,0 +1,318 @@
+.favorites-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-primary);
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 모바일에서는 아래에서 슬라이드 */
+@media (max-width: 768px) {
+  .favorites-panel {
+    animation: slide-in-up 0.3s ease-out;
+  }
+
+  @keyframes slide-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Header */
+.favorites-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.favorites-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.favorites-panel-title .icon {
+  color: #f59e0b;
+}
+
+.favorites-panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.favorites-panel-close:hover {
+  background: var(--color-bg-tertiary);
+}
+
+/* Content */
+.favorites-panel-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.favorites-panel-loading,
+.favorites-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  height: 100%;
+}
+
+.favorites-panel-empty {
+  gap: 12px;
+}
+
+.favorites-panel-empty p {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.favorites-panel-empty span {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+/* List */
+.favorites-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.favorite-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: item-slide-in 0.3s ease-out both;
+}
+
+@keyframes item-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.favorite-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.favorite-item:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.favorite-item.deleting {
+  animation: delete-slide 0.3s ease-out forwards;
+}
+
+@keyframes delete-slide {
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+    height: 0;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* 스와이프 삭제 배경 */
+.favorite-item-delete-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #ef4444;
+  color: var(--color-bg-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 메인 콘텐츠 wrapper */
+.favorite-item-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-primary);
+  transition: transform 0.1s ease-out;
+  min-width: 0;
+}
+
+/* 별 아이콘 */
+.favorite-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #fef3c7;
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.favorite-item-icon span {
+  font-size: 16px;
+}
+
+.favorite-item-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.favorite-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.favorite-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-item-address {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-item-category {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.favorite-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin-right: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.favorite-item-remove:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* Footer */
+.favorites-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  flex-shrink: 0;
+}
+
+.favorites-panel-count {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.favorites-panel-hint {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* 데스크탑에서는 스와이프 힌트 숨김 */
+@media (min-width: 769px) {
+  .favorites-panel-hint {
+    display: none;
+  }
+}
+
+/* Scrollbar */
+.favorites-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.favorites-panel-content::-webkit-scrollbar-track {
+  background: var(--color-bg-tertiary);
+}
+
+.favorites-panel-content::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: 3px;
+}

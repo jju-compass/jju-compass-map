@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="전주대학교 캠퍼스 위치 검색 서비스 - JJU Compass Map">
+  <meta name="theme-color" content="#667eea">
+  <title>JJU Compass Map - 전주대학교 위치 검색</title>
+  <!-- Kakao Maps SDK -->
+  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=<%= htmlWebpackPlugin.options.kakaoApiKey %>&libraries=services,clusterer"></script>
+</head>
+<body>
+  <noscript>
+    <div style="padding: 20px; text-align: center;">
+      이 앱을 사용하려면 JavaScript를 활성화해야 합니다.
+    </div>
+  </noscript>
+  <div id="root"></div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+/* Icon Base */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-clickable {
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.icon-clickable:hover {
+  opacity: 0.7;
+}
+
+.icon-clickable:active {
+  transform: scale(0.95);
+}
+
+.icon-clickable:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

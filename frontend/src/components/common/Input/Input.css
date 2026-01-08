@@ -1,0 +1,100 @@
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.input-full {
+  width: 100%;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-input-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  outline: none;
+}
+
+.input-field::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input-field:disabled {
+  background: var(--color-bg-tertiary);
+  cursor: not-allowed;
+}
+
+/* Icon positioning */
+.input-has-icon-left .input-field {
+  padding-left: 2.5rem;
+}
+
+.input-has-icon-right .input-field {
+  padding-right: 2.5rem;
+}
+
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.input-icon[role="button"] {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.input-icon[role="button"]:hover {
+  color: #667eea;
+}
+
+.input-icon-left {
+  left: 0.75rem;
+}
+
+.input-icon-right {
+  right: 0.75rem;
+}
+
+.input-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Error state */
+.input-error .input-field {
+  border-color: #dc3545;
+}
+
+.input-error .input-field:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+.input-error-message {
+  font-size: 0.8125rem;
+  color: #dc3545;
+}

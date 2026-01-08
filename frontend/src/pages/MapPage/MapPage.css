@@ -1,0 +1,155 @@
+/* MapPage Layout */
+.map-page {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+}
+
+/* Body - 3 Column Layout: Sidebar(left) + Map(center) + PlaceList(right) */
+.map-page-body {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+}
+
+/* Main Content Area (Center - CategoryHeader + Map) */
+.map-page-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Map Container */
+.map-page-map {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  background: var(--color-bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+  overflow: hidden;
+}
+
+.map-page-map-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+}
+
+/* Place Detail Overlay */
+.map-page-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+.map-page-detail {
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+/* Directions Panel Overlay */
+.map-page-directions-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+.map-page-directions {
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .map-page-body {
+    gap: 0;
+    padding: 0;
+  }
+
+  .map-page-main {
+    gap: 0;
+  }
+
+  .map-page-map {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .map-page-detail-overlay,
+  .map-page-directions-overlay {
+    align-items: flex-end;
+  }
+
+  .map-page-detail,
+  .map-page-directions {
+    width: 100%;
+    max-width: none;
+    max-height: 85vh;
+    border-radius: 16px 16px 0 0;
+  }
+}

@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+backend/jju-server
+backend/jju-server.exe
+*.exe
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Database
+database/*.db
+database/*.db-shm
+database/*.db-wal
+database/*.db-journal
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Windows artifacts
+nul
+*/nul
+
+# Build cache
+.cache/
+.parcel-cache/
+
+# Server documentation (local only)
+ORACLE_CLOUD_SERVER.md

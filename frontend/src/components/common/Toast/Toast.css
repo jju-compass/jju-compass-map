@@ -1,0 +1,124 @@
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 90vw;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--color-bg-primary);
+  box-shadow: 0 4px 20px var(--color-shadow-md);
+  pointer-events: auto;
+  animation: toast-slide-in 0.3s ease-out;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 200px;
+  max-width: 400px;
+}
+
+.toast.exit {
+  animation: toast-slide-out 0.3s ease-in forwards;
+}
+
+.toast-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+/* 타입별 스타일 */
+.toast.success {
+  background: linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%);
+  border: 1px solid #69db7c;
+  color: #2b8a3e;
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+  border: 1px solid #ff8787;
+  color: #c92a2a;
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #d0ebff 0%, #a5d8ff 100%);
+  border: 1px solid #74c0fc;
+  color: #1864ab;
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #fff3bf 0%, #ffec99 100%);
+  border: 1px solid #ffd43b;
+  color: #e67700;
+}
+
+/* 애니메이션 */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+/* 모바일 */
+@media (max-width: 768px) {
+  .toast-container {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    transform: none;
+    max-width: none;
+  }
+
+  .toast {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: auto;
+    max-width: none;
+  }
+}

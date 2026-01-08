@@ -1,0 +1,96 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--color-bg-tertiary, #f3f4f6);
+  border: 1px solid var(--color-border, #e5e7eb);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.theme-toggle:hover {
+  background: var(--color-bg-hover, #e5e7eb);
+  color: var(--color-text-primary, #1f2937);
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Light mode - Sun */
+.theme-toggle.theme-light {
+  color: #f59e0b;
+}
+
+.theme-toggle.theme-light:hover {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* Dark mode - Moon */
+.theme-toggle.theme-dark {
+  color: #6366f1;
+}
+
+.theme-toggle.theme-dark:hover {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+/* System mode - Monitor */
+.theme-toggle.theme-system {
+  color: #10b981;
+}
+
+.theme-toggle.theme-system:hover {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .theme-toggle {
+  background: var(--color-bg-tertiary, #374151);
+  border-color: var(--color-border, #4b5563);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: var(--color-bg-hover, #4b5563);
+}
+
+[data-theme="dark"] .theme-toggle.theme-light:hover {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .theme-toggle.theme-dark:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+
+[data-theme="dark"] .theme-toggle.theme-system:hover {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .theme-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+}

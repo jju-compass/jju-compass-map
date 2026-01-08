@@ -1,0 +1,133 @@
+.route-info-panel {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px var(--color-shadow-md);
+  z-index: 100;
+  min-width: 240px;
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.route-info-panel.animating {
+  border: 2px solid var(--color-primary);
+}
+
+.route-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.route-info-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.route-info-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.route-info-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--color-bg-tertiary);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  transition: all 0.2s;
+}
+
+.route-info-close:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.route-info-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.route-info-stat {
+  text-align: center;
+}
+
+.route-info-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.route-info-stat-value .unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  margin-left: 2px;
+}
+
+.route-info-stat-label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+.route-info-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--color-border);
+}
+
+/* 진행률 바 */
+.route-info-progress {
+  margin-top: 12px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.route-info-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, #3b82f6 100%);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+/* 모바일 */
+@media (max-width: 480px) {
+  .route-info-panel {
+    bottom: 70px;
+    width: calc(100% - 32px);
+    max-width: 320px;
+    padding: 14px 16px;
+  }
+
+  .route-info-stat-value {
+    font-size: 24px;
+  }
+}

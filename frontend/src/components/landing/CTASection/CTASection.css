@@ -1,0 +1,125 @@
+.cta {
+  background: linear-gradient(135deg, var(--color-primary), #7c3aed);
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.cta-content {
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.cta-content.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cta-content h2 {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--color-bg-primary);
+  margin-bottom: 16px;
+}
+
+.cta-content p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 32px;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.3s;
+  cursor: pointer;
+  border: none;
+}
+
+.cta .btn-large {
+  background: var(--color-bg-primary);
+  color: var(--color-primary);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.cta .btn-large:hover {
+  animation: none;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 30px var(--color-shadow-md);
+}
+
+.cta .btn-outline-light {
+  background: transparent;
+  color: var(--color-bg-primary);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.cta .btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-bg-primary);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .cta {
+    padding: 60px 24px;
+  }
+
+  .cta-content h2 {
+    font-size: 32px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cta .btn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .cta-content h2 {
+    font-size: 28px;
+  }
+
+  .cta-content p {
+    font-size: 14px;
+  }
+
+  .cta .btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+}

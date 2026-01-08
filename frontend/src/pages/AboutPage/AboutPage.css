@@ -1,0 +1,239 @@
+.about-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary);
+}
+
+.about-main {
+  flex: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  width: 100%;
+}
+
+/* Header */
+.about-header {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+
+.about-header h1 {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.about-header p {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+}
+
+/* Section */
+.about-section {
+  margin-bottom: 48px;
+}
+
+.about-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-primary);
+  display: inline-block;
+}
+
+/* Content Card */
+.about-content-card {
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.about-content-card p {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.about-content-card p:last-child {
+  margin-bottom: 0;
+}
+
+/* Features Grid */
+.about-features {
+  margin-bottom: 48px;
+}
+
+.about-features h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.about-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.about-feature-card {
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 2px 8px var(--color-shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.about-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--color-shadow-md);
+}
+
+.about-feature-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-primary), #7c3aed);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.about-feature-icon svg {
+  stroke: var(--color-bg-primary);
+}
+
+.about-feature-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.about-feature-card p {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  line-height: 1.6;
+}
+
+/* Tech List */
+.about-tech-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.about-tech-list li:last-child {
+  border-bottom: none;
+}
+
+.about-tech-list strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.about-tech-list a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.about-tech-list a:hover {
+  text-decoration: underline;
+}
+
+/* CTA */
+.about-cta {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.about-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--color-primary), #7c3aed);
+  color: var(--color-bg-primary);
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.about-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(76, 110, 245, 0.3);
+}
+
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: var(--color-bg-primary);
+  padding: 8px 16px;
+  z-index: 10001;
+  transition: top 0.3s;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .about-header {
+    padding: 40px 0 24px;
+  }
+
+  .about-header h1 {
+    font-size: 32px;
+  }
+
+  .about-section h2,
+  .about-features h2 {
+    font-size: 24px;
+  }
+
+  .about-content-card {
+    padding: 24px;
+  }
+
+  .about-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-main {
+    padding: 0 16px 60px;
+  }
+
+  .about-header h1 {
+    font-size: 28px;
+  }
+
+  .about-header p {
+    font-size: 14px;
+  }
+}
