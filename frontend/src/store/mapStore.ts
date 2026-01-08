@@ -59,8 +59,8 @@ export const useMapStore = create<MapState>((set) => ({
   center: JJU_CENTER,
   setCenter: (center) => set({ center }),
 
-  // Zoom
-  zoom: 16,
+  // Zoom (카카오맵: 1=가장 확대, 14=가장 축소, 4=약 500m 반경)
+  zoom: 4,
   setZoom: (zoom) => set({ zoom }),
 
   // Search results

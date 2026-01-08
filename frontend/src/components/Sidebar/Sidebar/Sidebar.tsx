@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SearchBar } from '../SearchBar';
 import { SearchResults } from '../SearchResults';
 import { Icon } from '@components/common';
@@ -14,20 +14,31 @@ export interface SidebarProps {
   className?: string;
   onPlaceSelect?: (place: Place) => void;
   onDirections?: (place: Place) => void;
+  initialSearchKeyword?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   className = '',
   onPlaceSelect,
   onDirections,
+  initialSearchKeyword,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const initialSearchDone = useRef(false);
   
   const { searchResults, selectedPlace, setSelectedPlace, isLoading, error } = useMapStore();
   const { searchKeyword } = useUserStore();
   const { search } = useSearch();
   const { favorites, toggleFavorite } = useFavorites();
   const { popularKeywords } = useHistory();
+
+  // URL 파라미터로 초기 검색 수행
+  useEffect(() => {
+    if (initialSearchKeyword && !initialSearchDone.current) {
+      initialSearchDone.current = true;
+      search(initialSearchKeyword);
+    }
+  }, [initialSearchKeyword, search]);
 
   // Convert favorites array to Set<string> for SearchResults component
   const favoritesSet = new Set(favorites.map(f => f.place_id));

@@ -1,0 +1,217 @@
+.guide-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.guide-main {
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  width: 100%;
+}
+
+/* Header */
+.guide-header {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+
+.guide-header h1 {
+  font-size: 40px;
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 12px;
+}
+
+.guide-header p {
+  font-size: 18px;
+  color: #495057;
+}
+
+/* Section */
+.guide-section {
+  margin-bottom: 48px;
+}
+
+.guide-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #4c6ef5;
+  display: inline-block;
+}
+
+/* Steps */
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.guide-step {
+  display: flex;
+  gap: 20px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.guide-step:hover {
+  transform: translateX(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.guide-step-number {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #4c6ef5, #7c3aed);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.guide-step-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 8px;
+}
+
+.guide-step-content p {
+  font-size: 15px;
+  color: #495057;
+  line-height: 1.7;
+}
+
+/* Tips Card */
+.guide-tips-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.guide-tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guide-tips-list li {
+  padding: 16px 0;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 15px;
+  color: #495057;
+  line-height: 1.6;
+}
+
+.guide-tips-list li:last-child {
+  border-bottom: none;
+}
+
+.guide-tips-list strong {
+  color: #4c6ef5;
+  font-weight: 600;
+}
+
+/* CTA */
+.guide-cta {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.guide-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4c6ef5, #7c3aed);
+  color: white;
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.guide-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(76, 110, 245, 0.3);
+}
+
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #4c6ef5;
+  color: white;
+  padding: 8px 16px;
+  z-index: 10001;
+  transition: top 0.3s;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .guide-header {
+    padding: 40px 0 24px;
+  }
+
+  .guide-header h1 {
+    font-size: 32px;
+  }
+
+  .guide-section h2 {
+    font-size: 24px;
+  }
+
+  .guide-step {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .guide-step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .guide-main {
+    padding: 0 16px 60px;
+  }
+
+  .guide-header h1 {
+    font-size: 28px;
+  }
+
+  .guide-header p {
+    font-size: 14px;
+  }
+
+  .guide-step {
+    padding: 20px;
+  }
+
+  .guide-tips-card {
+    padding: 24px;
+  }
+}
