@@ -66,7 +66,7 @@ const MapPage: React.FC = () => {
   const { favorites } = useUserStore();
   const { search } = useSearch();
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
-  const { loadHistory, loadPopularKeywords } = useHistory();
+  const { popularKeywords, loadHistory, loadPopularKeywords } = useHistory();
 
   const {
     homePickMode,
@@ -322,6 +322,11 @@ const MapPage: React.FC = () => {
           onCategorySelect={handleCategorySelect}
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          popularKeywords={popularKeywords}
+          onPopularKeywordClick={(keyword) => {
+            search(keyword);
+            setSelectedCategory(null);
+          }}
         />
 
         {/* Center Content (Map) */}

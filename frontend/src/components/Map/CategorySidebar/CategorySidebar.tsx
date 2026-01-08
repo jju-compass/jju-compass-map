@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon, type IconName } from '@components/common';
+import type { PopularKeyword } from '../../../types';
 import './CategorySidebar.css';
 
 export interface Category {
@@ -48,6 +49,8 @@ export interface CategorySidebarProps {
   onCategorySelect: (category: Category) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  popularKeywords?: PopularKeyword[];
+  onPopularKeywordClick?: (keyword: string) => void;
 }
 
 export const CategorySidebar: React.FC<CategorySidebarProps> = ({
@@ -55,6 +58,8 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
   onCategorySelect,
   isOpen = true,
   onClose,
+  popularKeywords,
+  onPopularKeywordClick,
 }) => {
   const classes = [
     'category-sidebar',
@@ -107,6 +112,31 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
             </div>
           ))}
         </nav>
+
+        {/* Popular Keywords Section */}
+        {popularKeywords && popularKeywords.length > 0 && (
+          <div className="category-sidebar-popular">
+            <div className="popular-section-header">
+              <Icon name="trending" size="sm" />
+              <span>인기 검색어</span>
+            </div>
+            <ul className="popular-section-list">
+              {popularKeywords.slice(0, 5).map((item, index) => (
+                <li key={item.keyword}>
+                  <button
+                    className="popular-section-item"
+                    onClick={() => onPopularKeywordClick?.(item.keyword)}
+                    aria-label={`${item.keyword} 검색`}
+                  >
+                    <span className="popular-section-rank">{index + 1}</span>
+                    <span className="popular-section-text">{item.keyword}</span>
+                    <span className="popular-section-count">{item.count}회</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </aside>
     </>
   );
