@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ThemeToggle } from '@components/common';
 import './LandingNavbar.css';
 
 const LandingNavbar: React.FC = () => {
@@ -25,7 +24,6 @@ const LandingNavbar: React.FC = () => {
         <div className="nav-links">
           <Link to="/about">소개</Link>
           <Link to="/guide">사용방법</Link>
-          <ThemeToggle />
           <Link to="/map" className="nav-btn-primary">
             지도 시작하기
           </Link>

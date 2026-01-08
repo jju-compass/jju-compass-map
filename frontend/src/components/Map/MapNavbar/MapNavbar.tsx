@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon, ThemeToggle } from '@components/common';
+import { Icon } from '@components/common';
 import './MapNavbar.css';
 
 export interface MapNavbarProps {
@@ -73,7 +73,6 @@ export const MapNavbar: React.FC<MapNavbarProps> = ({
         <Link to="/guide" className="map-navbar-link">
           사용방법
         </Link>
-        <ThemeToggle />
       </div>
     </nav>
   );

@@ -17,4 +17,3 @@ export {
 } from './Skeleton';
 export { SoundToggle } from './SoundToggle';
 export { SkipLink } from './SkipLink';
-export { ThemeToggle } from './ThemeToggle';

@@ -3,7 +3,7 @@
    ======================================== */
 :root {
   /* 배경 색상 */
-  --color-bg-primary: #f5f5f5;
+  --color-bg-primary: #ffffff;
   --color-bg-secondary: #ffffff;
   --color-bg-card: #ffffff;
   --color-bg-hover: #f9fafb;
@@ -46,6 +46,8 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-shadow-md: rgba(0, 0, 0, 0.12);
   
   /* 스크롤바 */
   --scrollbar-bg: #f1f1f1;
@@ -60,62 +62,6 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.2s ease;
   --transition-slow: 0.3s ease;
-}
-
-/* 다크 모드 변수 */
-[data-theme="dark"] {
-  /* 배경 색상 */
-  --color-bg-primary: #121212;
-  --color-bg-secondary: #1e1e1e;
-  --color-bg-card: #2d2d2d;
-  --color-bg-hover: #3d3d3d;
-  --color-bg-active: #1a2744;
-  --color-bg-overlay: rgba(0, 0, 0, 0.6);
-  --color-bg-modal: rgba(30, 30, 30, 0.95);
-  
-  /* 텍스트 색상 */
-  --color-text-primary: #e0e0e0;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #707070;
-  --color-text-inverse: #121212;
-  --color-text-link: #6b8cff;
-  
-  /* 테두리 색상 */
-  --color-border: #404040;
-  --color-border-light: #333333;
-  --color-border-dark: #555555;
-  
-  /* Primary 색상 (다크모드에서 약간 밝게) */
-  --color-primary: #6b8cff;
-  --color-primary-hover: #8ba3ff;
-  --color-primary-light: #1a2744;
-  --color-primary-dark: #4c6ef5;
-  --color-primary-gradient: linear-gradient(135deg, #6b8cff, #9f7aea);
-  
-  /* 상태 색상 (다크모드 조정) */
-  --color-success: #4ade80;
-  --color-success-light: #14532d;
-  --color-warning: #fbbf24;
-  --color-warning-light: #713f12;
-  --color-error: #f87171;
-  --color-error-light: #7f1d1d;
-  --color-info: #60a5fa;
-  --color-info-light: #1e3a5f;
-  
-  /* 그림자 (다크모드에서 더 진하게) */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
-  
-  /* 스크롤바 */
-  --scrollbar-bg: #2d2d2d;
-  --scrollbar-thumb: #555555;
-  --scrollbar-thumb-hover: #666666;
-  
-  /* 포커스 링 */
-  --focus-ring: #6b8cff;
 }
 
 /* ========================================
