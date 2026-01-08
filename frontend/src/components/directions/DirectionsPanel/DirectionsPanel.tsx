@@ -139,16 +139,25 @@ export const DirectionsPanel: React.FC<DirectionsPanelProps> = ({
         </div>
       )}
 
-      {/* Route Info Summary */}
+      {/* Route Info Result - 강화된 UI */}
       {routeInfo && !isLoading && (
-        <div className="directions-panel-summary">
-          <div className="directions-summary-item">
-            <Icon name="clock" size="sm" />
-            <span>{formatDuration(routeInfo.duration)}</span>
+        <div className="directions-panel-result">
+          <div className="directions-result-header">
+            <Icon name="walking" size="md" />
+            <span>도보 경로 안내</span>
           </div>
-          <div className="directions-summary-item">
-            <Icon name="location" size="sm" />
-            <span>{formatDistance(routeInfo.distance)}</span>
+          <div className="directions-result-info">
+            <div className="directions-result-main">
+              <span className="directions-result-duration">
+                {formatDuration(routeInfo.duration)}
+              </span>
+              <span className="directions-result-label">소요 예상</span>
+            </div>
+            <div className="directions-result-divider" />
+            <div className="directions-result-sub">
+              <Icon name="location" size="sm" />
+              <span>{formatDistance(routeInfo.distance)}</span>
+            </div>
           </div>
         </div>
       )}
