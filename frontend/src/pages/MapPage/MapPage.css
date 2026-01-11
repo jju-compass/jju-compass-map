@@ -104,6 +104,32 @@
   animation: slideUp 0.3s ease;
 }
 
+/* Generic Panel Overlay (Favorites, History) */
+.map-page-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+.map-page-panel {
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {
@@ -142,12 +168,14 @@
   }
 
   .map-page-detail-overlay,
-  .map-page-directions-overlay {
+  .map-page-directions-overlay,
+  .map-page-panel-overlay {
     align-items: flex-end;
   }
 
   .map-page-detail,
-  .map-page-directions {
+  .map-page-directions,
+  .map-page-panel {
     width: 100%;
     max-width: none;
     max-height: 85vh;
