@@ -9,7 +9,11 @@ export interface MapControlsProps {
   showZoom?: boolean;
   showMyLocation?: boolean;
   showHome?: boolean;
+  showFavorites?: boolean;
+  showHistory?: boolean;
   onHomeClick?: () => void;
+  onFavoritesClick?: () => void;
+  onHistoryClick?: () => void;
 }
 
 export const MapControls: React.FC<MapControlsProps> = ({
@@ -17,7 +21,11 @@ export const MapControls: React.FC<MapControlsProps> = ({
   showZoom = true,
   showMyLocation = true,
   showHome = false,
+  showFavorites = false,
+  showHistory = false,
   onHomeClick,
+  onFavoritesClick,
+  onHistoryClick,
 }) => {
   const { map, zoom, setZoom, setCenter, setCurrentLocation } = useMapStore();
   const { getCurrentLocation } = useGeolocation();
@@ -112,6 +120,32 @@ export const MapControls: React.FC<MapControlsProps> = ({
             title="홈 위치로 이동"
           >
             <Icon name="home" size="sm" />
+          </button>
+        </div>
+      )}
+
+      {showFavorites && (
+        <div className="map-controls-group">
+          <button
+            className="map-control-btn"
+            onClick={onFavoritesClick}
+            aria-label="즐겨찾기"
+            title="즐겨찾기 목록"
+          >
+            <Icon name="star" size="sm" />
+          </button>
+        </div>
+      )}
+
+      {showHistory && (
+        <div className="map-controls-group">
+          <button
+            className="map-control-btn"
+            onClick={onHistoryClick}
+            aria-label="검색 기록"
+            title="검색 기록"
+          >
+            <Icon name="history" size="sm" />
           </button>
         </div>
       )}

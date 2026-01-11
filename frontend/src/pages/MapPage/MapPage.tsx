@@ -12,7 +12,7 @@ import {
   type Category,
 } from '../../components/Map';
 import { HomeMarker, StartFlagMarker } from '../../components/Map/CustomMarkers';
-import { PlaceDetail } from '../../components/panels';
+import { PlaceDetail, FavoritesPanel, HistoryPanel } from '../../components/panels';
 import { DirectionsPanel, RoutePolyline } from '../../components/directions';
 import { Loading, ToastContainer, SoundToggle, SkipLink } from '../../components/common';
 import { HomeSettingModal, RouteStartModal } from '../../components/modals';
@@ -36,6 +36,8 @@ const MapPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showDirections, setShowDirections] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   
   // Directions state
   const [directionsOrigin, setDirectionsOrigin] = useState<{
@@ -68,7 +70,7 @@ const MapPage: React.FC = () => {
   const { favorites } = useUserStore();
   const { search } = useSearch();
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
-  const { popularKeywords, loadHistory, loadPopularKeywords } = useHistory();
+  const { history, popularKeywords, loadHistory, loadPopularKeywords, clearHistory } = useHistory();
 
   // Walking animation hook
   const { startAnimation, stopAnimation } = useWalkingAnimation();
@@ -121,6 +123,14 @@ const MapPage: React.FC = () => {
         useRouteStore.getState().setRouteModalOpen(false);
         return;
       }
+      if (showFavorites) {
+        setShowFavorites(false);
+        return;
+      }
+      if (showHistory) {
+        setShowHistory(false);
+        return;
+      }
       if (selectedPlace) {
         setSelectedPlace(null);
         return;
@@ -132,7 +142,7 @@ const MapPage: React.FC = () => {
       if (isSidebarOpen) {
         setIsSidebarOpen(false);
       }
-    }, [selectedPlace, showDirections, isSidebarOpen, setHomeModalOpen, setSelectedPlace]),
+    }, [selectedPlace, showDirections, showFavorites, showHistory, isSidebarOpen, setHomeModalOpen, setSelectedPlace]),
   });
 
   // Load initial data on mount
@@ -225,6 +235,49 @@ const MapPage: React.FC = () => {
   const handleClosePlaceDetail = useCallback(() => {
     setSelectedPlace(null);
   }, [setSelectedPlace]);
+
+  // Handle favorite selection from FavoritesPanel
+  const handleFavoriteSelect = useCallback((favorite: import('../../types').Favorite) => {
+    // 지도 이동
+    if (map && favorite.lat && favorite.lng) {
+      map.panTo(new kakao.maps.LatLng(favorite.lat, favorite.lng));
+    }
+    setShowFavorites(false);
+    toast.success(`${favorite.place_name}(으)로 이동했습니다`);
+  }, [map]);
+
+  // Handle favorite removal from FavoritesPanel
+  const handleFavoriteRemove = useCallback(async (favorite: import('../../types').Favorite) => {
+    try {
+      await toggleFavorite({
+        id: favorite.place_id,
+        place_name: favorite.place_name,
+        address_name: favorite.address || '',
+        road_address_name: favorite.road_address || '',
+        x: String(favorite.lng),
+        y: String(favorite.lat),
+        phone: favorite.phone || '',
+        category_name: favorite.category || '',
+      } as import('../../types').Place);
+      toast.success('즐겨찾기에서 삭제되었습니다');
+    } catch (error) {
+      toast.error('삭제에 실패했습니다');
+    }
+  }, [toggleFavorite]);
+
+  // Handle history item selection from HistoryPanel
+  const handleHistorySelect = useCallback((keyword: string) => {
+    search(keyword);
+    setSelectedCategory(null);
+    setShowHistory(false);
+    toast.success(`"${keyword}" 검색 결과를 표시합니다`);
+  }, [search]);
+
+  // Handle clear all history
+  const handleClearHistory = useCallback(async () => {
+    await clearHistory();
+    toast.success('검색 기록이 삭제되었습니다');
+  }, [clearHistory]);
 
   // Swap origin and destination
   const handleSwapDirections = useCallback(() => {
@@ -365,7 +418,11 @@ const MapPage: React.FC = () => {
                 showZoom
                 showMyLocation
                 showHome
+                showFavorites
+                showHistory
                 onHomeClick={handleHomeClick}
+                onFavoritesClick={() => setShowFavorites(true)}
+                onHistoryClick={() => setShowHistory(true)}
               />
             )}
 
@@ -441,6 +498,34 @@ const MapPage: React.FC = () => {
               onSearch={handleDirectionsSearch}
               onSwap={handleSwapDirections}
               onClose={() => setShowDirections(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Favorites Panel */}
+      {showFavorites && (
+        <div className="map-page-panel-overlay" onClick={() => setShowFavorites(false)}>
+          <div className="map-page-panel" onClick={(e) => e.stopPropagation()}>
+            <FavoritesPanel
+              favorites={favorites}
+              onSelect={handleFavoriteSelect}
+              onRemove={handleFavoriteRemove}
+              onClose={() => setShowFavorites(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* History Panel */}
+      {showHistory && (
+        <div className="map-page-panel-overlay" onClick={() => setShowHistory(false)}>
+          <div className="map-page-panel" onClick={(e) => e.stopPropagation()}>
+            <HistoryPanel
+              history={history}
+              onSelect={handleHistorySelect}
+              onClearAll={handleClearHistory}
+              onClose={() => setShowHistory(false)}
             />
           </div>
         </div>
