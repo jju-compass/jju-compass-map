@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jju-compass/jju-compass-map/internal/config"
@@ -19,6 +21,18 @@ type DirectionsHandler struct {
 	apiLimiter *middleware.DailyAPILimiter
 	httpClient *http.Client
 }
+
+// routeCacheEntry represents a cached route response
+type routeCacheEntry struct {
+	Data      map[string]interface{}
+	Timestamp time.Time
+}
+
+// Route cache with 1 hour TTL
+var (
+	routeCache    sync.Map
+	routeCacheTTL = 1 * time.Hour
+)
 
 // NewDirectionsHandler creates a new directions handler
 func NewDirectionsHandler(cfg *config.KakaoConfig, apiLimiter *middleware.DailyAPILimiter) *DirectionsHandler {
@@ -47,6 +61,21 @@ func (h *DirectionsHandler) GetDirections(c *gin.Context) {
 	if !h.validateCoords(origin) || !h.validateCoords(destination) {
 		BadRequest(c, "invalid coordinate format")
 		return
+	}
+
+	// Create cache key from origin and destination
+	cacheKey := fmt.Sprintf("%s->%s", origin, destination)
+
+	// Check cache first
+	if cached, ok := routeCache.Load(cacheKey); ok {
+		entry := cached.(routeCacheEntry)
+		// Check if cache is still valid (within TTL)
+		if time.Since(entry.Timestamp) < routeCacheTTL {
+			Success(c, entry.Data)
+			return
+		}
+		// Cache expired, delete it
+		routeCache.Delete(cacheKey)
 	}
 
 	// Check daily API limit
@@ -104,6 +133,12 @@ func (h *DirectionsHandler) GetDirections(c *gin.Context) {
 		InternalError(c, "응답 파싱 실패")
 		return
 	}
+
+	// Store in cache
+	routeCache.Store(cacheKey, routeCacheEntry{
+		Data:      result,
+		Timestamp: time.Now(),
+	})
 
 	Success(c, result)
 }
