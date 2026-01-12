@@ -120,6 +120,48 @@
   white-space: nowrap;
 }
 
+/* 모바일 햄버거 메뉴 컨테이너 */
+.map-controls-mobile {
+  position: absolute;
+  right: 12px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 10;
+}
+
+/* 햄버거 버튼 */
+.map-control-hamburger {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--color-bg-primary);
+  box-shadow: 0 2px 12px var(--color-shadow-md);
+}
+
+.map-control-hamburger .map-control-emoji {
+  font-size: 24px;
+}
+
+/* 모바일에서 펼쳐진 메뉴 */
+.map-controls-mobile .map-controls {
+  position: static;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -135,10 +177,7 @@
     right: 12px;
   }
 
-  .map-controls {
-    right: 12px;
-    bottom: 24px;
-  }
+  /* 데스크톱용 .map-controls는 모바일에서 숨김 (JS에서 isMobile로 처리) */
 
   .map-control-btn {
     width: 36px;
@@ -153,5 +192,9 @@
 
   .map-control-emoji {
     font-size: 16px;
+  }
+
+  .map-control-hamburger .map-control-emoji {
+    font-size: 22px;
   }
 }

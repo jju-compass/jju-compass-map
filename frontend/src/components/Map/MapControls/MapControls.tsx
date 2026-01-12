@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMapStore } from '@store/mapStore';
 import { useGeolocation } from '@hooks/useGeolocation';
 import { Icon } from '@components/common';
@@ -30,6 +30,24 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const { map, zoom, setZoom, setCenter, setCurrentLocation } = useMapStore();
   const { getCurrentLocation } = useGeolocation();
   const [isGeoLoading, setIsGeoLoading] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 메뉴 토글
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   const handleZoomIn = () => {
     if (!map) return;
@@ -74,6 +92,60 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
   const classes = ['map-controls', className].filter(Boolean).join(' ');
 
+  // 메뉴 버튼들 렌더링
+  const renderMenuButtons = () => (
+    <>
+      {showMyLocation && (
+        <button
+          className={`map-control-btn map-control-btn-labeled ${isGeoLoading ? 'loading' : ''}`}
+          onClick={handleMyLocation}
+          disabled={isGeoLoading}
+          aria-label="내 위치"
+          title="내 위치로 이동"
+        >
+          <span className="map-control-emoji">📍</span>
+          <span className="map-control-label">내 위치</span>
+        </button>
+      )}
+
+      {showHome && (
+        <button
+          className="map-control-btn map-control-btn-labeled"
+          onClick={handleHome}
+          aria-label="홈 위치"
+          title="홈 위치로 이동"
+        >
+          <span className="map-control-emoji">🏠</span>
+          <span className="map-control-label">홈</span>
+        </button>
+      )}
+
+      {showFavorites && (
+        <button
+          className="map-control-btn map-control-btn-labeled"
+          onClick={onFavoritesClick}
+          aria-label="즐겨찾기"
+          title="즐겨찾기 목록"
+        >
+          <span className="map-control-emoji">⭐</span>
+          <span className="map-control-label">즐겨찾기</span>
+        </button>
+      )}
+
+      {showHistory && (
+        <button
+          className="map-control-btn map-control-btn-labeled"
+          onClick={onHistoryClick}
+          aria-label="검색 기록"
+          title="검색 기록"
+        >
+          <span className="map-control-emoji">🕐</span>
+          <span className="map-control-label">기록</span>
+        </button>
+      )}
+    </>
+  );
+
   return (
     <>
       {/* 줌 컨트롤 - 오른쪽 중간 */}
@@ -99,56 +171,32 @@ export const MapControls: React.FC<MapControlsProps> = ({
       )}
 
       {/* 메인 컨트롤 - 오른쪽 하단 */}
-      <div className={classes}>
-        {showMyLocation && (
+      {isMobile ? (
+        // 모바일: 햄버거 메뉴
+        <div className="map-controls-mobile">
+          {/* 햄버거 버튼 */}
           <button
-            className={`map-control-btn map-control-btn-labeled ${isGeoLoading ? 'loading' : ''}`}
-            onClick={handleMyLocation}
-            disabled={isGeoLoading}
-            aria-label="내 위치"
-            title="내 위치로 이동"
+            className="map-control-btn map-control-hamburger"
+            onClick={toggleMenu}
+            aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={isMenuOpen}
           >
-            <span className="map-control-emoji">📍</span>
-            <span className="map-control-label">내 위치</span>
+            <span className="map-control-emoji">{isMenuOpen ? '✕' : '☰'}</span>
           </button>
-        )}
 
-        {showHome && (
-          <button
-            className="map-control-btn map-control-btn-labeled"
-            onClick={handleHome}
-            aria-label="홈 위치"
-            title="홈 위치로 이동"
-          >
-            <span className="map-control-emoji">🏠</span>
-            <span className="map-control-label">홈</span>
-          </button>
-        )}
-
-        {showFavorites && (
-          <button
-            className="map-control-btn map-control-btn-labeled"
-            onClick={onFavoritesClick}
-            aria-label="즐겨찾기"
-            title="즐겨찾기 목록"
-          >
-            <span className="map-control-emoji">⭐</span>
-            <span className="map-control-label">즐겨찾기</span>
-          </button>
-        )}
-
-        {showHistory && (
-          <button
-            className="map-control-btn map-control-btn-labeled"
-            onClick={onHistoryClick}
-            aria-label="검색 기록"
-            title="검색 기록"
-          >
-            <span className="map-control-emoji">🕐</span>
-            <span className="map-control-label">기록</span>
-          </button>
-        )}
-      </div>
+          {/* 펼쳐진 메뉴 */}
+          {isMenuOpen && (
+            <div className={classes}>
+              {renderMenuButtons()}
+            </div>
+          )}
+        </div>
+      ) : (
+        // 데스크톱: 항상 표시
+        <div className={classes}>
+          {renderMenuButtons()}
+        </div>
+      )}
     </>
   );
 };
