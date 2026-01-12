@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMapStore } from '@store/mapStore';
-import { getCategoryEmoji } from '@utils/categoryEmoji';
+import { getCategoryEmoji } from '../../../utils/categoryEmoji';
 import type { Place } from '../../../types';
 import '../PlaceMarker/PlaceMarker.css';
 import './PlaceMarkerCluster.css';
@@ -24,7 +24,7 @@ function getPixelDistance(
   pos1: { lat: number; lng: number },
   pos2: { lat: number; lng: number }
 ): number {
-  const proj = map.getProjection();
+  const proj = (map as any).getProjection();
   const point1 = proj.containerPointFromCoords(
     new kakao.maps.LatLng(pos1.lat, pos1.lng)
   );

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useMapStore } from '@store/mapStore';
-import { getCategoryEmoji, getShortCategory } from '@utils/categoryEmoji';
+import { getCategoryEmoji, getShortCategory } from '../../../utils/categoryEmoji';
 import type { Place } from '../../../types';
 import './PlaceMarker.css';
 
