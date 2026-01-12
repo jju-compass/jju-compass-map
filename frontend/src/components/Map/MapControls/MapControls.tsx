@@ -101,56 +101,52 @@ export const MapControls: React.FC<MapControlsProps> = ({
       {/* 메인 컨트롤 - 오른쪽 하단 */}
       <div className={classes}>
         {showMyLocation && (
-          <div className="map-controls-group">
-            <button
-              className={`map-control-btn ${isGeoLoading ? 'loading' : ''}`}
-              onClick={handleMyLocation}
-              disabled={isGeoLoading}
-              aria-label="내 위치"
-              title="내 위치로 이동"
-            >
-              <Icon name="my-location" size="sm" />
-            </button>
-          </div>
+          <button
+            className={`map-control-btn map-control-btn-labeled ${isGeoLoading ? 'loading' : ''}`}
+            onClick={handleMyLocation}
+            disabled={isGeoLoading}
+            aria-label="내 위치"
+            title="내 위치로 이동"
+          >
+            <span className="map-control-emoji">📍</span>
+            <span className="map-control-label">내 위치</span>
+          </button>
         )}
 
         {showHome && (
-          <div className="map-controls-group">
-            <button
-              className="map-control-btn"
-              onClick={handleHome}
-              aria-label="홈 위치"
-              title="홈 위치로 이동"
-            >
-              <Icon name="home" size="sm" />
-            </button>
-          </div>
+          <button
+            className="map-control-btn map-control-btn-labeled"
+            onClick={handleHome}
+            aria-label="홈 위치"
+            title="홈 위치로 이동"
+          >
+            <span className="map-control-emoji">🏠</span>
+            <span className="map-control-label">홈</span>
+          </button>
         )}
 
         {showFavorites && (
-          <div className="map-controls-group">
-            <button
-              className="map-control-btn"
-              onClick={onFavoritesClick}
-              aria-label="즐겨찾기"
-              title="즐겨찾기 목록"
-            >
-              <Icon name="star" size="sm" />
-            </button>
-          </div>
+          <button
+            className="map-control-btn map-control-btn-labeled"
+            onClick={onFavoritesClick}
+            aria-label="즐겨찾기"
+            title="즐겨찾기 목록"
+          >
+            <span className="map-control-emoji">⭐</span>
+            <span className="map-control-label">즐겨찾기</span>
+          </button>
         )}
 
         {showHistory && (
-          <div className="map-controls-group">
-            <button
-              className="map-control-btn"
-              onClick={onHistoryClick}
-              aria-label="검색 기록"
-              title="검색 기록"
-            >
-              <Icon name="history" size="sm" />
-            </button>
-          </div>
+          <button
+            className="map-control-btn map-control-btn-labeled"
+            onClick={onHistoryClick}
+            aria-label="검색 기록"
+            title="검색 기록"
+          >
+            <span className="map-control-emoji">🕐</span>
+            <span className="map-control-label">기록</span>
+          </button>
         )}
       </div>
     </>

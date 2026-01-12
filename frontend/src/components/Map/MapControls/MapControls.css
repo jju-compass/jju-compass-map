@@ -24,7 +24,11 @@
   bottom: 32px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  background: var(--color-bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--color-shadow-md);
+  overflow: hidden;
   z-index: 10;
 }
 
@@ -78,6 +82,44 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+/* 이모지 + 텍스트 레이블 버튼 */
+.map-control-btn-labeled {
+  width: auto;
+  height: auto;
+  min-width: 120px;
+  padding: 12px 16px;
+  gap: 8px;
+  justify-content: flex-start;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.map-controls .map-control-btn-labeled:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.map-controls .map-control-btn-labeled:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+.map-controls .map-control-btn-labeled:last-child {
+  border-radius: 0 0 12px 12px;
+}
+
+.map-controls .map-control-btn-labeled:only-child {
+  border-radius: 12px;
+}
+
+.map-control-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.map-control-label {
+  white-space: nowrap;
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -101,5 +143,15 @@
   .map-control-btn {
     width: 36px;
     height: 36px;
+  }
+
+  .map-control-btn-labeled {
+    min-width: 110px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .map-control-emoji {
+    font-size: 16px;
   }
 }
