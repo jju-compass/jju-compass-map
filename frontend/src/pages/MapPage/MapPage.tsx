@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   KakaoMap,
-  MapMarker,
+  PlaceMarkerCluster,
   MapControls,
   MapNavbar,
   CategorySidebar,
@@ -426,14 +426,15 @@ const MapPage: React.FC = () => {
               />
             )}
 
-            {isMapReady && searchResults.map((place) => (
-              <MapMarker
-                key={place.id}
-                place={place}
-                isSelected={selectedPlace?.id === place.id}
-                onClick={handlePlaceClick}
+            {/* 커스텀 장소 마커 (클러스터링 적용) */}
+            {isMapReady && (
+              <PlaceMarkerCluster
+                places={searchResults}
+                selectedPlaceId={selectedPlace?.id}
+                onPlaceClick={handlePlaceClick}
+                minClusterSize={3}
               />
-            ))}
+            )}
 
             {isMapReady && (
               <>
