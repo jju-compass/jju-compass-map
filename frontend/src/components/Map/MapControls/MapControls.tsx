@@ -75,9 +75,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const classes = ['map-controls', className].filter(Boolean).join(' ');
 
   return (
-    <div className={classes}>
+    <>
+      {/* 줌 컨트롤 - 오른쪽 중간 */}
       {showZoom && (
-        <div className="map-controls-group">
+        <div className="map-controls-zoom">
           <button
             className="map-control-btn"
             onClick={handleZoomIn}
@@ -96,60 +97,63 @@ export const MapControls: React.FC<MapControlsProps> = ({
           </button>
         </div>
       )}
-      
-      {showMyLocation && (
-        <div className="map-controls-group">
-          <button
-            className={`map-control-btn ${isGeoLoading ? 'loading' : ''}`}
-            onClick={handleMyLocation}
-            disabled={isGeoLoading}
-            aria-label="내 위치"
-            title="내 위치로 이동"
-          >
-            <Icon name="my-location" size="sm" />
-          </button>
-        </div>
-      )}
 
-      {showHome && (
-        <div className="map-controls-group">
-          <button
-            className="map-control-btn"
-            onClick={handleHome}
-            aria-label="홈 위치"
-            title="홈 위치로 이동"
-          >
-            <Icon name="home" size="sm" />
-          </button>
-        </div>
-      )}
+      {/* 메인 컨트롤 - 오른쪽 하단 */}
+      <div className={classes}>
+        {showMyLocation && (
+          <div className="map-controls-group">
+            <button
+              className={`map-control-btn ${isGeoLoading ? 'loading' : ''}`}
+              onClick={handleMyLocation}
+              disabled={isGeoLoading}
+              aria-label="내 위치"
+              title="내 위치로 이동"
+            >
+              <Icon name="my-location" size="sm" />
+            </button>
+          </div>
+        )}
 
-      {showFavorites && (
-        <div className="map-controls-group">
-          <button
-            className="map-control-btn"
-            onClick={onFavoritesClick}
-            aria-label="즐겨찾기"
-            title="즐겨찾기 목록"
-          >
-            <Icon name="star" size="sm" />
-          </button>
-        </div>
-      )}
+        {showHome && (
+          <div className="map-controls-group">
+            <button
+              className="map-control-btn"
+              onClick={handleHome}
+              aria-label="홈 위치"
+              title="홈 위치로 이동"
+            >
+              <Icon name="home" size="sm" />
+            </button>
+          </div>
+        )}
 
-      {showHistory && (
-        <div className="map-controls-group">
-          <button
-            className="map-control-btn"
-            onClick={onHistoryClick}
-            aria-label="검색 기록"
-            title="검색 기록"
-          >
-            <Icon name="history" size="sm" />
-          </button>
-        </div>
-      )}
-    </div>
+        {showFavorites && (
+          <div className="map-controls-group">
+            <button
+              className="map-control-btn"
+              onClick={onFavoritesClick}
+              aria-label="즐겨찾기"
+              title="즐겨찾기 목록"
+            >
+              <Icon name="star" size="sm" />
+            </button>
+          </div>
+        )}
+
+        {showHistory && (
+          <div className="map-controls-group">
+            <button
+              className="map-control-btn"
+              onClick={onHistoryClick}
+              aria-label="검색 기록"
+              title="검색 기록"
+            >
+              <Icon name="history" size="sm" />
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
