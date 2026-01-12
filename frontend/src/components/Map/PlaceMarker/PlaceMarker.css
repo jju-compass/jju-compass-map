@@ -1,0 +1,234 @@
+/* ========================================
+   PlaceMarker - 커스텀 장소 마커 스타일
+   ======================================== */
+
+/* 기본 마커 컨테이너 */
+.place-marker {
+  position: relative;
+  cursor: pointer;
+  animation: marker-drop 0.4s ease-out forwards;
+  opacity: 0;
+  filter: drop-shadow(0 2px 4px var(--color-shadow));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* Drop 애니메이션 */
+@keyframes marker-drop {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 호버 효과 */
+.place-marker:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 8px var(--color-shadow-md));
+  z-index: 50 !important;
+}
+
+/* 선택 상태 */
+.place-marker-selected {
+  transform: scale(1.08);
+  z-index: 100 !important;
+}
+
+.place-marker-selected .place-marker-content {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-active);
+}
+
+.place-marker-selected .place-marker-tail::after {
+  border-top-color: var(--color-bg-active);
+}
+
+.place-marker-selected:hover {
+  transform: scale(1.1);
+}
+
+/* ========================================
+   Full 모드 (이모지 + 이름 + 카테고리)
+   ======================================== */
+.place-marker-full .place-marker-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.place-marker-full .place-marker-emoji {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.place-marker-full .place-marker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.place-marker-full .place-marker-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-marker-full .place-marker-category {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================================
+   With-name 모드 (이모지 + 이름)
+   ======================================== */
+.place-marker-with-name .place-marker-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.place-marker-with-name .place-marker-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.place-marker-with-name .place-marker-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================================
+   Emoji-only 모드 (이모지만)
+   ======================================== */
+.place-marker-emoji-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.place-marker-emoji-only .place-marker-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px var(--color-shadow);
+}
+
+.place-marker-selected .place-marker-emoji-only .place-marker-emoji {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-active);
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+}
+
+/* ========================================
+   마커 꼬리 (말풍선 아래 삼각형)
+   ======================================== */
+.place-marker-tail {
+  position: relative;
+  width: 100%;
+  height: 8px;
+}
+
+.place-marker-tail::before,
+.place-marker-tail::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+}
+
+/* 테두리 삼각형 */
+.place-marker-tail::before {
+  top: -1px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid var(--color-border);
+}
+
+/* 배경 삼각형 */
+.place-marker-tail::after {
+  top: -2px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--color-bg-primary);
+}
+
+/* Emoji-only 모드에서는 꼬리 숨김 */
+.place-marker-emoji-only + .place-marker-tail {
+  display: none;
+}
+
+/* ========================================
+   반응형 스타일
+   ======================================== */
+@media (max-width: 768px) {
+  .place-marker-full .place-marker-content {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .place-marker-full .place-marker-emoji {
+    font-size: 18px;
+  }
+
+  .place-marker-full .place-marker-name {
+    font-size: 12px;
+    max-width: 100px;
+  }
+
+  .place-marker-full .place-marker-category {
+    font-size: 10px;
+  }
+
+  .place-marker-with-name .place-marker-content {
+    padding: 5px 8px;
+  }
+
+  .place-marker-with-name .place-marker-name {
+    font-size: 11px;
+    max-width: 70px;
+  }
+
+  .place-marker-emoji-only .place-marker-emoji {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+}

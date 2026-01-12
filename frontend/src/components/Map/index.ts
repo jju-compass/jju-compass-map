@@ -1,6 +1,7 @@
 // Map Components
 export { KakaoMap, type KakaoMapProps } from './KakaoMap';
 export { MapMarker, type MapMarkerProps } from './MapMarker';
+export { PlaceMarker, type PlaceMarkerProps } from './PlaceMarker';
 export { MapControls, type MapControlsProps } from './MapControls';
 
 // New Layout Components
