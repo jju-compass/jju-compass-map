@@ -6,9 +6,6 @@ export * from './common';
 // Map Components
 export * from './Map';
 
-// Sidebar Components
-export * from './Sidebar';
-
 // Panel Components
 export * from './panels';
 

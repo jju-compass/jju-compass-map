@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMapStore } from '@store/mapStore';
 import { getCategoryEmoji } from '../../../utils/categoryEmoji';
 import type { Place } from '../../../types';
-import '../PlaceMarker/PlaceMarker.css';
+import './PlaceMarker.css';
 import './PlaceMarkerCluster.css';
 
 export interface PlaceMarkerClusterProps {
