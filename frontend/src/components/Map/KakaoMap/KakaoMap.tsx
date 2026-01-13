@@ -20,7 +20,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   
-  const { center, zoom, setMap, setCenter } = useMapStore();
+  const { center, zoom, setMap, setCenter, setZoom } = useMapStore();
 
   // Initialize map
   useEffect(() => {
@@ -75,8 +75,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
     // Zoom changed event
     const handleZoomChanged = () => {
       const level = map.getLevel();
-      console.log('[DEBUG KakaoMap] zoom_changed event fired, level:', level);
-      // setZoom 제거 - store 업데이트로 인한 불필요한 리렌더링 방지
+      setZoom(level);
       onZoomChanged?.(level);
     };
 
@@ -89,7 +88,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
       kakao.maps.event.removeListener(map, 'dragend', handleDragEnd);
       kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChanged);
     };
-  }, [onClick, onDragEnd, onZoomChanged, setCenter]);
+  }, [onClick, onDragEnd, onZoomChanged, setCenter, setZoom]);
 
   // Sync center changes from store
   const panTo = useCallback((lat: number, lng: number) => {

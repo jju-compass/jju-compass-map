@@ -81,11 +81,8 @@ function clusterPlaces(
       const centerLat = nearbyPlaces.reduce((sum, p) => sum + parseFloat(p.y), 0) / nearbyPlaces.length;
       const centerLng = nearbyPlaces.reduce((sum, p) => sum + parseFloat(p.x), 0) / nearbyPlaces.length;
       
-      // 안정적인 클러스터 ID 생성: 포함된 장소 ID들을 정렬하여 연결
-      const stableClusterId = nearbyPlaces.map(p => p.id).sort().join('_');
-      
       clusters.push({
-        id: `cluster-${stableClusterId}`,
+        id: `cluster-${place.id}`,
         places: nearbyPlaces,
         center: { lat: centerLat, lng: centerLng },
       });
@@ -107,13 +104,8 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   onPlaceClick,
   minClusterSize = 3,
 }) => {
-  console.log('[DEBUG PlaceMarkerCluster] Component RENDER, places:', places.length, 'selectedPlaceId:', selectedPlaceId);
-  
-  // map만 선택적 구독 - zoom, center 등 다른 상태 변경 시 리렌더링 방지
-  const map = useMapStore((state) => state.map);
+  const { map, zoom } = useMapStore();
   const overlaysRef = useRef<Map<string, kakao.maps.CustomOverlay>>(new Map());
-  const prevSelectedRef = useRef<string | undefined>(undefined);
-  const prevDisplayModeRef = useRef<string>('');
   const [clusterData, setClusterData] = useState<{
     clusters: ClusterGroup[];
     singles: Place[];
@@ -143,21 +135,18 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
   // 맵 이벤트 리스너
   useEffect(() => {
-    console.log('[DEBUG PlaceMarkerCluster] useEffect[map, updateClusters] - Map event listener setup');
     if (!map) return;
 
     updateClusters();
 
-    // 드래그 종료 시에만 클러스터 재계산 (줌 변경 시에는 재계산 안 함 - 깜빡임 방지)
-    const handleDragEnd = () => {
-      console.log('[DEBUG PlaceMarkerCluster] dragend event fired');
-      updateClusters();
-    };
+    const handleZoomChange = () => updateClusters();
+    const handleDragEnd = () => updateClusters();
 
+    kakao.maps.event.addListener(map, 'zoom_changed', handleZoomChange);
     kakao.maps.event.addListener(map, 'dragend', handleDragEnd);
 
     return () => {
-      console.log('[DEBUG PlaceMarkerCluster] useEffect[map, updateClusters] - CLEANUP');
+      kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChange);
       kakao.maps.event.removeListener(map, 'dragend', handleDragEnd);
     };
   }, [map, updateClusters]);
@@ -169,24 +158,17 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     return 'full';
   }, []);
 
-  // 단일 마커 HTML 생성 (displayMode를 파라미터로 받아 map 의존성 제거)
-  // skipAnimation: 업데이트 시 애니메이션 건너뛰기 (깜빡임 방지)
-  const createSingleMarkerContent = useCallback((
-    place: Place,
-    index: number,
-    isSelected: boolean,
-    displayMode: 'emoji-only' | 'with-name' | 'full',
-    skipAnimation: boolean = false
-  ) => {
+  // 단일 마커 HTML 생성
+  const createSingleMarkerContent = useCallback((place: Place, index: number) => {
+    const currentZoom = map?.getLevel() || 3;
+    const displayMode = getDisplayMode(currentZoom);
     const emoji = getCategoryEmoji(place.category_name);
+    const isSelected = place.id === selectedPlaceId;
     const shortCategory = place.category_name?.split('>').slice(1).join(' > ').trim() || '';
 
     const el = document.createElement('div');
-    const animationClass = skipAnimation ? ' no-animation' : '';
-    el.className = `place-marker place-marker-${displayMode}${isSelected ? ' place-marker-selected' : ''}${animationClass}`;
-    if (!skipAnimation) {
-      el.style.animationDelay = `${index * 30}ms`;
-    }
+    el.className = `place-marker place-marker-${displayMode}${isSelected ? ' place-marker-selected' : ''}`;
+    el.style.animationDelay = `${index * 30}ms`;
 
     if (displayMode === 'emoji-only') {
       el.innerHTML = `
@@ -221,7 +203,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     });
 
     return el;
-  }, [onPlaceClick]);
+  }, [map, selectedPlaceId, onPlaceClick, getDisplayMode]);
 
   // 클러스터 마커 HTML 생성
   const createClusterMarkerContent = useCallback((cluster: ClusterGroup) => {
@@ -257,164 +239,55 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     return el;
   }, [map]);
 
-  // 오버레이 렌더링 (차분 업데이트: 기존 마커 재사용, 새 마커만 추가, 불필요한 마커만 제거)
+  // 오버레이 렌더링
   useEffect(() => {
-    console.log('[DEBUG PlaceMarkerCluster] useEffect[overlay render] - START, singles:', clusterData.singles.length, 'clusters:', clusterData.clusters.length);
     if (!map) return;
 
-    const currentZoom = map.getLevel();
-    const displayMode = getDisplayMode(currentZoom);
-    const newOverlayIds = new Set<string>();
+    // 기존 오버레이 모두 제거
+    overlaysRef.current.forEach(overlay => {
+      overlay.setMap(null);
+    });
+    overlaysRef.current.clear();
 
-    // 단일 마커 처리
+    // 단일 마커 생성
     clusterData.singles.forEach((place, index) => {
       const lat = parseFloat(place.y);
       const lng = parseFloat(place.x);
       if (isNaN(lat) || isNaN(lng)) return;
 
-      newOverlayIds.add(place.id);
-
-      // 기존 오버레이가 없을 때만 새로 생성
-      if (!overlaysRef.current.has(place.id)) {
-        console.log('[DEBUG PlaceMarkerCluster] Creating NEW overlay for:', place.id);
-        const isSelected = place.id === selectedPlaceId;
-        const content = createSingleMarkerContent(place, index, isSelected, displayMode);
-        const overlay = new kakao.maps.CustomOverlay({
-          position: new kakao.maps.LatLng(lat, lng),
-          content,
-          yAnchor: 1.1,
-          zIndex: isSelected ? 100 : 10,
-        });
-        
-        overlay.setMap(map);
-        overlaysRef.current.set(place.id, overlay);
-      }
+      const content = createSingleMarkerContent(place, index);
+      const overlay = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(lat, lng),
+        content,
+        yAnchor: 1.1,
+        zIndex: place.id === selectedPlaceId ? 100 : 10,
+      });
+      
+      overlay.setMap(map);
+      overlaysRef.current.set(place.id, overlay);
     });
 
-    // 클러스터 마커 처리
+    // 클러스터 마커 생성
     clusterData.clusters.forEach((cluster) => {
-      newOverlayIds.add(cluster.id);
-
-      // 기존 오버레이가 없을 때만 새로 생성
-      if (!overlaysRef.current.has(cluster.id)) {
-        console.log('[DEBUG PlaceMarkerCluster] Creating NEW cluster overlay for:', cluster.id);
-        const content = createClusterMarkerContent(cluster);
-        const overlay = new kakao.maps.CustomOverlay({
-          position: new kakao.maps.LatLng(cluster.center.lat, cluster.center.lng),
-          content,
-          yAnchor: 0.5,
-          zIndex: 50,
-        });
-        
-        overlay.setMap(map);
-        overlaysRef.current.set(cluster.id, overlay);
-      }
+      const content = createClusterMarkerContent(cluster);
+      const overlay = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(cluster.center.lat, cluster.center.lng),
+        content,
+        yAnchor: 0.5,
+        zIndex: 50,
+      });
+      
+      overlay.setMap(map);
+      overlaysRef.current.set(cluster.id, overlay);
     });
 
-    // 더 이상 필요 없는 오버레이만 제거
-    let removedCount = 0;
-    overlaysRef.current.forEach((overlay, id) => {
-      if (!newOverlayIds.has(id)) {
-        console.log('[DEBUG PlaceMarkerCluster] REMOVING overlay:', id);
-        overlay.setMap(null);
-        overlaysRef.current.delete(id);
-        removedCount++;
-      }
-    });
-    
-    console.log('[DEBUG PlaceMarkerCluster] useEffect[overlay render] - END, total overlays:', overlaysRef.current.size, 'removed:', removedCount);
-
-    // 현재 displayMode 저장
-    prevDisplayModeRef.current = displayMode;
-
-  }, [map, clusterData, selectedPlaceId, createSingleMarkerContent, createClusterMarkerContent, getDisplayMode]);
-
-  // 선택 상태 변경 시 해당 마커만 업데이트 (전체 재렌더링 방지)
-  useEffect(() => {
-    console.log('[DEBUG PlaceMarkerCluster] useEffect[selection] - prevSelected:', prevSelectedRef.current, 'newSelected:', selectedPlaceId);
-    if (!map) return;
-
-    const prevSelected = prevSelectedRef.current;
-    const newSelected = selectedPlaceId;
-
-    // 선택 상태가 변경되지 않았으면 무시
-    if (prevSelected === newSelected) {
-      console.log('[DEBUG PlaceMarkerCluster] useEffect[selection] - No change, skipping');
-      return;
-    }
-
-    const currentZoom = map.getLevel();
-    const displayMode = getDisplayMode(currentZoom);
-
-    // 이전 선택 마커 스타일 해제
-    if (prevSelected && overlaysRef.current.has(prevSelected)) {
-      const place = clusterData.singles.find(p => p.id === prevSelected);
-      if (place) {
-        console.log('[DEBUG PlaceMarkerCluster] useEffect[selection] - Deselecting:', prevSelected);
-        const overlay = overlaysRef.current.get(prevSelected)!;
-        const content = createSingleMarkerContent(place, 0, false, displayMode, true);
-        overlay.setContent(content);
-        overlay.setZIndex(10);
-      }
-    }
-
-    // 새로 선택된 마커 스타일 적용
-    if (newSelected && overlaysRef.current.has(newSelected)) {
-      const place = clusterData.singles.find(p => p.id === newSelected);
-      if (place) {
-        console.log('[DEBUG PlaceMarkerCluster] useEffect[selection] - Selecting:', newSelected);
-        const overlay = overlaysRef.current.get(newSelected)!;
-        const content = createSingleMarkerContent(place, 0, true, displayMode, true);
-        overlay.setContent(content);
-        overlay.setZIndex(100);
-      }
-    }
-
-    prevSelectedRef.current = newSelected;
-  }, [map, selectedPlaceId, clusterData.singles, createSingleMarkerContent, getDisplayMode]);
-
-  // 줌 레벨 변경 시 displayMode가 바뀌면 기존 마커 콘텐츠만 업데이트 (제거/재생성 없이)
-  useEffect(() => {
-    console.log('[DEBUG PlaceMarkerCluster] useEffect[zoom displayMode] - Setting up zoom_changed listener');
-    if (!map) return;
-
-    const handleZoomChanged = () => {
-      const currentZoom = map.getLevel();
-      const newDisplayMode = getDisplayMode(currentZoom);
-      console.log('[DEBUG PlaceMarkerCluster] zoom_changed handler - prevDisplayMode:', prevDisplayModeRef.current, 'newDisplayMode:', newDisplayMode);
-
-      // displayMode가 변경되었을 때만 기존 단일 마커들의 콘텐츠 업데이트
-      if (prevDisplayModeRef.current && prevDisplayModeRef.current !== newDisplayMode) {
-        console.log('[DEBUG PlaceMarkerCluster] displayMode CHANGED, updating', clusterData.singles.length, 'markers');
-        clusterData.singles.forEach((place, index) => {
-          if (overlaysRef.current.has(place.id)) {
-            const overlay = overlaysRef.current.get(place.id)!;
-            const isSelected = place.id === selectedPlaceId;
-            const content = createSingleMarkerContent(place, index, isSelected, newDisplayMode, true);
-            overlay.setContent(content);
-          }
-        });
-        prevDisplayModeRef.current = newDisplayMode;
-      }
-    };
-
-    kakao.maps.event.addListener(map, 'zoom_changed', handleZoomChanged);
-
-    return () => {
-      console.log('[DEBUG PlaceMarkerCluster] useEffect[zoom displayMode] - CLEANUP');
-      kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChanged);
-    };
-  }, [map, clusterData.singles, selectedPlaceId, createSingleMarkerContent, getDisplayMode]);
-
-  // 컴포넌트 언마운트 시 모든 오버레이 정리
-  useEffect(() => {
     return () => {
       overlaysRef.current.forEach(overlay => {
         overlay.setMap(null);
       });
       overlaysRef.current.clear();
     };
-  }, []);
+  }, [map, clusterData, selectedPlaceId, createSingleMarkerContent, createClusterMarkerContent]);
 
   return null;
 };
