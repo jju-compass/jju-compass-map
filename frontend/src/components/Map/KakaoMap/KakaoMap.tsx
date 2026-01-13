@@ -89,7 +89,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
       kakao.maps.event.removeListener(map, 'dragend', handleDragEnd);
       kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChanged);
     };
-  }, [onClick, onDragEnd, onZoomChanged, setCenter, setZoom]);
+  }, [onClick, onDragEnd, onZoomChanged, setCenter]);
 
   // Sync center changes from store
   const panTo = useCallback((lat: number, lng: number) => {
