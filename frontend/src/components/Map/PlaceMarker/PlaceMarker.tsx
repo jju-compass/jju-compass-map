@@ -28,7 +28,8 @@ export const PlaceMarker: React.FC<PlaceMarkerProps> = ({
 }) => {
   const overlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const { map, zoom } = useMapStore();
+  // 선택적 구독 - zoom 변경 시 리렌더링 방지 (zoom은 사용하지 않음)
+  const map = useMapStore((state) => state.map);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('full');
 
   // 좌표 파싱

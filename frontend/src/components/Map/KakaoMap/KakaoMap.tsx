@@ -20,7 +20,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   
-  const { center, zoom, setMap, setCenter, setZoom } = useMapStore();
+  const { center, zoom, setMap, setCenter } = useMapStore();
 
   // Initialize map
   useEffect(() => {
@@ -76,7 +76,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
     const handleZoomChanged = () => {
       const level = map.getLevel();
       console.log('[DEBUG KakaoMap] zoom_changed event fired, level:', level);
-      setZoom(level);
+      // setZoom 제거 - store 업데이트로 인한 불필요한 리렌더링 방지
       onZoomChanged?.(level);
     };
 

@@ -27,7 +27,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
   onFavoritesClick,
   onHistoryClick,
 }) => {
-  const { map, zoom, setZoom, setCenter, setCurrentLocation } = useMapStore();
+  // 선택적 구독 - zoom 변경 시 리렌더링 방지
+  const map = useMapStore((state) => state.map);
+  const setCenter = useMapStore((state) => state.setCenter);
+  const setCurrentLocation = useMapStore((state) => state.setCurrentLocation);
   const { getCurrentLocation } = useGeolocation();
   const [isGeoLoading, setIsGeoLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,16 +54,16 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
   const handleZoomIn = () => {
     if (!map) return;
-    const newLevel = Math.max(1, zoom - 1);
+    const currentLevel = map.getLevel();
+    const newLevel = Math.max(1, currentLevel - 1);
     map.setLevel(newLevel, { animate: true });
-    setZoom(newLevel);
   };
 
   const handleZoomOut = () => {
     if (!map) return;
-    const newLevel = Math.min(14, zoom + 1);
+    const currentLevel = map.getLevel();
+    const newLevel = Math.min(14, currentLevel + 1);
     map.setLevel(newLevel, { animate: true });
-    setZoom(newLevel);
   };
 
   const handleMyLocation = async () => {
