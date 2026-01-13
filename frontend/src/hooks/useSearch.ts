@@ -6,7 +6,7 @@ import type { Place } from '../types';
 const MAX_PAGES = 3; // 최대 3페이지 (45개)
 
 export function useSearch() {
-  const { setSearchResults, setIsLoading, setError, setSelectedPlace } = useMapStore();
+  const { setSearchResults, setIsLoading, setError } = useMapStore();
   const allResultsRef = useRef<Place[]>([]);
 
   const search = useCallback(async (keyword: string) => {
@@ -100,16 +100,7 @@ export function useSearch() {
     }
   }, [setSearchResults, setIsLoading, setError]);
 
-  const selectPlace = useCallback((place: Place | null) => {
-    setSelectedPlace(place);
-  }, [setSelectedPlace]);
-
-  const clearSearch = useCallback(() => {
-    setSearchResults([]);
-    setSelectedPlace(null);
-  }, [setSearchResults, setSelectedPlace]);
-
-  return { search, selectPlace, clearSearch };
+  return { search };
 }
 
 export default useSearch;
