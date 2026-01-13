@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useMapStore, useUserStore } from '../store';
+import { useMapStore } from '../store';
 import { cacheAPI } from '../api';
 import type { Place } from '../types';
 
@@ -7,7 +7,6 @@ const MAX_PAGES = 3; // 최대 3페이지 (45개)
 
 export function useSearch() {
   const { setSearchResults, setIsLoading, setError, setSelectedPlace } = useMapStore();
-  const { setSearchKeyword } = useUserStore();
   const allResultsRef = useRef<Place[]>([]);
 
   const search = useCallback(async (keyword: string) => {
@@ -18,7 +17,6 @@ export function useSearch() {
 
     setIsLoading(true);
     setError(null);
-    setSearchKeyword(keyword);
     allResultsRef.current = [];
 
     try {
@@ -100,7 +98,7 @@ export function useSearch() {
       setIsLoading(false);
       throw error;
     }
-  }, [setSearchResults, setIsLoading, setError, setSearchKeyword]);
+  }, [setSearchResults, setIsLoading, setError]);
 
   const selectPlace = useCallback((place: Place | null) => {
     setSelectedPlace(place);
@@ -109,8 +107,7 @@ export function useSearch() {
   const clearSearch = useCallback(() => {
     setSearchResults([]);
     setSelectedPlace(null);
-    setSearchKeyword('');
-  }, [setSearchResults, setSelectedPlace, setSearchKeyword]);
+  }, [setSearchResults, setSelectedPlace]);
 
   return { search, selectPlace, clearSearch };
 }

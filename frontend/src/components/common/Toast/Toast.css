@@ -76,12 +76,6 @@
   color: #1864ab;
 }
 
-.toast.warning {
-  background: linear-gradient(135deg, #fff3bf 0%, #ffec99 100%);
-  border: 1px solid #ffd43b;
-  color: #e67700;
-}
-
 /* 애니메이션 */
 @keyframes toast-slide-in {
   from {

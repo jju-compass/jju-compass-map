@@ -6,7 +6,6 @@ const toastIcons: Record<ToastType, string> = {
   success: '✅',
   error: '❌',
   info: 'ℹ️',
-  warning: '⚠️',
 };
 
 export const ToastContainer: React.FC = () => {
