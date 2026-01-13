@@ -4,7 +4,6 @@ import type {
   Favorite, 
   SearchHistory, 
   PopularKeyword, 
-  UserSettings, 
   CacheEntry, 
   CacheStats,
   APIUsage 
@@ -58,18 +57,6 @@ export const historyAPI = {
     api.delete<{ message: string }>('/history'),
 };
 
-// Settings API
-export const settingsAPI = {
-  getHome: () =>
-    api.get<UserSettings>('/settings/home'),
-  
-  setHome: (lat: number, lng: number, name?: string) =>
-    api.post<{ message: string; home_lat: number; home_lng: number; home_name: string }>('/settings/home', { lat, lng, name }),
-  
-  deleteHome: () =>
-    api.delete<{ message: string }>('/settings/home'),
-};
-
 // Directions API
 export const directionsAPI = {
   getDirections: (origin: string, destination: string) =>
@@ -83,6 +70,5 @@ export default {
   cache: cacheAPI,
   favorites: favoritesAPI,
   history: historyAPI,
-  settings: settingsAPI,
   directions: directionsAPI,
 };

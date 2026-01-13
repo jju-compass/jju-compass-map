@@ -93,35 +93,7 @@ export function getShortCategory(categoryName: string): string {
   return categoryName;
 }
 
-/**
- * 카테고리에서 대분류만 추출합니다.
- * 예: "음식점 > 한식 > 국밥" → "음식점"
- * @param categoryName - 전체 카테고리 이름
- * @returns 대분류 카테고리
- */
-export function getMainCategory(categoryName: string): string {
-  if (!categoryName) return '';
-  
-  const parts = categoryName.split('>');
-  return parts[0].trim();
-}
-
-/**
- * 카테고리에서 중분류를 추출합니다.
- * 예: "음식점 > 한식 > 국밥" → "한식"
- * @param categoryName - 전체 카테고리 이름
- * @returns 중분류 카테고리
- */
-export function getSubCategory(categoryName: string): string {
-  if (!categoryName) return '';
-  
-  const parts = categoryName.split('>').map(part => part.trim());
-  return parts[1] || parts[0] || '';
-}
-
 export default {
   getCategoryEmoji,
   getShortCategory,
-  getMainCategory,
-  getSubCategory,
 };

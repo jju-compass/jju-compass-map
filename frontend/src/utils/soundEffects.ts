@@ -208,69 +208,6 @@ export const SoundEffects = {
       console.log('Sound error:', e);
     }
   },
-
-  /**
-   * 성공 효과음 (두 음)
-   */
-  playSuccess() {
-    const state = useSoundStore.getState();
-    if (!state.enabled) return;
-
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-
-      [0, 0.12].forEach((delay, i) => {
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        const freqs = [440, 660]; // A4, E5
-        oscillator.frequency.setValueAtTime(freqs[i], ctx.currentTime + delay);
-
-        gainNode.gain.setValueAtTime(state.volume * 0.6, ctx.currentTime + delay);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.15);
-
-        oscillator.start(ctx.currentTime + delay);
-        oscillator.stop(ctx.currentTime + delay + 0.15);
-      });
-    } catch (e) {
-      console.log('Sound error:', e);
-    }
-  },
-
-  /**
-   * 알림 효과음
-   */
-  playNotification() {
-    const state = useSoundStore.getState();
-    if (!state.enabled) return;
-
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-      oscillator.frequency.setValueAtTime(1047, ctx.currentTime + 0.08);
-
-      gainNode.gain.setValueAtTime(state.volume * 0.4, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.2);
-    } catch (e) {
-      console.log('Sound error:', e);
-    }
-  },
 };
 
 export default SoundEffects;
