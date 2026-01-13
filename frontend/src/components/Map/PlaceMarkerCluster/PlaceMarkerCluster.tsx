@@ -110,6 +110,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   const { map, zoom } = useMapStore();
   const overlaysRef = useRef<Map<string, kakao.maps.CustomOverlay>>(new Map());
   const prevSelectedRef = useRef<string | undefined>(undefined);
+  const prevDisplayModeRef = useRef<string>('');
   const [clusterData, setClusterData] = useState<{
     clusters: ClusterGroup[];
     singles: Place[];
@@ -335,6 +336,28 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
     prevSelectedRef.current = newSelected;
   }, [map, selectedPlaceId, clusterData.singles, createSingleMarkerContent]);
+
+  // 줌 레벨 변경 시 displayMode가 바뀌면 기존 마커 콘텐츠만 업데이트 (제거/재생성 없이)
+  useEffect(() => {
+    if (!map) return;
+
+    const currentZoom = map.getLevel();
+    const newDisplayMode = getDisplayMode(currentZoom);
+
+    // displayMode가 변경되었을 때만 기존 단일 마커들의 콘텐츠 업데이트
+    if (prevDisplayModeRef.current && prevDisplayModeRef.current !== newDisplayMode) {
+      clusterData.singles.forEach((place, index) => {
+        if (overlaysRef.current.has(place.id)) {
+          const overlay = overlaysRef.current.get(place.id)!;
+          const isSelected = place.id === selectedPlaceId;
+          const content = createSingleMarkerContent(place, index, isSelected);
+          overlay.setContent(content);
+        }
+      });
+    }
+
+    prevDisplayModeRef.current = newDisplayMode;
+  }, [map, zoom, clusterData.singles, selectedPlaceId, createSingleMarkerContent, getDisplayMode]);
 
   // 컴포넌트 언마운트 시 모든 오버레이 정리
   useEffect(() => {
