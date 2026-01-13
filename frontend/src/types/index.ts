@@ -52,20 +52,6 @@ export interface CacheEntry {
   cached_at?: string;
 }
 
-// Cache stats
-export interface CacheStats {
-  total_entries: number;
-  valid_entries: number;
-  expired: number;
-}
-
-// API usage
-export interface APIUsage {
-  used: number;
-  limit: number;
-  remaining: number;
-}
-
 // Coordinates
 export interface Coordinates {
   lat: number;
