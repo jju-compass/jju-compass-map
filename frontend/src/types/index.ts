@@ -72,28 +72,8 @@ export interface Coordinates {
   lng: number;
 }
 
-// Map bounds
-export interface MapBounds {
-  sw: Coordinates;
-  ne: Coordinates;
-}
-
 // Route info
 export interface RouteInfo {
   distance: number; // meters
   duration: number; // seconds
-  sections?: RouteSection[];
-}
-
-export interface RouteSection {
-  distance: number;
-  duration: number;
-  roads: RoadInfo[];
-}
-
-export interface RoadInfo {
-  name: string;
-  distance: number;
-  duration: number;
-  vertexes: number[];
 }

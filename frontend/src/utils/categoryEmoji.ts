@@ -73,27 +73,3 @@ export function getCategoryEmoji(categoryName: string): string {
   
   return DEFAULT_EMOJI;
 }
-
-/**
- * 카테고리 이름을 간략화합니다.
- * 예: "음식점 > 한식 > 국밥" → "한식 > 국밥"
- * @param categoryName - 전체 카테고리 이름
- * @returns 간략화된 카테고리 이름
- */
-export function getShortCategory(categoryName: string): string {
-  if (!categoryName) return '';
-  
-  const parts = categoryName.split('>').map(part => part.trim());
-  
-  // 첫 번째 대분류 제거 (음식점, 서비스 등)
-  if (parts.length > 1) {
-    return parts.slice(1).join(' > ');
-  }
-  
-  return categoryName;
-}
-
-export default {
-  getCategoryEmoji,
-  getShortCategory,
-};
