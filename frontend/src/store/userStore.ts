@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Favorite, SearchHistory, PopularKeyword, UserSettings } from '../types';
+import type { Favorite, SearchHistory, PopularKeyword } from '../types';
 
 interface UserState {
   // Favorites
@@ -17,23 +17,6 @@ interface UserState {
   // Popular keywords
   popularKeywords: PopularKeyword[];
   setPopularKeywords: (keywords: PopularKeyword[]) => void;
-
-  // Home location
-  homeSettings: UserSettings | null;
-  setHomeSettings: (settings: UserSettings | null) => void;
-
-  // Search keyword
-  searchKeyword: string;
-  setSearchKeyword: (keyword: string) => void;
-
-  // UI state
-  activePanel: 'search' | 'favorites' | 'history' | 'settings' | null;
-  setActivePanel: (panel: 'search' | 'favorites' | 'history' | 'settings' | null) => void;
-
-  // Sidebar open state
-  isSidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  toggleSidebar: () => void;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -56,23 +39,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   // Popular keywords
   popularKeywords: [],
   setPopularKeywords: (keywords) => set({ popularKeywords: keywords }),
-
-  // Home
-  homeSettings: null,
-  setHomeSettings: (settings) => set({ homeSettings: settings }),
-
-  // Search keyword
-  searchKeyword: '',
-  setSearchKeyword: (keyword) => set({ searchKeyword: keyword }),
-
-  // Active panel
-  activePanel: null,
-  setActivePanel: (panel) => set({ activePanel: panel }),
-
-  // Sidebar
-  isSidebarOpen: true,
-  setSidebarOpen: (open) => set({ isSidebarOpen: open }),
-  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 }));
 
 export default useUserStore;

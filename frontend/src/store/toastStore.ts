@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = 'success' | 'error' | 'info';
 
 export interface Toast {
   id: string;
@@ -13,7 +13,6 @@ interface ToastState {
   toasts: Toast[];
   addToast: (message: string, type?: ToastType, duration?: number) => void;
   removeToast: (id: string) => void;
-  clearToasts: () => void;
 }
 
 let toastId = 0;
@@ -41,8 +40,6 @@ export const useToastStore = create<ToastState>((set) => ({
     set((state) => ({
       toasts: state.toasts.filter((t) => t.id !== id),
     })),
-
-  clearToasts: () => set({ toasts: [] }),
 }));
 
 // 편의 함수들
@@ -53,8 +50,6 @@ export const toast = {
     useToastStore.getState().addToast(message, 'error', duration),
   info: (message: string, duration?: number) =>
     useToastStore.getState().addToast(message, 'info', duration),
-  warning: (message: string, duration?: number) =>
-    useToastStore.getState().addToast(message, 'warning', duration),
 };
 
 export default useToastStore;

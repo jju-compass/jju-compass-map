@@ -24,16 +24,6 @@ interface RouteState {
 
   startPickMode: boolean;
   setStartPickMode: (mode: boolean) => void;
-
-  // 목적지 (길찾기용)
-  destination: {
-    name: string;
-    position: Coordinates;
-  } | null;
-  setDestination: (dest: { name: string; position: Coordinates } | null) => void;
-
-  // 초기화
-  clearRoute: () => void;
 }
 
 export const useRouteStore = create<RouteState>()(
@@ -60,17 +50,6 @@ export const useRouteStore = create<RouteState>()(
 
       startPickMode: false,
       setStartPickMode: (mode) => set({ startPickMode: mode }),
-
-      // 목적지
-      destination: null,
-      setDestination: (dest) => set({ destination: dest }),
-
-      // 초기화
-      clearRoute: () => set({
-        startPosition: null,
-        destination: null,
-        startPickMode: false,
-      }),
     }),
     {
       name: 'jju-route-storage',

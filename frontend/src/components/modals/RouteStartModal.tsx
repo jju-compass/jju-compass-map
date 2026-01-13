@@ -14,7 +14,6 @@ export const RouteStartModal: React.FC = () => {
     setRouteModalOpen,
     setStartPosition,
     setStartPickMode,
-    destination,
   } = useRouteStore();
 
   if (!isRouteModalOpen) return null;
@@ -99,11 +98,6 @@ export const RouteStartModal: React.FC = () => {
         </h3>
         <p className="route-modal-desc">
           출발 위치를 설정하면 목적지까지의 경로를 확인할 수 있습니다
-          {destination && (
-            <span style={{ display: 'block', marginTop: '8px', fontWeight: 600 }}>
-              목적지: {destination.name}
-            </span>
-          )}
         </p>
 
         <div className="route-modal-buttons">

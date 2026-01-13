@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Place, Coordinates, MapMarker } from '../types';
+import type { Place, Coordinates } from '../types';
 
 interface MapState {
   // Map instance
@@ -17,16 +17,10 @@ interface MapState {
   // Search results
   searchResults: Place[];
   setSearchResults: (results: Place[]) => void;
-  clearSearchResults: () => void;
 
   // Selected place
   selectedPlace: Place | null;
   setSelectedPlace: (place: Place | null) => void;
-
-  // Markers
-  markers: MapMarker[];
-  setMarkers: (markers: MapMarker[]) => void;
-  clearMarkers: () => void;
 
   // Loading state
   isLoading: boolean;
@@ -47,9 +41,6 @@ const JJU_CENTER: Coordinates = {
   lng: 127.09236571436321,
 };
 
-// 검색 반경 (미터)
-export const SEARCH_RADIUS = 2000;
-
 export const useMapStore = create<MapState>((set) => ({
   // Map
   map: null,
@@ -66,16 +57,10 @@ export const useMapStore = create<MapState>((set) => ({
   // Search results
   searchResults: [],
   setSearchResults: (results) => set({ searchResults: results }),
-  clearSearchResults: () => set({ searchResults: [], selectedPlace: null }),
 
   // Selected place
   selectedPlace: null,
   setSelectedPlace: (place) => set({ selectedPlace: place }),
-
-  // Markers
-  markers: [],
-  setMarkers: (markers) => set({ markers }),
-  clearMarkers: () => set({ markers: [] }),
 
   // Loading
   isLoading: false,
