@@ -28,6 +28,12 @@
   }
 }
 
+/* 업데이트 시 애니메이션 비활성화 (깜빡임 방지) */
+.place-marker.no-animation {
+  animation: none;
+  opacity: 1;
+}
+
 /* 호버 효과 */
 .place-marker:hover {
   transform: scale(1.05);

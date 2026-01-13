@@ -162,18 +162,23 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   }, []);
 
   // 단일 마커 HTML 생성 (displayMode를 파라미터로 받아 map 의존성 제거)
+  // skipAnimation: 업데이트 시 애니메이션 건너뛰기 (깜빡임 방지)
   const createSingleMarkerContent = useCallback((
     place: Place,
     index: number,
     isSelected: boolean,
-    displayMode: 'emoji-only' | 'with-name' | 'full'
+    displayMode: 'emoji-only' | 'with-name' | 'full',
+    skipAnimation: boolean = false
   ) => {
     const emoji = getCategoryEmoji(place.category_name);
     const shortCategory = place.category_name?.split('>').slice(1).join(' > ').trim() || '';
 
     const el = document.createElement('div');
-    el.className = `place-marker place-marker-${displayMode}${isSelected ? ' place-marker-selected' : ''}`;
-    el.style.animationDelay = `${index * 30}ms`;
+    const animationClass = skipAnimation ? ' no-animation' : '';
+    el.className = `place-marker place-marker-${displayMode}${isSelected ? ' place-marker-selected' : ''}${animationClass}`;
+    if (!skipAnimation) {
+      el.style.animationDelay = `${index * 30}ms`;
+    }
 
     if (displayMode === 'emoji-only') {
       el.innerHTML = `
@@ -326,7 +331,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       const place = clusterData.singles.find(p => p.id === prevSelected);
       if (place) {
         const overlay = overlaysRef.current.get(prevSelected)!;
-        const content = createSingleMarkerContent(place, 0, false, displayMode);
+        const content = createSingleMarkerContent(place, 0, false, displayMode, true);
         overlay.setContent(content);
         overlay.setZIndex(10);
       }
@@ -337,7 +342,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       const place = clusterData.singles.find(p => p.id === newSelected);
       if (place) {
         const overlay = overlaysRef.current.get(newSelected)!;
-        const content = createSingleMarkerContent(place, 0, true, displayMode);
+        const content = createSingleMarkerContent(place, 0, true, displayMode, true);
         overlay.setContent(content);
         overlay.setZIndex(100);
       }
@@ -360,7 +365,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
           if (overlaysRef.current.has(place.id)) {
             const overlay = overlaysRef.current.get(place.id)!;
             const isSelected = place.id === selectedPlaceId;
-            const content = createSingleMarkerContent(place, index, isSelected, newDisplayMode);
+            const content = createSingleMarkerContent(place, index, isSelected, newDisplayMode, true);
             overlay.setContent(content);
           }
         });
