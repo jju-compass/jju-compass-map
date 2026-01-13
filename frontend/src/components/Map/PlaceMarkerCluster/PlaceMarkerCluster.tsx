@@ -107,7 +107,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   onPlaceClick,
   minClusterSize = 3,
 }) => {
-  const { map, zoom } = useMapStore();
+  const { map } = useMapStore();
   const overlaysRef = useRef<Map<string, kakao.maps.CustomOverlay>>(new Map());
   const prevSelectedRef = useRef<string | undefined>(undefined);
   const prevDisplayModeRef = useRef<string>('');
@@ -161,10 +161,13 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     return 'full';
   }, []);
 
-  // 단일 마커 HTML 생성 (선택 상태는 별도 처리하므로 isSelected 파라미터로 받음)
-  const createSingleMarkerContent = useCallback((place: Place, index: number, isSelected: boolean = false) => {
-    const currentZoom = map?.getLevel() || 3;
-    const displayMode = getDisplayMode(currentZoom);
+  // 단일 마커 HTML 생성 (displayMode를 파라미터로 받아 map 의존성 제거)
+  const createSingleMarkerContent = useCallback((
+    place: Place,
+    index: number,
+    isSelected: boolean,
+    displayMode: 'emoji-only' | 'with-name' | 'full'
+  ) => {
     const emoji = getCategoryEmoji(place.category_name);
     const shortCategory = place.category_name?.split('>').slice(1).join(' > ').trim() || '';
 
@@ -205,7 +208,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     });
 
     return el;
-  }, [map, onPlaceClick, getDisplayMode]);
+  }, [onPlaceClick]);
 
   // 클러스터 마커 HTML 생성
   const createClusterMarkerContent = useCallback((cluster: ClusterGroup) => {
@@ -245,6 +248,8 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   useEffect(() => {
     if (!map) return;
 
+    const currentZoom = map.getLevel();
+    const displayMode = getDisplayMode(currentZoom);
     const newOverlayIds = new Set<string>();
 
     // 단일 마커 처리
@@ -258,7 +263,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       // 기존 오버레이가 없을 때만 새로 생성
       if (!overlaysRef.current.has(place.id)) {
         const isSelected = place.id === selectedPlaceId;
-        const content = createSingleMarkerContent(place, index, isSelected);
+        const content = createSingleMarkerContent(place, index, isSelected, displayMode);
         const overlay = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(lat, lng),
           content,
@@ -298,7 +303,10 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       }
     });
 
-  }, [map, clusterData, createSingleMarkerContent, createClusterMarkerContent]);
+    // 현재 displayMode 저장
+    prevDisplayModeRef.current = displayMode;
+
+  }, [map, clusterData, selectedPlaceId, createSingleMarkerContent, createClusterMarkerContent, getDisplayMode]);
 
   // 선택 상태 변경 시 해당 마커만 업데이트 (전체 재렌더링 방지)
   useEffect(() => {
@@ -310,12 +318,15 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     // 선택 상태가 변경되지 않았으면 무시
     if (prevSelected === newSelected) return;
 
+    const currentZoom = map.getLevel();
+    const displayMode = getDisplayMode(currentZoom);
+
     // 이전 선택 마커 스타일 해제
     if (prevSelected && overlaysRef.current.has(prevSelected)) {
       const place = clusterData.singles.find(p => p.id === prevSelected);
       if (place) {
         const overlay = overlaysRef.current.get(prevSelected)!;
-        const content = createSingleMarkerContent(place, 0, false);
+        const content = createSingleMarkerContent(place, 0, false, displayMode);
         overlay.setContent(content);
         overlay.setZIndex(10);
       }
@@ -326,36 +337,43 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       const place = clusterData.singles.find(p => p.id === newSelected);
       if (place) {
         const overlay = overlaysRef.current.get(newSelected)!;
-        const content = createSingleMarkerContent(place, 0, true);
+        const content = createSingleMarkerContent(place, 0, true, displayMode);
         overlay.setContent(content);
         overlay.setZIndex(100);
       }
     }
 
     prevSelectedRef.current = newSelected;
-  }, [map, selectedPlaceId, clusterData.singles, createSingleMarkerContent]);
+  }, [map, selectedPlaceId, clusterData.singles, createSingleMarkerContent, getDisplayMode]);
 
   // 줌 레벨 변경 시 displayMode가 바뀌면 기존 마커 콘텐츠만 업데이트 (제거/재생성 없이)
   useEffect(() => {
     if (!map) return;
 
-    const currentZoom = map.getLevel();
-    const newDisplayMode = getDisplayMode(currentZoom);
+    const handleZoomChanged = () => {
+      const currentZoom = map.getLevel();
+      const newDisplayMode = getDisplayMode(currentZoom);
 
-    // displayMode가 변경되었을 때만 기존 단일 마커들의 콘텐츠 업데이트
-    if (prevDisplayModeRef.current && prevDisplayModeRef.current !== newDisplayMode) {
-      clusterData.singles.forEach((place, index) => {
-        if (overlaysRef.current.has(place.id)) {
-          const overlay = overlaysRef.current.get(place.id)!;
-          const isSelected = place.id === selectedPlaceId;
-          const content = createSingleMarkerContent(place, index, isSelected);
-          overlay.setContent(content);
-        }
-      });
-    }
+      // displayMode가 변경되었을 때만 기존 단일 마커들의 콘텐츠 업데이트
+      if (prevDisplayModeRef.current && prevDisplayModeRef.current !== newDisplayMode) {
+        clusterData.singles.forEach((place, index) => {
+          if (overlaysRef.current.has(place.id)) {
+            const overlay = overlaysRef.current.get(place.id)!;
+            const isSelected = place.id === selectedPlaceId;
+            const content = createSingleMarkerContent(place, index, isSelected, newDisplayMode);
+            overlay.setContent(content);
+          }
+        });
+        prevDisplayModeRef.current = newDisplayMode;
+      }
+    };
 
-    prevDisplayModeRef.current = newDisplayMode;
-  }, [map, zoom, clusterData.singles, selectedPlaceId, createSingleMarkerContent, getDisplayMode]);
+    kakao.maps.event.addListener(map, 'zoom_changed', handleZoomChanged);
+
+    return () => {
+      kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChanged);
+    };
+  }, [map, clusterData.singles, selectedPlaceId, createSingleMarkerContent, getDisplayMode]);
 
   // 컴포넌트 언마운트 시 모든 오버레이 정리
   useEffect(() => {
