@@ -242,55 +242,73 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     return el;
   }, [map]);
 
-  // 오버레이 렌더링
+  // 오버레이 렌더링 (차분 업데이트: 기존 마커 재사용, 새 마커만 추가, 불필요한 마커만 제거)
   useEffect(() => {
     if (!map) return;
 
-    // 기존 오버레이 모두 제거
-    overlaysRef.current.forEach(overlay => {
-      overlay.setMap(null);
-    });
-    overlaysRef.current.clear();
+    const newOverlayIds = new Set<string>();
 
-    // 단일 마커 생성
+    // 단일 마커 처리
     clusterData.singles.forEach((place, index) => {
       const lat = parseFloat(place.y);
       const lng = parseFloat(place.x);
       if (isNaN(lat) || isNaN(lng)) return;
 
-      const content = createSingleMarkerContent(place, index);
-      const overlay = new kakao.maps.CustomOverlay({
-        position: new kakao.maps.LatLng(lat, lng),
-        content,
-        yAnchor: 1.1,
-        zIndex: place.id === selectedPlaceId ? 100 : 10,
-      });
-      
-      overlay.setMap(map);
-      overlaysRef.current.set(place.id, overlay);
+      newOverlayIds.add(place.id);
+
+      // 기존 오버레이가 없을 때만 새로 생성
+      if (!overlaysRef.current.has(place.id)) {
+        const content = createSingleMarkerContent(place, index);
+        const overlay = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(lat, lng),
+          content,
+          yAnchor: 1.1,
+          zIndex: place.id === selectedPlaceId ? 100 : 10,
+        });
+        
+        overlay.setMap(map);
+        overlaysRef.current.set(place.id, overlay);
+      }
     });
 
-    // 클러스터 마커 생성
+    // 클러스터 마커 처리
     clusterData.clusters.forEach((cluster) => {
-      const content = createClusterMarkerContent(cluster);
-      const overlay = new kakao.maps.CustomOverlay({
-        position: new kakao.maps.LatLng(cluster.center.lat, cluster.center.lng),
-        content,
-        yAnchor: 0.5,
-        zIndex: 50,
-      });
-      
-      overlay.setMap(map);
-      overlaysRef.current.set(cluster.id, overlay);
+      newOverlayIds.add(cluster.id);
+
+      // 기존 오버레이가 없을 때만 새로 생성
+      if (!overlaysRef.current.has(cluster.id)) {
+        const content = createClusterMarkerContent(cluster);
+        const overlay = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(cluster.center.lat, cluster.center.lng),
+          content,
+          yAnchor: 0.5,
+          zIndex: 50,
+        });
+        
+        overlay.setMap(map);
+        overlaysRef.current.set(cluster.id, overlay);
+      }
     });
 
+    // 더 이상 필요 없는 오버레이만 제거
+    overlaysRef.current.forEach((overlay, id) => {
+      if (!newOverlayIds.has(id)) {
+        overlay.setMap(null);
+        overlaysRef.current.delete(id);
+      }
+    });
+
+  }, [map, clusterData, createSingleMarkerContent, createClusterMarkerContent]);
+
+  // 컴포넌트 언마운트 시 모든 오버레이 정리
+  useEffect(() => {
     return () => {
       overlaysRef.current.forEach(overlay => {
         overlay.setMap(null);
       });
       overlaysRef.current.clear();
     };
-  }, [map, clusterData, selectedPlaceId, createSingleMarkerContent, createClusterMarkerContent]);
+  }, []);
 
   return null;
 };
