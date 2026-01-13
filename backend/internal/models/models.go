@@ -35,16 +35,6 @@ type SearchHistory struct {
 	SearchedAt  time.Time `json:"searched_at"`
 }
 
-// UserSettings represents user preferences
-type UserSettings struct {
-	ID        int64     `json:"id"`
-	UserID    string    `json:"user_id"`
-	HomeLat   *float64  `json:"home_lat,omitempty"`
-	HomeLng   *float64  `json:"home_lng,omitempty"`
-	HomeName  string    `json:"home_name,omitempty"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 // Place represents a Kakao place search result
 type Place struct {
 	ID                string `json:"id"`

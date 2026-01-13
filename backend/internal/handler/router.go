@@ -15,7 +15,6 @@ type Handlers struct {
 	Cache      *CacheHandler
 	Favorite   *FavoriteHandler
 	History    *HistoryHandler
-	Settings   *SettingsHandler
 	Directions *DirectionsHandler
 }
 
@@ -26,7 +25,6 @@ func NewHandlers(db *sql.DB, cfg *config.Config, apiLimiter *middleware.DailyAPI
 		Cache:      NewCacheHandler(repository.NewCacheRepository(db), historyRepo),
 		Favorite:   NewFavoriteHandler(repository.NewFavoriteRepository(db)),
 		History:    NewHistoryHandler(historyRepo),
-		Settings:   NewSettingsHandler(repository.NewSettingsRepository(db)),
 		Directions: NewDirectionsHandler(&cfg.Kakao, apiLimiter),
 	}
 }
@@ -77,14 +75,6 @@ func (h *Handlers) RegisterRoutes(router *gin.Engine) {
 			history.GET("", h.History.GetHistory)
 			history.GET("/popular", h.History.GetPopular)
 			history.DELETE("", h.History.DeleteHistory)
-		}
-
-		// Settings routes
-		settings := api.Group("/settings")
-		{
-			settings.GET("/home", h.Settings.GetHome)
-			settings.POST("/home", h.Settings.SetHome)
-			settings.DELETE("/home", h.Settings.DeleteHome)
 		}
 
 		// Directions routes
