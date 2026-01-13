@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Icon } from '@components/common';
+import { formatDistance } from '../../../utils/distance';
 import type { Place } from '../../../types';
 import './PlaceDetail.css';
 
@@ -152,12 +153,5 @@ export const PlaceDetail: React.FC<PlaceDetailProps> = ({
     </div>
   );
 };
-
-function formatDistance(meters: number): string {
-  if (meters < 1000) {
-    return `${meters}m`;
-  }
-  return `${(meters / 1000).toFixed(1)}km`;
-}
 
 export default PlaceDetail;

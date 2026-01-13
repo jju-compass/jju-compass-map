@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Icon } from '@components/common';
+import { formatDistance } from '../../../utils/distance';
 import type { Place, Coordinates, RouteInfo } from '../../../types';
 import './DirectionsPanel.css';
 
@@ -173,13 +174,6 @@ function formatDuration(seconds: number): string {
     return `${hours}시간 ${mins}분`;
   }
   return `${mins}분`;
-}
-
-function formatDistance(meters: number): string {
-  if (meters < 1000) {
-    return `${meters}m`;
-  }
-  return `${(meters / 1000).toFixed(1)}km`;
 }
 
 export default DirectionsPanel;
