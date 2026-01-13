@@ -44,14 +44,6 @@ export interface PopularKeyword {
   count: number;
 }
 
-// User settings
-export interface UserSettings {
-  has_home: boolean;
-  home_lat?: number;
-  home_lng?: number;
-  home_name?: string;
-}
-
 // Cache entry
 export interface CacheEntry {
   cached: boolean;
@@ -84,14 +76,6 @@ export interface Coordinates {
 export interface MapBounds {
   sw: Coordinates;
   ne: Coordinates;
-}
-
-// Marker
-export interface MapMarker {
-  id: string;
-  position: Coordinates;
-  title: string;
-  place?: Place;
 }
 
 // Route info

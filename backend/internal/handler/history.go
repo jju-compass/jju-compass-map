@@ -83,11 +83,6 @@ func (h *HistoryHandler) DeleteHistory(c *gin.Context) {
 	SuccessMessage(c, "검색 기록이 삭제되었습니다")
 }
 
-// AddHistory adds a search to history (internal use)
-func (h *HistoryHandler) AddHistory(userID, keyword string, resultCount int) error {
-	return h.repo.Add(userID, keyword, resultCount)
-}
-
 // parseInt helper function
 func parseInt(s string) (int, error) {
 	var n int

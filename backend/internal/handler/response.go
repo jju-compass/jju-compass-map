@@ -51,11 +51,6 @@ func BadRequest(c *gin.Context, message string) {
 	Error(c, http.StatusBadRequest, message)
 }
 
-// NotFound returns a 404 error
-func NotFound(c *gin.Context, message string) {
-	Error(c, http.StatusNotFound, message)
-}
-
 // InternalError returns a 500 error
 func InternalError(c *gin.Context, message string) {
 	Error(c, http.StatusInternalServerError, message)

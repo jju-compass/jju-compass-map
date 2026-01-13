@@ -80,9 +80,3 @@ func (r *FavoriteRepository) Exists(userID, placeID string) (bool, error) {
 	`, userID, placeID).Scan(&count)
 	return count > 0, err
 }
-
-// DeleteAll removes all favorites for a user
-func (r *FavoriteRepository) DeleteAll(userID string) error {
-	_, err := r.db.Exec("DELETE FROM favorites WHERE user_id = ?", userID)
-	return err
-}
