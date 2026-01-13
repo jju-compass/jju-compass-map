@@ -92,8 +92,6 @@ html, body {
   height: 100%;
 }
 
-/* .app, .app-main 스타일은 App.css에서 정의됨 */
-
 .loading-message {
   display: flex;
   align-items: center;
