@@ -144,14 +144,12 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
     updateClusters();
 
-    const handleZoomChange = () => updateClusters();
+    // 드래그 종료 시에만 클러스터 재계산 (줌 변경 시에는 재계산 안 함 - 깜빡임 방지)
     const handleDragEnd = () => updateClusters();
 
-    kakao.maps.event.addListener(map, 'zoom_changed', handleZoomChange);
     kakao.maps.event.addListener(map, 'dragend', handleDragEnd);
 
     return () => {
-      kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChange);
       kakao.maps.event.removeListener(map, 'dragend', handleDragEnd);
     };
   }, [map, updateClusters]);
