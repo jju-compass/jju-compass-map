@@ -81,17 +81,6 @@ func InitSchema() error {
 	);
 	CREATE INDEX IF NOT EXISTS idx_history_user ON search_history(user_id);
 	CREATE INDEX IF NOT EXISTS idx_history_keyword ON search_history(keyword);
-
-	-- 사용자 설정 테이블
-	CREATE TABLE IF NOT EXISTS user_settings (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id TEXT NOT NULL UNIQUE,
-		home_lat REAL,
-		home_lng REAL,
-		home_name TEXT,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE INDEX IF NOT EXISTS idx_settings_user ON user_settings(user_id);
 	`
 
 	_, err := DB.Exec(schema)
