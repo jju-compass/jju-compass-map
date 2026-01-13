@@ -3,7 +3,7 @@ import { useMapStore } from '../store';
 import type { Coordinates } from '../types';
 
 export function useGeolocation() {
-  const { setCurrentLocation, setCenter, setError } = useMapStore();
+  const { setCurrentLocation, setError } = useMapStore();
 
   const getCurrentLocation = useCallback(() => {
     return new Promise<Coordinates>((resolve, reject) => {
@@ -48,19 +48,8 @@ export function useGeolocation() {
     });
   }, [setCurrentLocation, setError]);
 
-  const moveToCurrentLocation = useCallback(async () => {
-    try {
-      const location = await getCurrentLocation();
-      setCenter(location);
-      return location;
-    } catch (error) {
-      throw error;
-    }
-  }, [getCurrentLocation, setCenter]);
-
   return {
     getCurrentLocation,
-    moveToCurrentLocation,
   };
 }
 
