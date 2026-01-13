@@ -109,7 +109,8 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 }) => {
   console.log('[DEBUG PlaceMarkerCluster] Component RENDER, places:', places.length, 'selectedPlaceId:', selectedPlaceId);
   
-  const { map } = useMapStore();
+  // map만 선택적 구독 - zoom, center 등 다른 상태 변경 시 리렌더링 방지
+  const map = useMapStore((state) => state.map);
   const overlaysRef = useRef<Map<string, kakao.maps.CustomOverlay>>(new Map());
   const prevSelectedRef = useRef<string | undefined>(undefined);
   const prevDisplayModeRef = useRef<string>('');
