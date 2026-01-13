@@ -4,9 +4,7 @@ import type {
   Favorite, 
   SearchHistory, 
   PopularKeyword, 
-  CacheEntry, 
-  CacheStats,
-  APIUsage 
+  CacheEntry
 } from '../types';
 
 // Cache API
@@ -16,30 +14,12 @@ export const cacheAPI = {
   
   setSearch: (keyword: string, results: Place[], ttl?: number) =>
     api.post<{ message: string }>('/cache/search', { keyword, results, ttl }),
-  
-  getStats: () => 
-    api.get<CacheStats>('/cache/stats'),
-  
-  deleteExpired: () => 
-    api.delete<{ deleted: number; message: string }>('/cache'),
-  
-  deleteByKeyword: (keyword: string) =>
-    api.delete<{ message: string }>(`/cache?keyword=${encodeURIComponent(keyword)}`),
 };
 
 // Favorites API
 export const favoritesAPI = {
   getAll: () => 
     api.get<{ favorites: Favorite[]; count: number }>('/favorites'),
-  
-  add: (place: Omit<Favorite, 'id' | 'user_id' | 'created_at'>) =>
-    api.post<Favorite>('/favorites', place),
-  
-  remove: (placeId: string) =>
-    api.delete<{ message: string }>(`/favorites?place_id=${placeId}`),
-  
-  check: (placeId: string) =>
-    api.get<{ place_id: string; is_favorite: boolean }>(`/favorites/check?place_id=${placeId}`),
   
   toggle: (place: Partial<Favorite>) =>
     api.post<{ place_id: string; is_favorite: boolean; action: string }>('/favorites/check', place),
@@ -61,9 +41,6 @@ export const historyAPI = {
 export const directionsAPI = {
   getDirections: (origin: string, destination: string) =>
     api.get<unknown>(`/directions?origin=${origin}&destination=${destination}`),
-  
-  getUsage: () =>
-    api.get<APIUsage>('/directions/usage'),
 };
 
 export default {

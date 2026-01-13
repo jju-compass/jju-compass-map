@@ -5,7 +5,6 @@ interface UserState {
   // Favorites
   favorites: Favorite[];
   setFavorites: (favorites: Favorite[]) => void;
-  addFavorite: (favorite: Favorite) => void;
   removeFavorite: (placeId: string) => void;
   isFavorite: (placeId: string) => boolean;
 
@@ -23,9 +22,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   // Favorites
   favorites: [],
   setFavorites: (favorites) => set({ favorites }),
-  addFavorite: (favorite) => set((state) => ({ 
-    favorites: [favorite, ...state.favorites] 
-  })),
   removeFavorite: (placeId) => set((state) => ({
     favorites: state.favorites.filter((f) => f.place_id !== placeId)
   })),

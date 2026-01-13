@@ -1,13 +1,12 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useUserStore } from '../store';
 import { favoritesAPI } from '../api';
-import type { Place, Favorite } from '../types';
+import type { Place } from '../types';
 
 export function useFavorites() {
   const { 
     favorites, 
     setFavorites, 
-    addFavorite, 
     removeFavorite,
     isFavorite 
   } = useUserStore();
