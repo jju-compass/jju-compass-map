@@ -75,6 +75,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
     // Zoom changed event
     const handleZoomChanged = () => {
       const level = map.getLevel();
+      console.log('[DEBUG KakaoMap] zoom_changed event fired, level:', level);
       setZoom(level);
       onZoomChanged?.(level);
     };
