@@ -109,6 +109,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 }) => {
   const { map, zoom } = useMapStore();
   const overlaysRef = useRef<Map<string, kakao.maps.CustomOverlay>>(new Map());
+  const prevSelectedRef = useRef<string | undefined>(undefined);
   const [clusterData, setClusterData] = useState<{
     clusters: ClusterGroup[];
     singles: Place[];
@@ -161,12 +162,11 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     return 'full';
   }, []);
 
-  // 단일 마커 HTML 생성
-  const createSingleMarkerContent = useCallback((place: Place, index: number) => {
+  // 단일 마커 HTML 생성 (선택 상태는 별도 처리하므로 isSelected 파라미터로 받음)
+  const createSingleMarkerContent = useCallback((place: Place, index: number, isSelected: boolean = false) => {
     const currentZoom = map?.getLevel() || 3;
     const displayMode = getDisplayMode(currentZoom);
     const emoji = getCategoryEmoji(place.category_name);
-    const isSelected = place.id === selectedPlaceId;
     const shortCategory = place.category_name?.split('>').slice(1).join(' > ').trim() || '';
 
     const el = document.createElement('div');
@@ -206,7 +206,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     });
 
     return el;
-  }, [map, selectedPlaceId, onPlaceClick, getDisplayMode]);
+  }, [map, onPlaceClick, getDisplayMode]);
 
   // 클러스터 마커 HTML 생성
   const createClusterMarkerContent = useCallback((cluster: ClusterGroup) => {
@@ -258,12 +258,13 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
       // 기존 오버레이가 없을 때만 새로 생성
       if (!overlaysRef.current.has(place.id)) {
-        const content = createSingleMarkerContent(place, index);
+        const isSelected = place.id === selectedPlaceId;
+        const content = createSingleMarkerContent(place, index, isSelected);
         const overlay = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(lat, lng),
           content,
           yAnchor: 1.1,
-          zIndex: place.id === selectedPlaceId ? 100 : 10,
+          zIndex: isSelected ? 100 : 10,
         });
         
         overlay.setMap(map);
@@ -299,6 +300,41 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     });
 
   }, [map, clusterData, createSingleMarkerContent, createClusterMarkerContent]);
+
+  // 선택 상태 변경 시 해당 마커만 업데이트 (전체 재렌더링 방지)
+  useEffect(() => {
+    if (!map) return;
+
+    const prevSelected = prevSelectedRef.current;
+    const newSelected = selectedPlaceId;
+
+    // 선택 상태가 변경되지 않았으면 무시
+    if (prevSelected === newSelected) return;
+
+    // 이전 선택 마커 스타일 해제
+    if (prevSelected && overlaysRef.current.has(prevSelected)) {
+      const place = clusterData.singles.find(p => p.id === prevSelected);
+      if (place) {
+        const overlay = overlaysRef.current.get(prevSelected)!;
+        const content = createSingleMarkerContent(place, 0, false);
+        overlay.setContent(content);
+        overlay.setZIndex(10);
+      }
+    }
+
+    // 새로 선택된 마커 스타일 적용
+    if (newSelected && overlaysRef.current.has(newSelected)) {
+      const place = clusterData.singles.find(p => p.id === newSelected);
+      if (place) {
+        const overlay = overlaysRef.current.get(newSelected)!;
+        const content = createSingleMarkerContent(place, 0, true);
+        overlay.setContent(content);
+        overlay.setZIndex(100);
+      }
+    }
+
+    prevSelectedRef.current = newSelected;
+  }, [map, selectedPlaceId, clusterData.singles, createSingleMarkerContent]);
 
   // 컴포넌트 언마운트 시 모든 오버레이 정리
   useEffect(() => {
