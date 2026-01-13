@@ -81,8 +81,11 @@ function clusterPlaces(
       const centerLat = nearbyPlaces.reduce((sum, p) => sum + parseFloat(p.y), 0) / nearbyPlaces.length;
       const centerLng = nearbyPlaces.reduce((sum, p) => sum + parseFloat(p.x), 0) / nearbyPlaces.length;
       
+      // 안정적인 클러스터 ID 생성: 포함된 장소 ID들을 정렬하여 연결
+      const stableClusterId = nearbyPlaces.map(p => p.id).sort().join('_');
+      
       clusters.push({
-        id: `cluster-${place.id}`,
+        id: `cluster-${stableClusterId}`,
         places: nearbyPlaces,
         center: { lat: centerLat, lng: centerLng },
       });
