@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMapStore } from '@store/mapStore';
 import { useGeolocation } from '@hooks/useGeolocation';
 import { Icon } from '@components/common';
+import { SoundEffects } from '../../../utils/soundEffects';
 import './MapControls.css';
 
 export interface MapControlsProps {
@@ -64,6 +65,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   };
 
   const handleMyLocation = async () => {
+    SoundEffects.playClick();
     if (!map) return;
     
     setIsGeoLoading(true);
@@ -85,6 +87,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   };
 
   const handleHome = () => {
+    SoundEffects.playClick();
     if (onHomeClick) {
       onHomeClick();
     }
@@ -123,7 +126,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
       {showFavorites && (
         <button
           className="map-control-btn map-control-btn-labeled"
-          onClick={onFavoritesClick}
+          onClick={() => {
+            SoundEffects.playClick();
+            onFavoritesClick?.();
+          }}
           aria-label="즐겨찾기"
           title="즐겨찾기 목록"
         >
@@ -135,7 +141,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
       {showHistory && (
         <button
           className="map-control-btn map-control-btn-labeled"
-          onClick={onHistoryClick}
+          onClick={() => {
+            SoundEffects.playClick();
+            onHistoryClick?.();
+          }}
           aria-label="검색 기록"
           title="검색 기록"
         >
