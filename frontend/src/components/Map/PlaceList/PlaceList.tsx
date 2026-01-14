@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '@components/common';
+import { SoundEffects } from '../../../utils/soundEffects';
 import type { Place } from '../../../types';
 import './PlaceList.css';
 
@@ -102,6 +103,7 @@ export const PlaceList: React.FC<PlaceListProps> = ({
                     className="place-card-directions"
                     onClick={(e) => {
                       e.stopPropagation();
+                      SoundEffects.playClick();
                       onDirectionsClick(place);
                     }}
                     aria-label={`${place.place_name} 길찾기`}
