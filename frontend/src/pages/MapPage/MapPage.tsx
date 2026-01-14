@@ -189,6 +189,7 @@ const MapPage: React.FC = () => {
   const handleNavbarSearch = useCallback((keyword: string) => {
     search(keyword);
     setSelectedCategory(null);
+    SoundEffects.playSearchComplete();
   }, [search]);
 
   // Handle category selection
@@ -201,6 +202,7 @@ const MapPage: React.FC = () => {
 
   // Handle place selection from list
   const handlePlaceClick = useCallback((place: Place) => {
+    SoundEffects.playClick();
     setSelectedPlace(place);
     
     const lat = parseFloat(place.y);
@@ -238,6 +240,7 @@ const MapPage: React.FC = () => {
 
   // Handle favorite selection from FavoritesPanel
   const handleFavoriteSelect = useCallback((favorite: import('../../types').Favorite) => {
+    SoundEffects.playClick();
     // 지도 이동
     if (map && favorite.lat && favorite.lng) {
       map.panTo(new kakao.maps.LatLng(favorite.lat, favorite.lng));
@@ -248,6 +251,7 @@ const MapPage: React.FC = () => {
 
   // Handle favorite removal from FavoritesPanel
   const handleFavoriteRemove = useCallback(async (favorite: import('../../types').Favorite) => {
+    SoundEffects.playClick();
     try {
       await toggleFavorite({
         id: favorite.place_id,
@@ -267,6 +271,7 @@ const MapPage: React.FC = () => {
 
   // Handle history item selection from HistoryPanel
   const handleHistorySelect = useCallback((keyword: string) => {
+    SoundEffects.playClick();
     search(keyword);
     setSelectedCategory(null);
     setShowHistory(false);
@@ -477,7 +482,10 @@ const MapPage: React.FC = () => {
               place={selectedPlace}
               isFavorite={checkFavorite(selectedPlace.id)}
               onClose={handleClosePlaceDetail}
-              onFavoriteToggle={() => toggleFavorite(selectedPlace)}
+              onFavoriteToggle={() => {
+                SoundEffects.playClick();
+                toggleFavorite(selectedPlace);
+              }}
               onDirections={() => handleDirections(selectedPlace)}
             />
           </div>
