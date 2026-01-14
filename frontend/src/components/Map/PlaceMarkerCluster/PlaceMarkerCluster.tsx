@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMapStore } from '@store/mapStore';
 import { getCategoryEmoji } from '../../../utils/categoryEmoji';
+import { SoundEffects } from '../../../utils/soundEffects';
 import type { Place } from '../../../types';
 import './PlaceMarker.css';
 import './PlaceMarkerCluster.css';
@@ -223,6 +224,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     // 클러스터 클릭 시 해당 영역으로 줌 인
     el.addEventListener('click', (e) => {
       e.stopPropagation();
+      SoundEffects.playClick();
       if (map) {
         const bounds = new kakao.maps.LatLngBounds();
         cluster.places.forEach(place => {
