@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Icon } from '@components/common';
 import { formatDistance } from '../../../utils/distance';
+import { SoundEffects } from '../../../utils/soundEffects';
 import type { Place } from '../../../types';
 import './PlaceDetail.css';
 
@@ -135,7 +136,10 @@ export const PlaceDetail: React.FC<PlaceDetailProps> = ({
             variant="primary"
             size="md"
             icon={<Icon name="directions" size="sm" />}
-            onClick={() => onDirections(place)}
+            onClick={() => {
+              SoundEffects.playClick();
+              onDirections(place);
+            }}
           >
             길찾기
           </Button>
