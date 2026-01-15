@@ -13,7 +13,7 @@ import {
 } from '../../components/Map';
 import { HomeMarker, StartFlagMarker } from '../../components/Map/CustomMarkers';
 import { PlaceDetail, FavoritesPanel, HistoryPanel } from '../../components/panels';
-import { DirectionsPanel, RoutePolyline } from '../../components/directions';
+import { DirectionsPanel, RoutePolyline, RouteInfoOverlay } from '../../components/directions';
 import { Loading, ToastContainer, SoundToggle, SkipLink } from '../../components/common';
 import { HomeSettingModal, RouteStartModal } from '../../components/modals';
 import { useMapStore } from '../../store/mapStore';
@@ -185,20 +185,31 @@ const MapPage: React.FC = () => {
     console.log('Map initialized');
   }, []);
 
+  // Clear route (for close button and auto-clear on search)
+  const clearRoute = useCallback(() => {
+    setRoutePath([]);
+    setRouteInfo(null);
+    setDirectionsOrigin(null);
+    setDirectionsDestination(null);
+    stopAnimation();
+  }, [stopAnimation]);
+
   // Handle navbar search
   const handleNavbarSearch = useCallback((keyword: string) => {
+    clearRoute();
     search(keyword);
     setSelectedCategory(null);
     SoundEffects.playSearchComplete();
-  }, [search]);
+  }, [search, clearRoute]);
 
   // Handle category selection
   const handleCategorySelect = useCallback((category: Category) => {
+    clearRoute();
     setSelectedCategory(category);
     search(category.searchKeyword);
     setIsSidebarOpen(false);
     SoundEffects.playSearchComplete();
-  }, [search]);
+  }, [search, clearRoute]);
 
   // Handle place selection from list
   const handlePlaceClick = useCallback((place: Place) => {
@@ -453,6 +464,17 @@ const MapPage: React.FC = () => {
                 path={routePath}
                 strokeColor="#3b82f6"
                 strokeWeight={5}
+              />
+            )}
+
+            {/* 경로 정보 오버레이 */}
+            {routePath.length > 0 && routeInfo && directionsOrigin && directionsDestination && (
+              <RouteInfoOverlay
+                originName={directionsOrigin.name}
+                destinationName={directionsDestination.name}
+                duration={routeInfo.duration}
+                distance={routeInfo.distance}
+                onClose={clearRoute}
               />
             )}
 
