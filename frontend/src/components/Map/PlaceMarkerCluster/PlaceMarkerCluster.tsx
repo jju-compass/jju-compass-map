@@ -170,9 +170,10 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     // 줌 아웃할수록 (레벨 높을수록) 클러스터 반경 증가
     if (zoomLevel >= 7) return 100;  // emoji-only → 충분
     if (zoomLevel >= 5) return 80;   // emoji-only → 충분
-    if (zoomLevel >= 4) return 70;   // with-name → 70% 커버
-    if (zoomLevel >= 3) return 80;   // with-name → 80% 커버
-    return 100;                       // full → 67% 커버
+    if (zoomLevel >= 4) return 60;   // with-name → 적당히
+    if (zoomLevel >= 3) return 40;   // with-name → 좁게
+    if (zoomLevel >= 2) return 15;   // full → 매우 좁게
+    return 0;                         // 줌 레벨 1: 클러스터링 비활성화
   }, []);
 
   // 클러스터링 업데이트
@@ -313,12 +314,26 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
       if (isNaN(lat) || isNaN(lng)) return;
 
       const content = createSingleMarkerContent(place, index);
+      const baseZIndex = place.id === selectedPlaceId ? 100 : (10 + index);
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(lat, lng),
         content,
         yAnchor: 1.1,
-        zIndex: place.id === selectedPlaceId ? 100 : (10 + index),  // 인덱스 기반 zIndex
+        zIndex: baseZIndex,
       });
+
+      // 마우스 호버 시 맨 앞으로 표시
+      content.addEventListener('mouseenter', () => {
+        overlay.setZIndex(200);
+      });
+      content.addEventListener('mouseleave', () => {
+        overlay.setZIndex(baseZIndex);
+      });
+
+      // 터치 디바이스 대응 (탭 시 맨 앞으로)
+      content.addEventListener('touchstart', () => {
+        overlay.setZIndex(200);
+      }, { passive: true });
       
       overlay.setMap(map);
       overlaysRef.current.set(place.id, overlay);
