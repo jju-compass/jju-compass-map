@@ -232,3 +232,248 @@
     font-size: 16px;
   }
 }
+
+/* ========================================
+   마커 래퍼 (팝업 포함)
+   ======================================== */
+.place-marker-wrapper {
+  position: relative;
+}
+
+/* ========================================
+   겹침 표시 배지
+   ======================================== */
+.place-marker-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary, #3b82f6);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px var(--color-shadow);
+  z-index: 10;
+}
+
+.place-marker-emoji-only .place-marker-badge {
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+}
+
+/* ========================================
+   팝업 리스트
+   ======================================== */
+.place-marker-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  min-width: 220px;
+  max-width: 300px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--color-shadow-md);
+  z-index: 300;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+.place-marker-popup.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 팝업 화살표 */
+.place-marker-popup::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--color-bg-primary);
+}
+
+.place-marker-popup::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid var(--color-border);
+}
+
+/* 팝업 헤더 */
+.place-marker-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.place-marker-popup-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.place-marker-popup-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.place-marker-popup-close:hover {
+  background: var(--color-bg-hover, #e9ecef);
+  color: var(--color-text-primary);
+}
+
+/* 팝업 리스트 */
+.place-marker-popup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* 팝업 항목 */
+.place-marker-popup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border-light, #e9ecef);
+  transition: background 0.15s ease;
+}
+
+.place-marker-popup-item:last-child {
+  border-bottom: none;
+}
+
+.place-marker-popup-item:hover {
+  background: var(--color-bg-hover, #f1f3f4);
+}
+
+.place-marker-popup-item:active {
+  background: var(--color-bg-active, #e8f0fe);
+}
+
+.place-marker-popup-emoji {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.place-marker-popup-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.place-marker-popup-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-marker-popup-category {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 스크롤바 스타일 */
+.place-marker-popup-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.place-marker-popup-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.place-marker-popup-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.place-marker-popup-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ========================================
+   팝업 반응형 스타일
+   ======================================== */
+@media (max-width: 768px) {
+  .place-marker-popup {
+    min-width: 200px;
+    max-width: 260px;
+  }
+
+  .place-marker-popup-header {
+    padding: 8px 10px;
+  }
+
+  .place-marker-popup-title {
+    font-size: 12px;
+  }
+
+  .place-marker-popup-item {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .place-marker-popup-emoji {
+    font-size: 18px;
+  }
+
+  .place-marker-popup-name {
+    font-size: 12px;
+  }
+
+  .place-marker-popup-category {
+    font-size: 10px;
+  }
+}
