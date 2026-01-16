@@ -49,6 +49,7 @@ function clusterPlaces(
   const singles: Place[] = [];
   const processed = new Set<string>();
 
+  // 1차 클러스터링: 기존 로직
   for (const place of places) {
     if (processed.has(place.id)) continue;
 
@@ -96,7 +97,58 @@ function clusterPlaces(
     }
   }
 
-  return { clusters, singles };
+  // 2차 충돌 검사: singles 간 겹침 처리
+  const finalSingles: Place[] = [];
+  const singleProcessed = new Set<string>();
+
+  for (const single of singles) {
+    if (singleProcessed.has(single.id)) continue;
+
+    const singleLat = parseFloat(single.y);
+    const singleLng = parseFloat(single.x);
+    if (isNaN(singleLat) || isNaN(singleLng)) {
+      finalSingles.push(single);
+      singleProcessed.add(single.id);
+      continue;
+    }
+
+    // 다른 singles와 거리 검사
+    const nearbySingles = singles.filter(other => {
+      if (singleProcessed.has(other.id) || other.id === single.id) return false;
+      
+      const otherLat = parseFloat(other.y);
+      const otherLng = parseFloat(other.x);
+      if (isNaN(otherLat) || isNaN(otherLng)) return false;
+
+      const distance = getPixelDistance(
+        map,
+        { lat: singleLat, lng: singleLng },
+        { lat: otherLat, lng: otherLng }
+      );
+      
+      return distance <= clusterRadius;
+    });
+
+    if (nearbySingles.length >= 1) {
+      // 가까운 singles가 있으면 클러스터로 묶음
+      const allNearby = [single, ...nearbySingles];
+      const centerLat = allNearby.reduce((sum, p) => sum + parseFloat(p.y), 0) / allNearby.length;
+      const centerLng = allNearby.reduce((sum, p) => sum + parseFloat(p.x), 0) / allNearby.length;
+      
+      clusters.push({
+        id: `cluster-single-${single.id}`,
+        places: allNearby,
+        center: { lat: centerLat, lng: centerLng },
+      });
+      
+      allNearby.forEach(p => singleProcessed.add(p.id));
+    } else {
+      finalSingles.push(single);
+      singleProcessed.add(single.id);
+    }
+  }
+
+  return { clusters, singles: finalSingles };
 }
 
 export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
@@ -114,11 +166,13 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
   // 줌 레벨에 따른 클러스터 반경 계산
   const getClusterRadius = useCallback((zoomLevel: number): number => {
+    // 마커 크기 고려: full(~150px), with-name(~100px), emoji-only(32px)
     // 줌 아웃할수록 (레벨 높을수록) 클러스터 반경 증가
-    if (zoomLevel >= 7) return 80;
-    if (zoomLevel >= 5) return 60;
-    if (zoomLevel >= 3) return 40;
-    return 30;
+    if (zoomLevel >= 7) return 100;  // emoji-only → 충분
+    if (zoomLevel >= 5) return 80;   // emoji-only → 충분
+    if (zoomLevel >= 4) return 70;   // with-name → 70% 커버
+    if (zoomLevel >= 3) return 80;   // with-name → 80% 커버
+    return 100;                       // full → 67% 커버
   }, []);
 
   // 클러스터링 업데이트
@@ -154,9 +208,10 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
 
   // 줌 레벨에 따른 표시 모드
   const getDisplayMode = useCallback((zoomLevel: number): 'emoji-only' | 'with-name' | 'full' => {
-    if (zoomLevel >= 6) return 'emoji-only';
-    if (zoomLevel >= 4) return 'with-name';
-    return 'full';
+    // 더 일찍 축소하여 겹침 방지
+    if (zoomLevel >= 4) return 'emoji-only';   // 6 → 4
+    if (zoomLevel >= 2) return 'with-name';    // 4 → 2
+    return 'full';  // 줌 레벨 1에서만 full
   }, []);
 
   // 단일 마커 HTML 생성
@@ -262,7 +317,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
         position: new kakao.maps.LatLng(lat, lng),
         content,
         yAnchor: 1.1,
-        zIndex: place.id === selectedPlaceId ? 100 : 10,
+        zIndex: place.id === selectedPlaceId ? 100 : (10 + index),  // 인덱스 기반 zIndex
       });
       
       overlay.setMap(map);

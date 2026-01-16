@@ -448,7 +448,7 @@ const MapPage: React.FC = () => {
                 places={searchResults}
                 selectedPlaceId={selectedPlace?.id}
                 onPlaceClick={handlePlaceClick}
-                minClusterSize={3}
+                minClusterSize={2}
               />
             )}
 
