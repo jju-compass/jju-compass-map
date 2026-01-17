@@ -6,7 +6,7 @@ import type { Place } from '../types';
 const MAX_PAGES = 3; // 최대 3페이지 (45개)
 
 export function useSearch() {
-  const { setSearchResults, setIsLoading, setError } = useMapStore();
+  const { setSearchResults, setIsLoading, setError, setShowOnlyFavorites } = useMapStore();
   const allResultsRef = useRef<Place[]>([]);
 
   const search = useCallback(async (keyword: string) => {
@@ -14,6 +14,9 @@ export function useSearch() {
       setSearchResults([]);
       return;
     }
+
+    // 검색 시 즐겨찾기 필터 모드 해제
+    setShowOnlyFavorites(false);
 
     setIsLoading(true);
     setError(null);
@@ -98,7 +101,7 @@ export function useSearch() {
       setIsLoading(false);
       throw error;
     }
-  }, [setSearchResults, setIsLoading, setError]);
+  }, [setSearchResults, setIsLoading, setError, setShowOnlyFavorites]);
 
   return { search };
 }

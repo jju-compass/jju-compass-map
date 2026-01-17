@@ -33,6 +33,10 @@ interface MapState {
   // Current location
   currentLocation: Coordinates | null;
   setCurrentLocation: (location: Coordinates | null) => void;
+
+  // Show only favorites on map
+  showOnlyFavorites: boolean;
+  setShowOnlyFavorites: (show: boolean) => void;
 }
 
 // 전주대학교 정문 좌표 (기본 중심)
@@ -73,6 +77,10 @@ export const useMapStore = create<MapState>((set) => ({
   // Current location
   currentLocation: null,
   setCurrentLocation: (location) => set({ currentLocation: location }),
+
+  // Show only favorites
+  showOnlyFavorites: false,
+  setShowOnlyFavorites: (show) => set({ showOnlyFavorites: show }),
 }));
 
 export default useMapStore;

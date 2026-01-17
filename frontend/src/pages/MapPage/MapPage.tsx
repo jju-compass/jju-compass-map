@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   KakaoMap,
@@ -27,6 +27,7 @@ import { useWalkingAnimation } from '../../hooks';
 import { directionsAPI } from '../../api';
 import { toast } from '../../store/toastStore';
 import { SoundEffects } from '../../utils/soundEffects';
+import { convertFavoritesToPlaces } from '../../utils/placeConverter';
 import type { Place, Coordinates, RouteInfo } from '../../types';
 import './MapPage.css';
 
@@ -65,9 +66,20 @@ const MapPage: React.FC = () => {
     setSelectedPlace,
     currentLocation,
     isLoading,
+    showOnlyFavorites,
+    setShowOnlyFavorites,
   } = useMapStore();
 
   const { favorites } = useUserStore();
+
+  // 지도에 표시할 장소 계산 (즐겨찾기 필터 적용)
+  const placesToShow = useMemo(() => {
+    if (showOnlyFavorites) {
+      return convertFavoritesToPlaces(favorites);
+    }
+    return searchResults;
+  }, [showOnlyFavorites, favorites, searchResults]);
+
   const { search } = useSearch();
   const { toggleFavorite, checkFavorite, loadFavorites } = useFavorites();
   const { history, popularKeywords, loadHistory, loadPopularKeywords, clearHistory } = useHistory();
@@ -111,6 +123,18 @@ const MapPage: React.FC = () => {
   const handleHomeClick = useCallback(() => {
     setHomeModalOpen(true);
   }, [setHomeModalOpen]);
+
+  // Handle favorites filter toggle
+  const handleFavoritesFilterToggle = useCallback(() => {
+    if (!showOnlyFavorites && favorites.length === 0) {
+      toast.info('즐겨찾기한 장소가 없습니다');
+      return;
+    }
+    setShowOnlyFavorites(!showOnlyFavorites);
+    if (!showOnlyFavorites) {
+      toast.success('즐겨찾기한 장소만 표시합니다');
+    }
+  }, [showOnlyFavorites, favorites.length, setShowOnlyFavorites]);
 
   // Keyboard shortcuts (ESC to close modals/panels)
   useKeyboardShortcuts({
@@ -197,19 +221,21 @@ const MapPage: React.FC = () => {
   // Handle navbar search
   const handleNavbarSearch = useCallback((keyword: string) => {
     clearRoute();
+    setShowOnlyFavorites(false); // 검색 시 즐겨찾기 필터 해제
     search(keyword);
     setSelectedCategory(null);
     SoundEffects.playSearchComplete();
-  }, [search, clearRoute]);
+  }, [search, clearRoute, setShowOnlyFavorites]);
 
   // Handle category selection
   const handleCategorySelect = useCallback((category: Category) => {
     clearRoute();
+    setShowOnlyFavorites(false); // 카테고리 선택 시 즐겨찾기 필터 해제
     setSelectedCategory(category);
     search(category.searchKeyword);
     setIsSidebarOpen(false);
     SoundEffects.playSearchComplete();
-  }, [search, clearRoute]);
+  }, [search, clearRoute, setShowOnlyFavorites]);
 
   // Handle place selection from list
   const handlePlaceClick = useCallback((place: Place) => {
@@ -436,16 +462,19 @@ const MapPage: React.FC = () => {
                 showHome
                 showFavorites
                 showHistory
+                showFavoritesFilter
+                isFavoritesFilterActive={showOnlyFavorites}
                 onHomeClick={handleHomeClick}
                 onFavoritesClick={() => setShowFavorites(true)}
                 onHistoryClick={() => setShowHistory(true)}
+                onFavoritesFilterToggle={handleFavoritesFilterToggle}
               />
             )}
 
             {/* 커스텀 장소 마커 (클러스터링 적용) */}
             {isMapReady && (
               <PlaceMarkerCluster
-                places={searchResults}
+                places={placesToShow}
                 selectedPlaceId={selectedPlace?.id}
                 onPlaceClick={handlePlaceClick}
                 minClusterSize={2}

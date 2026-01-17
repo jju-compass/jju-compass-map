@@ -12,9 +12,12 @@ export interface MapControlsProps {
   showHome?: boolean;
   showFavorites?: boolean;
   showHistory?: boolean;
+  showFavoritesFilter?: boolean;
+  isFavoritesFilterActive?: boolean;
   onHomeClick?: () => void;
   onFavoritesClick?: () => void;
   onHistoryClick?: () => void;
+  onFavoritesFilterToggle?: () => void;
 }
 
 export const MapControls: React.FC<MapControlsProps> = ({
@@ -24,9 +27,12 @@ export const MapControls: React.FC<MapControlsProps> = ({
   showHome = false,
   showFavorites = false,
   showHistory = false,
+  showFavoritesFilter = false,
+  isFavoritesFilterActive = false,
   onHomeClick,
   onFavoritesClick,
   onHistoryClick,
+  onFavoritesFilterToggle,
 }) => {
   const { map, zoom, setZoom, setCenter, setCurrentLocation } = useMapStore();
   const { getCurrentLocation } = useGeolocation();
@@ -135,6 +141,22 @@ export const MapControls: React.FC<MapControlsProps> = ({
         >
           <span className="map-control-emoji">⭐</span>
           <span className="map-control-label">즐겨찾기</span>
+        </button>
+      )}
+
+      {showFavoritesFilter && (
+        <button
+          className={`map-control-btn map-control-btn-labeled ${isFavoritesFilterActive ? 'active' : ''}`}
+          onClick={() => {
+            SoundEffects.playClick();
+            onFavoritesFilterToggle?.();
+          }}
+          aria-label="즐겨찾기만 표시"
+          aria-pressed={isFavoritesFilterActive}
+          title={isFavoritesFilterActive ? '전체 장소 표시' : '즐겨찾기만 표시'}
+        >
+          <span className="map-control-emoji">{isFavoritesFilterActive ? '⭐' : '☆'}</span>
+          <span className="map-control-label">{isFavoritesFilterActive ? '필터 해제' : '즐겨찾기만'}</span>
         </button>
       )}
 
