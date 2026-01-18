@@ -3,6 +3,9 @@ import { useMapStore } from '@store/mapStore';
 import { useGeolocation } from '@hooks/useGeolocation';
 import { Icon } from '@components/common';
 import { SoundEffects } from '../../../utils/soundEffects';
+import { mapConfig } from '../../../constants/categories';
+import { calculateDistance } from '../../../utils/distance';
+import { toast } from '../../../store/toastStore';
 import './MapControls.css';
 
 export interface MapControlsProps {
@@ -78,6 +81,19 @@ export const MapControls: React.FC<MapControlsProps> = ({
     try {
       const position = await getCurrentLocation();
       const { lat, lng } = position;
+      
+      // 범위 체크: GPS 위치가 캠퍼스 범위 외면 이동하지 않음
+      const distance = calculateDistance(
+        mapConfig.center.lat,
+        mapConfig.center.lng,
+        lat,
+        lng
+      );
+      
+      if (distance > mapConfig.maxDistanceFromCenter) {
+        toast.info('전주대학교 캠퍼스 범위를 벗어났습니다');
+        return;
+      }
       
       setCurrentLocation({ lat, lng });
       setCenter({ lat, lng });
