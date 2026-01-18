@@ -25,6 +25,7 @@ module.exports = (env, argv) => {
         '@api': path.resolve(__dirname, 'src/api'),
         '@types': path.resolve(__dirname, 'src/types'),
         '@styles': path.resolve(__dirname, 'src/styles'),
+        '@constants': path.resolve(__dirname, 'src/constants'),
       },
     },
     module: {

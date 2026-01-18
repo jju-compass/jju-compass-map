@@ -21,7 +21,8 @@
       "@store/*": ["./store/*"],
       "@api/*": ["./api/*"],
       "@types/*": ["./types/*"],
-      "@styles/*": ["./styles/*"]
+      "@styles/*": ["./styles/*"],
+      "@constants/*": ["./constants/*"]
     }
   },
   "include": ["src/**/*"],
