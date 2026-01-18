@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useMapStore } from '@store/mapStore';
+import { mapConfig } from '../../../constants/categories';
+import { calculateDistance } from '../../../utils/distance';
+import { toast } from '../../../store/toastStore';
 import './KakaoMap.css';
 
 export interface KakaoMapProps {
@@ -19,8 +22,39 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
+  const lastToastTimeRef = useRef<number>(0);
   
   const { center, zoom, setMap, setCenter, setZoom } = useMapStore();
+
+  // 토스트 중복 방지 (2초 간격)
+  const showBoundaryToast = useCallback(() => {
+    const now = Date.now();
+    if (now - lastToastTimeRef.current > 2000) {
+      lastToastTimeRef.current = now;
+      toast.info('전주대학교 캠퍼스 범위를 벗어났습니다');
+    }
+  }, []);
+
+  // 좌표가 허용 범위 내인지 확인하고, 벗어나면 경계 좌표 반환
+  const clampToAllowedBounds = useCallback((lat: number, lng: number): { lat: number; lng: number; clamped: boolean } => {
+    const distance = calculateDistance(
+      mapConfig.center.lat,
+      mapConfig.center.lng,
+      lat,
+      lng
+    );
+
+    if (distance <= mapConfig.maxDistanceFromCenter) {
+      return { lat, lng, clamped: false };
+    }
+
+    // 범위를 벗어난 경우: 중심에서 해당 방향으로 최대 거리까지의 좌표 계산
+    const ratio = mapConfig.maxDistanceFromCenter / distance;
+    const clampedLat = mapConfig.center.lat + (lat - mapConfig.center.lat) * ratio;
+    const clampedLng = mapConfig.center.lng + (lng - mapConfig.center.lng) * ratio;
+
+    return { lat: clampedLat, lng: clampedLng, clamped: true };
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -40,6 +74,10 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
     const map = new kakao.maps.Map(containerRef.current, options);
     mapRef.current = map;
     setMap(map);
+
+    // 줌 레벨 제한 설정
+    map.setMinLevel(mapConfig.minZoomLevel);
+    map.setMaxLevel(mapConfig.maxZoomLevel);
 
     // Map ready callback
     onMapReady?.(map);
@@ -65,11 +103,24 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
 
     // Drag end event
     const handleDragEnd = () => {
-      const center = map.getCenter();
-      const lat = center.getLat();
-      const lng = center.getLng();
-      setCenter({ lat, lng });
-      onDragEnd?.(lat, lng);
+      const centerPos = map.getCenter();
+      const lat = centerPos.getLat();
+      const lng = centerPos.getLng();
+      
+      // 범위 체크 및 클램핑
+      const { lat: clampedLat, lng: clampedLng, clamped } = clampToAllowedBounds(lat, lng);
+      
+      if (clamped) {
+        // 범위를 벗어난 경우: 경계로 이동하고 토스트 표시
+        const clampedLatLng = new kakao.maps.LatLng(clampedLat, clampedLng);
+        map.setCenter(clampedLatLng);
+        showBoundaryToast();
+        setCenter({ lat: clampedLat, lng: clampedLng });
+        onDragEnd?.(clampedLat, clampedLng);
+      } else {
+        setCenter({ lat, lng });
+        onDragEnd?.(lat, lng);
+      }
     };
 
     // Zoom changed event
@@ -88,7 +139,7 @@ export const KakaoMap: React.FC<KakaoMapProps> = ({
       kakao.maps.event.removeListener(map, 'dragend', handleDragEnd);
       kakao.maps.event.removeListener(map, 'zoom_changed', handleZoomChanged);
     };
-  }, [onClick, onDragEnd, onZoomChanged, setCenter, setZoom]);
+  }, [onClick, onDragEnd, onZoomChanged, setCenter, setZoom, clampToAllowedBounds, showBoundaryToast]);
 
   // Sync center changes from store
   const panTo = useCallback((lat: number, lng: number) => {
