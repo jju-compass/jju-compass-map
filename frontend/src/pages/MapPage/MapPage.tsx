@@ -28,6 +28,8 @@ import { directionsAPI } from '../../api';
 import { toast } from '../../store/toastStore';
 import { SoundEffects } from '../../utils/soundEffects';
 import { convertFavoritesToPlaces } from '../../utils/placeConverter';
+import { mapConfig } from '../../constants/categories';
+import { calculateDistance } from '../../utils/distance';
 import type { Place, Coordinates, RouteInfo } from '../../types';
 import './MapPage.css';
 
@@ -245,6 +247,19 @@ const MapPage: React.FC = () => {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
     if (!isNaN(lat) && !isNaN(lng) && map) {
+      // 안전장치: 범위 체크 (검색 결과는 이미 범위 내이지만 혹시 모를 경우)
+      const distance = calculateDistance(
+        mapConfig.center.lat,
+        mapConfig.center.lng,
+        lat,
+        lng
+      );
+      
+      if (distance > mapConfig.maxDistanceFromCenter) {
+        toast.info('전주대학교 캠퍼스 범위를 벗어났습니다');
+        return;
+      }
+      
       map.panTo(new kakao.maps.LatLng(lat, lng));
     }
   }, [map, setSelectedPlace]);
@@ -278,9 +293,25 @@ const MapPage: React.FC = () => {
   // Handle favorite selection from FavoritesPanel
   const handleFavoriteSelect = useCallback((favorite: import('../../types').Favorite) => {
     SoundEffects.playClick();
-    // 지도 이동
-    if (map && favorite.lat && favorite.lng) {
-      map.panTo(new kakao.maps.LatLng(favorite.lat, favorite.lng));
+    // 범위 체크: 즐겨찾기 위치가 캠퍼스 범위 외면 이동하지 않음
+    if (favorite.lat && favorite.lng) {
+      const distance = calculateDistance(
+        mapConfig.center.lat,
+        mapConfig.center.lng,
+        favorite.lat,
+        favorite.lng
+      );
+      
+      if (distance > mapConfig.maxDistanceFromCenter) {
+        toast.info('전주대학교 캠퍼스 범위를 벗어났습니다');
+        setShowFavorites(false);
+        return;
+      }
+      
+      // 지도 이동
+      if (map) {
+        map.panTo(new kakao.maps.LatLng(favorite.lat, favorite.lng));
+      }
     }
     setShowFavorites(false);
     toast.success(`${favorite.place_name}(으)로 이동했습니다`);
