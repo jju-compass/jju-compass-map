@@ -20,4 +20,9 @@ export const mapConfig = {
   pageSize: 15,
   // 최대 페이지 수
   maxPages: 3,
+  // 지도 이동 제한 범위 (미터) - 캠퍼스 중심에서 4km
+  maxDistanceFromCenter: 4000,
+  // 줌 레벨 제한
+  minZoomLevel: 1, // 최대 확대
+  maxZoomLevel: 7, // 최대 축소
 };
