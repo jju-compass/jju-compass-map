@@ -6,6 +6,8 @@ declare namespace kakao.maps {
     getCenter(): LatLng;
     setLevel(level: number, options?: { animate?: boolean }): void;
     getLevel(): number;
+    setMinLevel(level: number): void;
+    setMaxLevel(level: number): void;
     setBounds(bounds: LatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number): void;
     getBounds(): LatLngBounds;
     panTo(latlng: LatLng): void;
