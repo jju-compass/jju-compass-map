@@ -273,7 +273,7 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   }, []);
 
   // 클러스터링 업데이트
-  const updateClusters = useCallback(() => {
+  const updateClusters = useCallback((force = false) => {
     if (!map || places.length === 0) {
       setClusterData({ clusters: [], singles: [], overlappingGroups: [] });
       return;
@@ -283,7 +283,14 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
     const clusterRadius = getClusterRadius(currentZoom);
     const overlapRadius = getOverlapRadius(currentZoom);
     const result = clusterPlaces(map, places, clusterRadius, minClusterSize, overlapRadius);
-    setClusterData(result);
+    
+    setClusterData(prev => {
+      // force가 아니고 데이터가 같으면 업데이트 스킵 (드래그 깜빡임 방지)
+      if (!force && isSameClusterData(prev, result)) {
+        return prev;
+      }
+      return result;
+    });
   }, [map, places, minClusterSize, getClusterRadius, getOverlapRadius]);
 
   // 맵 이벤트 리스너
