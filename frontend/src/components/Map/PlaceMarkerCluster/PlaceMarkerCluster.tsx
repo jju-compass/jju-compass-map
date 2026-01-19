@@ -297,10 +297,10 @@ export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   useEffect(() => {
     if (!map) return;
 
-    updateClusters();
+    updateClusters(true);  // 초기 로드는 강제 실행
 
-    const handleZoomChange = () => updateClusters();
-    const handleDragEnd = () => updateClusters();
+    const handleZoomChange = () => updateClusters(true);   // 줌: 항상 업데이트 (스타일 변경)
+    const handleDragEnd = () => updateClusters(false);     // 드래그: 동등성 비교 후 스킵
 
     kakao.maps.event.addListener(map, 'zoom_changed', handleZoomChange);
     kakao.maps.event.addListener(map, 'dragend', handleDragEnd);
