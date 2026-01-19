@@ -209,6 +209,34 @@ function clusterPlaces(
   return { clusters, singles: finalSingles, overlappingGroups };
 }
 
+// 클러스터 데이터 동등성 비교 (ID 기준) - 드래그 시 불필요한 리렌더링 방지
+function isSameClusterData(
+  prev: { clusters: ClusterGroup[]; singles: Place[]; overlappingGroups: OverlappingGroup[] },
+  next: { clusters: ClusterGroup[]; singles: Place[]; overlappingGroups: OverlappingGroup[] }
+): boolean {
+  // 개수가 다르면 다른 데이터
+  if (prev.singles.length !== next.singles.length) return false;
+  if (prev.clusters.length !== next.clusters.length) return false;
+  if (prev.overlappingGroups.length !== next.overlappingGroups.length) return false;
+
+  // singles ID 비교
+  const prevSingleIds = prev.singles.map(p => p.id).sort().join(',');
+  const nextSingleIds = next.singles.map(p => p.id).sort().join(',');
+  if (prevSingleIds !== nextSingleIds) return false;
+
+  // clusters 내 장소 ID 비교
+  const prevClusterIds = prev.clusters.map(c => c.places.map(p => p.id).sort().join('|')).sort().join(',');
+  const nextClusterIds = next.clusters.map(c => c.places.map(p => p.id).sort().join('|')).sort().join(',');
+  if (prevClusterIds !== nextClusterIds) return false;
+
+  // overlappingGroups 내 장소 ID 비교
+  const prevOverlapIds = prev.overlappingGroups.map(g => g.places.map(p => p.id).sort().join('|')).sort().join(',');
+  const nextOverlapIds = next.overlappingGroups.map(g => g.places.map(p => p.id).sort().join('|')).sort().join(',');
+  if (prevOverlapIds !== nextOverlapIds) return false;
+
+  return true;
+}
+
 export const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   places,
   selectedPlaceId,
